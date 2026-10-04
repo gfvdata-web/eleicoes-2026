@@ -100,12 +100,21 @@
   .grupos .acoes button { font: inherit; font-size: .8rem; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--surface); cursor: pointer; }
   .grupos .acoes button.sec { background: transparent; color: var(--accent); }
   .legend li small { color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+  .badge-apu { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-bottom: 14px; padding: 6px 14px; border: 1px solid #b3261e; border-radius: 999px; font-size: .85rem; font-weight: 600; background: var(--surface); }
+  .badge-apu strong { color: #b3261e; text-transform: uppercase; letter-spacing: .06em; font-size: .75rem; display: inline-flex; align-items: center; gap: 6px; }
+  .badge-apu strong::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulsa 1.6s ease-in-out infinite; }
+  @keyframes pulsa { 50% { opacity: .25; } }
+  @media (prefers-reduced-motion: reduce) { .badge-apu strong::before { animation: none; } }
+  @media (prefers-color-scheme: dark) { .badge-apu { border-color: #ef6b5f; } .badge-apu strong { color: #ef6b5f; } }
+  .badge-apu a { color: var(--accent); text-decoration: none; }
+  .badge-apu a:hover { text-decoration: underline; }
   footer { margin-top: 24px; font-size: .8rem; color: var(--muted); }
   footer a { color: var(--accent); }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="badge-apu"><strong>Apuração</strong><a href="apuracao.html">Resultados oficiais do TSE →</a><a href="es.html">Espírito Santo →</a></div>
   <header>
     <h1 id="titulo">Disputa pelos governos estaduais — 2026</h1>
     <p id="subtitulo">Últimas pesquisas de intenção de voto antes do 1º turno (04/10/2026). Passe o mouse (ou toque) sobre um estado para ver os números.</p>
