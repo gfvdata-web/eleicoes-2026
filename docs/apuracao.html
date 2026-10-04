@@ -533,13 +533,18 @@
       .sort((a, b) => a.nome.localeCompare(b.nome));
     document.getElementById("tbody").innerHTML = lista.map(e => {
       const p = principal(e);
-      const pct = Object.fromEntries(p.res);
-      const cands = [...e.candidatos].sort((a, b) => (pct[b.nome] ?? -1) - (pct[a.nome] ?? -1));
-      return cands.map((c, i) => `<tr class="${i === 0 ? "first" : ""}">
+      // Na apuração do TSE pode haver homônimos de partidos diferentes: casa por nome + partido.
+      const val = c => {
+        const rs = (p.apu ? p.apu.res : p.res).filter(r => r[0] === c.nome);
+        const r = rs.find(r => r[2] === c.partido) || rs[0];
+        return r ? +r[1] : null;
+      };
+      const cands = e.candidatos.map(c => ({ c, v: val(c) })).sort((a, b) => (b.v ?? -1) - (a.v ?? -1));
+      return cands.map(({ c, v }, i) => `<tr class="${i === 0 ? "first" : ""}">
         <td class="uf">${i === 0 ? `${e.uf}` : ""}</td>
         <td class="${i < vagas() ? "lead" : ""}">${c.nome}</td>
         <td><span class="party">${c.partido}</span></td>
-        <td class="num">${pct[c.nome] != null ? fmt(pct[c.nome]) : "—"}${i === 0 ? (p.apu ? `<br><span class="tag tse">TSE · ${p.campo}</span>` : `<br><span class="tag">${p.inst} ${p.tipo} · ${p.campo}</span>`) : ""}</td>
+        <td class="num">${v != null ? fmt(v) : "—"}${i === 0 ? (p.apu ? `<br><span class="tag tse">TSE · ${p.campo}</span>` : `<br><span class="tag">${p.inst} ${p.tipo} · ${p.campo}</span>`) : ""}</td>
         <td class="res">${c.resumo}</td></tr>`).join("");
     }).join("");
     d3.selectAll("#mapa path").classed("sel", d => d && d.properties.sigla === uf);

@@ -3,6 +3,7 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-04
+- **Apuração, tabela:** corrigido o percentual de candidatos homônimos de partidos diferentes (ex.: duas Carol de Toni em SC, PL e PCO); a tabela agora casa por nome e partido, como o pop-up.
 
 - **Apuração por estado:** corrigido o mapa em branco nos estados diferentes do ES (`es.html?uf=…`): as malhas em `docs/data/uf/` estavam com o sentido dos polígonos invertido para o D3; `gerar_ufs.py` agora grava no sentido certo.
 - **Apuração, aba Presidente:** novo card "Candidatos — Brasil" com o total nacional do TSE (posição, partido, votos, % válidos e barra), como na página do Espírito Santo. O quadro "Apuração geral · Brasil" mostra só o % de urnas apuradas.
