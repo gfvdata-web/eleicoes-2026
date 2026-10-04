@@ -373,6 +373,7 @@ def main():
     ap.add_argument("--publicar", action="store_true", help="faz commit e push dos dados")
     ap.add_argument("--uma-vez", action="store_true", help="roda um ciclo e sai")
     ap.add_argument("--limpar", action="store_true", help="zera os arquivos do site e sai")
+    ap.add_argument("--intervalo", type=int, default=INTERVALO_COLETA, help="segundos entre ciclos (padrão 60)")
     ap.add_argument("--cargos", help="só estes cargos, separados por vírgula (ex.: governador,senador)")
     a = ap.parse_args()
 
@@ -391,7 +392,7 @@ def main():
     coletar = coletar_simulado if a.simular else coletar_real
     modo = c("SIMULAÇÃO (só local)", "amarelo", "negrito") if a.simular else (
         c("PUBLICANDO no GitHub", "vermelho", "negrito") if a.publicar else c("coleta sem publicar", "ciano"))
-    log(c("Apuração 2026 — coleta do TSE", "negrito") + f" · {modo} · coleta a cada {INTERVALO_COLETA}s"
+    log(c("Apuração 2026 — coleta do TSE", "negrito") + f" · {modo} · coleta a cada {a.intervalo}s"
         + (f", publicação a cada {INTERVALO_PUBLICACAO}s" if a.publicar else ""))
 
     ciclo, ultima_pub, pendente_pub = 0, 0.0, False
@@ -432,7 +433,7 @@ def main():
 
         if a.uma_vez:
             break
-        alvo = inicio + INTERVALO_COLETA
+        alvo = inicio + a.intervalo
         while time.time() < alvo:  # relógio ao vivo até o próximo ciclo
             print(f"\r\033[K  {c(agora(), 'negrito')} · próximo ciclo em {int(alvo - time.time()):>2}s", end="", flush=True)
             time.sleep(1)
