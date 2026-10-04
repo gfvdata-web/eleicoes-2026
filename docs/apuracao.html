@@ -116,12 +116,19 @@
   #mapa text.pct { font-size: 8px; font-weight: 500; }
   .tag.tse { border-color: var(--ao-vivo); color: var(--ao-vivo); }
   .sim { background: #f2c94c; color: #1d1d1b; padding: 1px 6px; border-radius: 4px; }
+  .atalhos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .atalhos a { font-size: .85rem; font-weight: 600; padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--accent); text-decoration: none; }
+  .atalhos a:hover { border-color: var(--accent); }
   footer { margin-top: 24px; font-size: .8rem; color: var(--muted); }
   footer a { color: var(--accent); }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <nav class="atalhos" aria-label="Outras páginas">
+    <a href="index.html">← Voltar às pesquisas</a>
+    <a href="es.html">Espírito Santo: apuração por município →</a>
+  </nav>
   <section class="apu" id="apu" aria-live="polite">
     <div class="apu-top">
       <strong>Apuração oficial</strong>
@@ -137,7 +144,6 @@
       <button type="button" data-modo="gov" aria-pressed="true">Governador</button>
       <button type="button" data-modo="sen" aria-pressed="false">Senado</button>
       <a href="senado.html">Bancada Senado</a>
-      <a href="es.html">Espírito Santo</a>
     </div>
   </header>
 
