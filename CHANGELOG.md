@@ -4,6 +4,7 @@ Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-04
 
+- **Apuração, aba Presidente:** a `apuracao.html` ganhou a aba "Presidente" (link `#presidente`) com o mapa dos 27 estados colorido pela apuração de `presidente.json`. O número abaixo da sigla é o % de votos válidos do líder no estado; o pop-up traz todos os candidatos com votos e %, e a faixa do topo mostra o total do Brasil.
 - **Apuração, pop-up e mapa:** o pop-up da `apuracao.html` mostra só o % apurado e, por candidato, votos e % (sem informações de pesquisa); rótulos de sigla e % apurado do mapa maiores. `scripts/apuracao.py` passa a guardar os votos de cada candidato.
 - **Navegação entre as páginas:** a `apuracao.html` ganhou, no topo, os atalhos "← Voltar às pesquisas" e "Espírito Santo: apuração por município →"; a `es.html` ganhou um link para as pesquisas.
 - **Atalho para a apuração na página de pesquisas:** selo "Apuração" acima do título da `index.html`, com links para a apuração nacional (`apuracao.html`) e a do Espírito Santo (`es.html`).

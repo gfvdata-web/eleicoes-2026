@@ -24,6 +24,7 @@ Para voltar ao modo antigo, basta trocar a opção de novo; o workflow pode fica
 - **Faixa "Apuração oficial"** no topo: média do % de urnas apuradas nos 27 estados (do cargo selecionado), estados com apuração, estados concluídos, hora do dado do TSE e barra de progresso. Antes dos dados: "Aguardando o início da apuração". Com dados simulados, mostra o aviso "Dados simulados, não oficiais".
 - **% apurado no mapa:** abaixo de cada sigla (arredondado para baixo; `<1%` entre 0 e 1; `100%` só quando completo).
 - **Apuração como pesquisa principal:** com `pct > 0`, a apuração vira a "pesquisa principal" (`apuracao(e)` dentro de `principal(e)`). Cor, líder, margem, pop-up e tabela passam a usá-la, com selo "TSE"/"oficial". Com 0%, o estado segue com a pesquisa. As pesquisas continuam no pop-up para comparação.
+- **Aba Presidente** (`#presidente`): mesmo mapa, lendo `presidente.json`. Não há lista própria de candidatos: os estados vêm de `dados.js` e os candidatos, da própria apuração. O número no mapa é o % de votos válidos do líder (nos outros cargos é o % de urnas); a faixa do topo mostra o total `BR`.
 - Lê `data/apuracao/governador.json` e `data/apuracao/senador.json` com `?t=<timestamp>` (evita o cache do Pages) e repinta só se algo mudou.
 
 ## Formato de `docs/data/apuracao/<cargo>.json`

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Apuração 2026 — Governador e Senado</title>
-<meta name="description" content="Apuração oficial das eleições de 2026 para governador e Senado, por estado, com o percentual de urnas apuradas.">
+<title>Apuração 2026 — Presidente, Governador e Senado</title>
+<meta name="description" content="Apuração oficial das eleições de 2026 para presidente, governador e Senado, por estado, com o percentual de urnas apuradas.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -142,6 +142,7 @@
     <h1 id="titulo">Disputa pelos governos estaduais — 2026</h1>
     <p id="subtitulo">Resultados do 1º turno (04/10/2026) à medida que as urnas são apuradas. Passe o mouse (ou toque) sobre um estado para ver os números.</p>
     <div class="modo" role="group" aria-label="Cargo">
+      <button type="button" data-modo="pres" aria-pressed="false">Presidente</button>
       <button type="button" data-modo="gov" aria-pressed="true">Governador</button>
       <button type="button" data-modo="sen" aria-pressed="false">Senado</button>
       <a href="senado.html">Bancada Senado</a>
@@ -181,7 +182,8 @@
       <p class="so-sen" hidden>Cada estado elege <strong>2 senadores</strong> e cada eleitor vota duas vezes. Os dois votos aparecem somados.</p>
       <p><strong>V</strong> = votos válidos, sem brancos, nulos e indecisos. <strong>T</strong> = votos totais, no cenário estimulado.</p>
       <p class="so-sen" hidden><strong>C</strong> = % de eleitores que citam o nome em um dos dois votos; a soma passa de 100%.</p>
-      <p>O número abaixo da sigla é o <strong>% de urnas apuradas</strong> no estado. Cor, pop-up e tabela usam a apuração (votos válidos).</p>
+      <p class="so-pres" hidden>No modo Presidente, o número abaixo da sigla é o <strong>% de votos válidos do líder</strong> no estado; a cor mostra a vantagem (ou o partido) do líder. O % de urnas apuradas aparece no pop-up.</p>
+      <p class="so-nopres">O número abaixo da sigla é o <strong>% de urnas apuradas</strong> no estado. Cor, pop-up e tabela usam a apuração (votos válidos).</p>
       <p>Clique em um estado para filtrar a tabela abaixo.</p>
     </div>
   </div>
@@ -223,6 +225,12 @@
 <script>
 (function () {
   const MODOS = {
+    pres: {
+      dados: [], atualizado: "",
+      titulo: "Disputa pela Presidência — 2026",
+      legTitulo: "Vantagem do líder", legDesc: "Diferença entre o 1º e o 2º colocados na apuração do estado (votos válidos). O número no mapa é o % de votos do líder",
+      docTitle: "Presidente 2026 — Apuração"
+    },
     gov: {
       dados: window.ESTADOS, atualizado: window.ATUALIZADO_EM,
       titulo: "Disputa pelos governos estaduais — 2026",
@@ -236,7 +244,7 @@
       docTitle: "Senado 2026 — Apuração"
     }
   };
-  let modo = location.hash === "#senado" ? "sen" : "gov";
+  let modo = location.hash === "#senado" ? "sen" : location.hash === "#presidente" ? "pres" : "gov";
   let ESTADOS, porUF;
 
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -251,12 +259,13 @@
   const ordenado = p => [...p.res].sort((a, b) => b[1] - a[1]);
   const vagas = () => (modo === "sen" ? 2 : 1);
   // Pesquisa que colore o mapa e alimenta a tabela: no governador, a AtlasIntel quando houver; senão, a mais recente.
-  const principal = e => apuracao(e) || (modo === "gov" && e.pesquisas.find(p => /atlas/i.test(p.inst))) || e.pesquisas[0];
+  const SEM_DADOS = { inst: "", tipo: "V", campo: "", res: [] };
+  const principal = e => apuracao(e) || (modo === "pres" && SEM_DADOS) || (modo === "gov" && e.pesquisas.find(p => /atlas/i.test(p.inst))) || e.pesquisas[0];
 
   // Apuração oficial (data/apuracao/<cargo>.json, gerado por scripts/apuracao.py): quando o estado tem urnas
   // apuradas, ela vira a "pesquisa principal". Formato: { cargo, atualizado, simulacao?, ufs: { UF: { pct, hora, res: [[nome, %válidos, partido?], ...], situacao? } } }
-  const ARQ_APU = { gov: "governador", sen: "senador" };
-  let APU = { gov: { ufs: {} }, sen: { ufs: {} } };
+  const ARQ_APU = { pres: "presidente", gov: "governador", sen: "senador" };
+  let APU = { pres: { ufs: {} }, gov: { ufs: {} }, sen: { ufs: {} } };
   const apuUF = uf => (APU[modo].ufs || {})[uf];
   const pctUrnas = uf => { const a = apuUF(uf); return a ? +a.pct || 0 : 0; };
   const apuCache = new Map();
@@ -271,6 +280,7 @@
   // Governador: 1º − 2º. Senado (2 vagas): 2º − 3º. Pesquisas tipo "C" somam até 200%, então a margem é dividida por 2.
   const margem = e => {
     const p = principal(e), r = ordenado(p), i = vagas() - 1;
+    if (!r.length) return Infinity;
     const m = r[i][1] - (r[i + 1] ? r[i + 1][1] : 0);
     return p.tipo === "C" ? m / 2 : m;
   };
@@ -297,6 +307,7 @@
   const rotulo = p => { const g = grupoDe(p); return g ? g.nome : p; };
 
   function cor(e) {
+    if (!ordenado(principal(e)).length) return "#b9b7af";
     if (colorir === "folga") return css("--" + faixa(e).id);
     const cs = [...new Set(lideres(e).map(corPartido))];
     return cs.length === 1 ? cs[0] : metades(cs);
@@ -391,17 +402,35 @@
     rotulos();
     render();
   });
-  const rotulos = () => svg.selectAll("text.pct").text(d => pctMapa(pctUrnas(d.properties.sigla)));
+  // Presidente: o número no mapa é o % de votos do líder; nos demais cargos, o % de urnas apuradas
+  const rotulos = () => svg.selectAll("text.pct").text(d => {
+    const uf = d.properties.sigla;
+    if (modo !== "pres") return pctMapa(pctUrnas(uf));
+    const e = porUF && porUF[uf], r = e ? ordenado(principal(e)) : [];
+    return r.length ? fmt(+r[0][1]) : "";
+  });
+  // Presidente não tem lista própria: os 27 estados vêm do governador e os candidatos, da apuração
+  function montarPres() {
+    MODOS.pres.dados = MODOS.gov.dados.map(g => {
+      const a = (APU.pres.ufs || {})[g.uf] || (APU.pres.ufs || {}).BR;
+      const cands = ((a && a.res) || []).map(r => ({ nome: r[0], partido: r[2] || "—", resumo: "" }));
+      return { uf: g.uf, nome: g.nome, regiao: g.regiao, pesquisas: [], candidatos: cands };
+    });
+  }
+  montarPres();
 
   // Faixa "Apuração oficial": média do % de urnas apuradas nos 27 estados do cargo selecionado
   function faixaApu() {
     const ufs = MODOS.gov.dados.map(e => e.uf), ps = ufs.map(pctUrnas);
     const iniciados = ps.filter(v => v > 0).length, fechados = ps.filter(v => v >= 100).length;
     const media = ps.reduce((s, v) => s + v, 0) / ufs.length;
-    const cargo = modo === "sen" ? "Senado" : "Governador";
+    const cargo = modo === "sen" ? "Senado" : modo === "pres" ? "Presidente" : "Governador";
+    const br = modo === "pres" && (APU.pres.ufs || {}).BR;
+    const brTxt = br && br.pct > 0 && Array.isArray(br.res) && br.res.length > 1
+      ? ` · Brasil (${fmtPct(br.pct)} das urnas): <strong>${br.res[0][0]}</strong> ${fmt(+br.res[0][1])} × <strong>${br.res[1][0]}</strong> ${fmt(+br.res[1][1])}` : "";
     document.getElementById("apu").classList.toggle("ativa", iniciados > 0 && fechados < ufs.length);
     document.getElementById("apuStatus").innerHTML = (APU[modo].simulacao ? "<b class=\"sim\">Dados simulados, não oficiais</b> · " : "") + (iniciados
-      ? `${cargo}: <strong>${fmtPct(media)}</strong> das urnas apuradas (média dos 27 estados) · ${iniciados} ${iniciados > 1 ? "estados" : "estado"} com apuração · ${fechados} ${fechados === 1 ? "concluído" : "concluídos"}`
+      ? `${cargo}: <strong>${fmtPct(media)}</strong> das urnas apuradas (média dos 27 estados) · ${iniciados} ${iniciados > 1 ? "estados" : "estado"} com apuração · ${fechados} ${fechados === 1 ? "concluído" : "concluídos"}${brTxt}`
       : "Aguardando o início da apuração. O TSE começa a divulgar os resultados às 17h (horário de Brasília).");
     document.getElementById("apuHora").textContent = APU[modo].atualizado ? "Dados do TSE de " + APU[modo].atualizado : "";
     document.getElementById("apuBar").style.width = media + "%";
@@ -425,6 +454,8 @@
       .then(mudou => {
         if (!mudou.some(Boolean)) return;
         apuCache.clear();
+        montarPres();
+        if (modo === "pres") { ESTADOS = MODOS.pres.dados; porUF = Object.fromEntries(ESTADOS.map(e => [e.uf, e])); }
         if (porUF) { pintar(); legenda(); render(); rotulos(); faixaApu(); }
       });
   }
@@ -543,6 +574,8 @@
     document.getElementById("atualizado").textContent = M.atualizado;
     document.title = M.docTitle;
     document.querySelectorAll(".so-sen").forEach(el => { el.hidden = m !== "sen"; });
+    document.querySelectorAll(".so-pres").forEach(el => { el.hidden = m !== "pres"; });
+    document.querySelectorAll(".so-nopres").forEach(el => { el.hidden = m === "pres"; });
     document.querySelectorAll(".modo button").forEach(b => b.setAttribute("aria-pressed", b.dataset.modo === m));
     tip.style.opacity = 0;
     pintar();
@@ -552,7 +585,7 @@
     faixaApu();
   }
   document.querySelectorAll(".modo button").forEach(b => b.addEventListener("click", () => {
-    history.replaceState(null, "", b.dataset.modo === "sen" ? "#senado" : location.pathname + location.search);
+    history.replaceState(null, "", b.dataset.modo === "sen" ? "#senado" : b.dataset.modo === "pres" ? "#presidente" : location.pathname + location.search);
     setModo(b.dataset.modo);
   }));
   document.querySelectorAll("[data-colorir]").forEach(b => b.setAttribute("aria-pressed", b.dataset.colorir === colorir));
