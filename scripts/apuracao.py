@@ -86,14 +86,14 @@ def converter(cargo, uf, bruto):
         for par in agr.get("par", []):
             for cd in par.get("cand", []):
                 vap = int(cd.get("vap") or 0)
-                res.append((vap, [cd.get("nmu") or cd["nm"], float(str(cd.get("pvapn") or cd.get("pvap") or 0).replace(",", ".")), par["sg"]]))
+                res.append((vap, [cd.get("nmu") or cd["nm"], float(str(cd.get("pvapn") or cd.get("pvap") or 0).replace(",", ".")), par["sg"], vap]))
                 eleito |= cd.get("e") == "s"
                 turno2 |= "2" in (cd.get("st") or "")
     if not res or pct <= 0:
         return None
     res.sort(key=lambda r: -r[0])
     return {"pct": pct, "hora": bruto.get("ht") or bruto.get("hg") or "",
-            "res": [[n, round(v, 2), p] for _, (n, v, p) in res],
+            "res": [[n, round(v, 2), p, vap] for vap, (n, v, p, _) in res],
             "situacao": "eleito" if eleito else "2turno" if turno2 else None}
 
 

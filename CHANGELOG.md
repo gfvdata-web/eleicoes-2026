@@ -4,6 +4,7 @@ Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-04
 
+- **Apuração, pop-up e mapa:** o pop-up da `apuracao.html` mostra só o % apurado e, por candidato, votos e % (sem informações de pesquisa); rótulos de sigla e % apurado do mapa maiores. `scripts/apuracao.py` passa a guardar os votos de cada candidato.
 - **Navegação entre as páginas:** a `apuracao.html` ganhou, no topo, os atalhos "← Voltar às pesquisas" e "Espírito Santo: apuração por município →"; a `es.html` ganhou um link para as pesquisas.
 - **Atalho para a apuração na página de pesquisas:** selo "Apuração" acima do título da `index.html`, com links para a apuração nacional (`apuracao.html`) e a do Espírito Santo (`es.html`).
 - **Nova página do Espírito Santo (`es.html`):** só com a apuração oficial do TSE, sem pesquisas. Abas para presidente, governador, Senado, deputado federal e estadual; filtro por macrorregião, microrregião ou município (também clicando no mapa); mapa dos 78 municípios colorido pelo mais votado, por um candidato escolhido ou pelo % apurado; lista de candidatos com busca, filtro de partido e opção de fixar (★) candidatos, que ficam no topo e ganham colunas na tabela "Por região". Para deputados, o quadro "Quem está passando" projeta as vagas com os votos já apurados (quociente eleitoral, 80%/20% e sobras). Dados de `docs/data/es/apuracao/<cargo>.json`, coletados por `scripts/apuracao_es.py`. Link na `apuracao.html`.

@@ -35,7 +35,7 @@
   #mapa { width: 100%; height: auto; display: block; }
   #mapa path { stroke: var(--state-stroke); stroke-width: .8; cursor: pointer; transition: opacity .15s; }
   #mapa path:hover, #mapa path.sel { stroke: var(--text); stroke-width: 1.6; }
-  #mapa text { font-size: 10px; font-weight: 600; fill: #fff; pointer-events: none; text-anchor: middle; paint-order: stroke; stroke: rgba(0,0,0,.35); stroke-width: 2px; }
+  #mapa text { font-size: 13px; font-weight: 600; fill: #fff; pointer-events: none; text-anchor: middle; paint-order: stroke; stroke: rgba(0,0,0,.35); stroke-width: 2px; }
   .legend h3, .side h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
   .legend ul { list-style: none; padding: 0; margin: 0 0 16px; }
   .legend li { display: flex; align-items: center; gap: 8px; font-size: .9rem; margin: 4px 0; }
@@ -48,11 +48,12 @@
   .poll { margin-top: 8px; }
   .poll .ph { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 3px; }
   .poll .ph span:last-child { color: var(--muted); font-weight: 400; }
-  .row { display: grid; grid-template-columns: 1fr 70px 36px; gap: 6px; align-items: center; margin: 2px 0; }
+  .row { display: grid; grid-template-columns: 1fr auto 52px; gap: 6px; align-items: center; margin: 2px 0; }
   .row .nm { line-height: 1.25; }
   .row .nm .pt { color: var(--muted); font-weight: 400; }
   .bar { height: 7px; background: var(--bar-bg); border-radius: 4px; overflow: hidden; }
   .bar i { display: block; height: 100%; background: var(--bar); border-radius: 4px; }
+  .row .vt { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
   .row .v { text-align: right; font-variant-numeric: tabular-nums; }
   .tag { display: inline-block; font-size: .7rem; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); margin-left: 4px; font-weight: 400; }
   .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
@@ -113,7 +114,7 @@
   #apuHora { margin-left: auto; font-size: .8rem; color: var(--muted); }
   .apu-bar { height: 8px; background: var(--bar-bg); border-radius: 4px; overflow: hidden; margin-top: 10px; }
   .apu-bar i { display: block; height: 100%; width: 0; background: var(--ao-vivo); border-radius: 4px; transition: width .4s; }
-  #mapa text.pct { font-size: 8px; font-weight: 500; }
+  #mapa text.pct { font-size: 11px; font-weight: 500; }
   .tag.tse { border-color: var(--ao-vivo); color: var(--ao-vivo); }
   .sim { background: #f2c94c; color: #1d1d1b; padding: 1px 6px; border-radius: 4px; }
   .atalhos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
@@ -139,7 +140,7 @@
   </section>
   <header>
     <h1 id="titulo">Disputa pelos governos estaduais — 2026</h1>
-    <p id="subtitulo">Resultados do 1º turno (04/10/2026) à medida que as urnas são apuradas. Enquanto um estado não tem urnas apuradas, o mapa mostra a última pesquisa. Passe o mouse (ou toque) sobre um estado para ver os números.</p>
+    <p id="subtitulo">Resultados do 1º turno (04/10/2026) à medida que as urnas são apuradas. Passe o mouse (ou toque) sobre um estado para ver os números.</p>
     <div class="modo" role="group" aria-label="Cargo">
       <button type="button" data-modo="gov" aria-pressed="true">Governador</button>
       <button type="button" data-modo="sen" aria-pressed="false">Senado</button>
@@ -180,7 +181,7 @@
       <p class="so-sen" hidden>Cada estado elege <strong>2 senadores</strong> e cada eleitor vota duas vezes. Os dois votos aparecem somados.</p>
       <p><strong>V</strong> = votos válidos, sem brancos, nulos e indecisos. <strong>T</strong> = votos totais, no cenário estimulado.</p>
       <p class="so-sen" hidden><strong>C</strong> = % de eleitores que citam o nome em um dos dois votos; a soma passa de 100%.</p>
-      <p>O número abaixo da sigla é o <strong>% de urnas apuradas</strong> no estado. Com urnas apuradas, cor, pop-up e tabela passam a usar a apuração (votos válidos); com 0%, ainda mostram a pesquisa.</p>
+      <p>O número abaixo da sigla é o <strong>% de urnas apuradas</strong> no estado. Cor, pop-up e tabela usam a apuração (votos válidos).</p>
       <p>Clique em um estado para filtrar a tabela abaixo.</p>
     </div>
   </div>
@@ -195,7 +196,7 @@
     </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>UF</th><th>Candidato</th><th>Partido</th><th style="text-align:right">Apuração / pesquisa</th><th>Resumo</th></tr></thead>
+        <thead><tr><th>UF</th><th>Candidato</th><th>Partido</th><th style="text-align:right">Apuração</th><th>Resumo</th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
@@ -341,21 +342,19 @@
   function tipHTML(e) {
     const r = ordenado(principal(e));
     const pp = principal(e);
-    const polls = [pp, ...e.pesquisas.filter(p => p !== pp)].map(p => {
-      const rows = ordenado(p).map(([n, v], i) =>
-        `<div class="row${i < vagas() ? " eleito" : ""}"><span class="nm">${n}${partidoDe(e, n) !== "—" ? ` <span class="pt">(${partidoDe(e, n)})</span>` : ""}</span><span class="bar"><i style="width:${Math.min(v, 100)}%"></i></span><span class="v">${fmt(v)}</span></div>`).join("");
-      return `<div class="poll"><div class="ph"><span>${p.inst}<span class="tag${p.apu ? " tse" : ""}">${p.apu ? "oficial" : p.tipo}</span></span><span>${p.campo}</span></div>${rows}</div>`;
+    const a0 = pp.apu, vt = n => n.toLocaleString("pt-BR");
+    const rows = (a0 ? a0.res : []).map((r, i) => {
+      const n = r[0], pt = r[2] || partidoDe(e, n);
+      return `<div class="row${i < vagas() ? " eleito" : ""}"><span class="nm">${n}${pt && pt !== "—" ? ` <span class="pt">(${pt})</span>` : ""}</span><span class="vt">${r[3] != null ? vt(+r[3]) : ""}</span><span class="v">${fmt(+r[1])}</span></div>`;
     }).join("");
-    const sub = modo === "sen"
-      ? `${pp.apu ? "Mais votados" : "À frente"}: <strong>${r[0][0]}</strong> (${partidoDe(e, r[0][0])}) e <strong>${r[1][0]}</strong> (${partidoDe(e, r[1][0])}) · 2ª vaga: ${r[1][0]} × ${r[2] ? r[2][0] : "—"}, margem de ${pts(margem(e))}`
-      : `${pp.apu ? "Mais votado" : "Lidera"}: <strong>${r[0][0]}</strong> (${partidoDe(e, r[0][0])}) · margem de ${pts(margem(e))}`;
+    const polls = `<div class="poll">${rows}</div>`;
     const a = pp.apu, sit = a && a.situacao;
     const situ = !sit ? ""
       : modo === "sen" ? `<strong>Eleitos:</strong> ${r[0][0]} e ${r[1][0]}<br>`
       : sit === "eleito" ? `<strong>Eleito:</strong> ${r[0][0]}<br>`
       : sit === "2turno" ? `<strong>2º turno:</strong> ${r[0][0]} × ${r[1][0]}<br>` : "";
-    const urnas = `<span class="tag tse" style="margin:0">${a ? fmtPct(a.pct) + " das urnas apuradas" : "0% das urnas apuradas · mostrando pesquisa"}</span>`;
-    return `<h4>${e.nome}</h4><div class="sub">${situ}${sub}<br>${urnas}</div>${polls}`;
+    const urnas = `<span class="tag tse" style="margin:0">${a ? fmtPct(a.pct) + " das urnas apuradas" : "0% das urnas apuradas"}</span>`;
+    return `<h4>${e.nome}</h4><div class="sub">${situ}${urnas}</div>${polls}`;
   }
   function moveTip(ev) {
     const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
@@ -388,7 +387,7 @@
     g.selectAll("text.uf").data(geo.features).join("text").attr("class", "uf")
       .attr("x", px).attr("y", py).text(d => d.properties.sigla);
     g.selectAll("text.pct").data(geo.features).join("text").attr("class", "pct")
-      .attr("x", px).attr("y", d => py(d) + 9);
+      .attr("x", px).attr("y", d => py(d) + 12);
     rotulos();
     render();
   });
