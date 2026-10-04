@@ -215,6 +215,15 @@
     </div>
   </div>
 
+  <div class="card so-pres" hidden>
+    <h3 style="margin:0 0 2px">Candidatos — Brasil</h3>
+    <p id="brSub" style="margin:0 0 10px;color:var(--muted);font-size:.85rem"></p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th style="text-align:right">#</th><th>Candidato</th><th>Partido</th><th style="text-align:right">Votos</th><th style="text-align:right">% válidos</th><th></th></tr></thead>
+      <tbody id="brBody"></tbody>
+    </table></div>
+  </div>
+
   <div class="card">
     <div class="filters">
       <label for="fEstado">Estado</label>
@@ -225,7 +234,7 @@
     </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>UF</th><th>Candidato</th><th>Partido</th><th style="text-align:right">Apuração</th><th class="so-pres" style="text-align:right" hidden>Brasil (geral)</th><th>Resumo</th></tr></thead>
+        <thead><tr><th>UF</th><th>Candidato</th><th>Partido</th><th style="text-align:right">Apuração</th><th>Resumo</th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
@@ -460,7 +469,7 @@
     const cargo = modo === "sen" ? "Senado" : modo === "pres" ? "Presidente" : "Governador";
     const br = modo === "pres" && (APU.pres.ufs || {}).BR;
     const bg = document.getElementById("brGeral");
-    bg.innerHTML = br && br.pct > 0 ? `<span>Apuração geral · Brasil</span><strong class="g">${fmtPct(br.pct)} das urnas</strong>${br.res.map(r => `${esc(r[0])} <b>${(+r[1]).toFixed(1).replace(".", ",")}%</b>`).join(" · ")}` : "Apuração geral: aguardando dados";
+    bg.innerHTML = br && br.pct > 0 ? `<span>Apuração geral · Brasil</span><strong class="g">${fmtPct(br.pct)} das urnas</strong>` : "Apuração geral: aguardando dados";
     const brTxt = br && br.pct > 0 && Array.isArray(br.res) && br.res.length > 1
       ? ` · Brasil (${fmtPct(br.pct)} das urnas): <strong>${br.res[0][0]}</strong> ${fmt(+br.res[0][1])} × <strong>${br.res[1][0]}</strong> ${fmt(+br.res[1][1])}` : "";
     document.getElementById("apu").classList.toggle("ativa", iniciados > 0 && fechados < ufs.length);
@@ -504,12 +513,21 @@
   [...MODOS.gov.dados].sort((a, b) => a.nome.localeCompare(b.nome)).forEach(e => fEstado.add(new Option(`${e.nome} (${e.uf})`, e.uf)));
   ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"].forEach(r => fRegiao.add(new Option(r, r)));
 
-  // Presidente: % geral (Brasil) do candidato, com barra, depois da apuração do estado
-  const geralTd = c => {
-    const br = (APU.pres.ufs || {}).BR, r = br && br.pct > 0 && Array.isArray(br.res) && br.res.find(x => x[0] === c.nome);
-    return r ? `<td class="num" style="min-width:110px"><strong>${(+r[1]).toFixed(1).replace(".", ",")}%</strong><span class="bar" style="display:block;margin-top:4px"><i style="width:${Math.min(100, +r[1])}%"></i></span></td>` : `<td class="num">—</td>`;
-  };
+  // Presidente: tabela nacional (total do TSE), sem segmentar por estado
+  function renderBR() {
+    const br = (APU.pres.ufs || {}).BR, ok = br && br.pct > 0 && Array.isArray(br.res);
+    const tot = ok ? br.res.reduce((t, r) => t + (+r[3] || 0), 0) : 0;
+    document.getElementById("brSub").textContent = ok ? `${fmtPct(br.pct)} das urnas apuradas · % sobre ${(+tot).toLocaleString("pt-BR")} votos válidos` : "Aguardando dados do TSE.";
+    const max = ok ? Math.max(...br.res.map(r => +r[1]), 1) : 1;
+    document.getElementById("brBody").innerHTML = ok ? br.res.map((r, i) => `<tr>
+      <td class="num">${i + 1}</td><td><strong>${esc(r[0])}</strong></td>
+      <td><span class="party">${esc(r[2] || "—")}</span></td>
+      <td class="num">${(+r[3] || 0).toLocaleString("pt-BR")}</td>
+      <td class="num"><strong>${(+r[1]).toFixed(2).replace(".", ",")}%</strong></td>
+      <td style="width:22%;min-width:80px"><span class="bar" style="display:block"><i style="width:${100 * r[1] / max}%;background:${CORES[r[2]] || "var(--bar)"}"></i></span></td></tr>`).join("") : "";
+  }
   function render() {
+    renderBR();
     const uf = fEstado.value, reg = fRegiao.value;
     const lista = ESTADOS.filter(e => (!uf || e.uf === uf) && (!reg || e.regiao === reg))
       .sort((a, b) => a.nome.localeCompare(b.nome));
@@ -522,7 +540,6 @@
         <td class="${i < vagas() ? "lead" : ""}">${c.nome}</td>
         <td><span class="party">${c.partido}</span></td>
         <td class="num">${pct[c.nome] != null ? fmt(pct[c.nome]) : "—"}${i === 0 ? (p.apu ? `<br><span class="tag tse">TSE · ${p.campo}</span>` : `<br><span class="tag">${p.inst} ${p.tipo} · ${p.campo}</span>`) : ""}</td>
-        ${modo === "pres" ? geralTd(c) : ""}
         <td class="res">${c.resumo}</td></tr>`).join("");
     }).join("");
     d3.selectAll("#mapa path").classed("sel", d => d && d.properties.sigla === uf);
