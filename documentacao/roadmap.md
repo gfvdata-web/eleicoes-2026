@@ -9,11 +9,11 @@ Status: 🟢 feito · 🟡 em andamento / próximo · ⚪ futuro (ainda não det
 - Tabela com partido e resumo dos candidatos, com filtro por estado e região.
 - Publicado em https://gfvdata-web.github.io/eleicoes-2026/
 
-## 🟡 Senado na mesma página
+## 🟢 Senado na mesma página (04/10/2026)
 
-- Em andamento em sessão paralela, **neste mesmo repositório e no mesmo `index.html`**.
-- Já existe: `docs/data/senado.js` (27 UFs, 2 vagas) e o seletor Governador/Senado no cabeçalho.
-- Ao concluir: atualizar [pagina.md](pagina.md) (seção "Seletor de cargo"), o [CHANGELOG](../CHANGELOG.md) e as pendências de dados do Senado em [dados.md](dados.md).
+- Seletor Governador/Senado no cabeçalho; `#senado` na URL abre direto no Senado.
+- Mapa do Senado colorido pela disputa da 2ª vaga (2º − 3º colocado).
+- `docs/data/senado.js` com 27 UFs, 2 vagas e tipos V/T/C.
 
 ## 🟡 Ajustes na página atual
 

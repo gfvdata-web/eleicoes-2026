@@ -66,6 +66,10 @@
   tr.first td { border-top: 2px solid var(--border); }
   .lead { font-weight: 600; }
   .party { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--bar-bg); font-size: .8rem; white-space: nowrap; }
+  .modo { display: inline-flex; margin-top: 14px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .modo button { font: inherit; font-size: .9rem; font-weight: 600; padding: 6px 16px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
+  .modo button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+  .row.eleito .nm { font-weight: 600; }
   footer { margin-top: 24px; font-size: .8rem; color: var(--muted); }
   footer a { color: var(--accent); }
 </style>
@@ -73,20 +77,26 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>Disputa pelos governos estaduais — 2026</h1>
-    <p>Últimas pesquisas de intenção de voto antes do 1º turno (04/10/2026). Passe o mouse (ou toque) sobre um estado para ver os números.</p>
+    <h1 id="titulo">Disputa pelos governos estaduais — 2026</h1>
+    <p id="subtitulo">Últimas pesquisas de intenção de voto antes do 1º turno (04/10/2026). Passe o mouse (ou toque) sobre um estado para ver os números.</p>
+    <div class="modo" role="group" aria-label="Cargo">
+      <button type="button" data-modo="gov" aria-pressed="true">Governador</button>
+      <button type="button" data-modo="sen" aria-pressed="false">Senado</button>
+    </div>
   </header>
 
   <div class="card map-grid">
     <svg id="mapa" viewBox="0 0 800 780" role="img" aria-label="Mapa do Brasil por estado"></svg>
     <div class="side">
       <div class="legend">
-        <h3>Vantagem do líder</h3>
-        <p>Pela pesquisa mais recente de cada estado</p>
+        <h3 id="legTitulo">Vantagem do líder</h3>
+        <p id="legDesc">Pela pesquisa mais recente de cada estado</p>
         <ul id="legenda"></ul>
       </div>
       <h3>Como ler</h3>
+      <p class="so-sen" hidden>Cada estado elege <strong>2 senadores</strong> e cada eleitor vota duas vezes. Os dois votos aparecem somados.</p>
       <p><strong>V</strong> = votos válidos, sem brancos, nulos e indecisos. <strong>T</strong> = votos totais, no cenário estimulado.</p>
+      <p class="so-sen" hidden><strong>C</strong> = % de eleitores que citam o nome em um dos dois votos; a soma passa de 100%.</p>
       <p>Clique em um estado para filtrar a tabela abaixo.</p>
     </div>
   </div>
@@ -108,6 +118,11 @@
   </div>
 
   <footer>
+    <span class="so-sen" hidden>Senado: pesquisas compiladas da
+    <a href="https://www.gazetadopovo.com.br/eleicoes/2026/pesquisa-eleitoral-2026/">Gazeta do Povo</a>,
+    <a href="https://www.cartacapital.com.br/politica/quaest-veja-as-intencoes-de-voto-para-o-senado-em-sp-mg-rj-pe-e-df/">CartaCapital</a>,
+    <a href="https://www.cnnbrasil.com.br/eleicoes/quaest-senado-df-michelle-tem-31-dos-votos-validos-leila-27-bia-24/">CNN Brasil</a>,
+    <a href="https://www.brasildefato.com.br/2026/10/01/datafolha-aponta-michelle-com-23-leila-e-bia-kicis-aparecem-com-18-para-o-senado-no-df/">Brasil de Fato</a> e Wikipédia.<br></span>
     Fontes: Quaest, Datafolha, AtlasIntel, Paraná Pesquisas, Real Time Big Data e outros institutos registrados no TSE, compilados de
     <a href="https://www.opovo.com.br/noticias/politica/eleicoes/2026/10/04/resultados-das-pesquisas-datafolha-e-quaest-para-governador.html">O Povo</a>,
     <a href="https://www.gazetadopovo.com.br/eleicoes/2026/pesquisa-eleitoral-2026/">Gazeta do Povo</a> e das páginas "Pesquisas eleitorais para a eleição estadual de 2026" da
@@ -118,11 +133,25 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script src="data/dados.js"></script>
+<script src="data/senado.js"></script>
 <script>
 (function () {
-  const ESTADOS = window.ESTADOS;
-  const porUF = Object.fromEntries(ESTADOS.map(e => [e.uf, e]));
-  document.getElementById("atualizado").textContent = window.ATUALIZADO_EM;
+  const MODOS = {
+    gov: {
+      dados: window.ESTADOS, atualizado: window.ATUALIZADO_EM,
+      titulo: "Disputa pelos governos estaduais — 2026",
+      legTitulo: "Vantagem do líder", legDesc: "Pela pesquisa mais recente de cada estado",
+      docTitle: "Governadores 2026 — Pesquisas"
+    },
+    sen: {
+      dados: window.SENADO, atualizado: window.ATUALIZADO_EM_SENADO,
+      titulo: "Disputa pelo Senado — 2026",
+      legTitulo: "Disputa pela 2ª vaga", legDesc: "Diferença entre o 2º e o 3º colocados na pesquisa mais recente",
+      docTitle: "Senado 2026 — Pesquisas"
+    }
+  };
+  let modo = location.hash === "#senado" ? "sen" : "gov";
+  let ESTADOS, porUF;
 
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const FAIXAS = [
@@ -132,7 +161,15 @@
     { id: "folgada", nome: "Folgada (mais de 20 pts)", max: Infinity }
   ];
   const fmt = v => (Number.isInteger(v) ? v : v.toFixed(1).replace(".", ",")) + "%";
-  const margem = e => { const r = [...e.pesquisas[0].res].sort((a, b) => b[1] - a[1]); return r[0][1] - (r[1] ? r[1][1] : 0); };
+  const pts = v => fmt(v).replace("%", " pts");
+  const ordenado = p => [...p.res].sort((a, b) => b[1] - a[1]);
+  const vagas = () => (modo === "sen" ? 2 : 1);
+  // Governador: 1º − 2º. Senado (2 vagas): 2º − 3º. Pesquisas tipo "C" somam até 200%, então a margem é dividida por 2.
+  const margem = e => {
+    const p = e.pesquisas[0], r = ordenado(p), i = vagas() - 1;
+    const m = r[i][1] - (r[i + 1] ? r[i + 1][1] : 0);
+    return p.tipo === "C" ? m / 2 : m;
+  };
   const faixa = e => FAIXAS.find(f => margem(e) <= f.max);
   const cor = e => css("--" + faixa(e).id);
 
@@ -143,13 +180,16 @@
   // Tooltip
   const tip = document.getElementById("tip");
   function tipHTML(e) {
-    const lider = [...e.pesquisas[0].res].sort((a, b) => b[1] - a[1])[0][0];
+    const r = ordenado(e.pesquisas[0]);
     const polls = e.pesquisas.map(p => {
-      const rows = [...p.res].sort((a, b) => b[1] - a[1]).map(([n, v]) =>
-        `<div class="row"><span class="nm">${n}</span><span class="bar"><i style="width:${Math.min(v, 100)}%"></i></span><span class="v">${fmt(v)}</span></div>`).join("");
+      const rows = ordenado(p).map(([n, v], i) =>
+        `<div class="row${i < vagas() ? " eleito" : ""}"><span class="nm">${n}</span><span class="bar"><i style="width:${Math.min(v, 100)}%"></i></span><span class="v">${fmt(v)}</span></div>`).join("");
       return `<div class="poll"><div class="ph"><span>${p.inst}<span class="tag">${p.tipo}</span></span><span>${p.campo}</span></div>${rows}</div>`;
     }).join("");
-    return `<h4>${e.nome}</h4><div class="sub">Lidera: <strong>${lider}</strong> · margem de ${fmt(margem(e)).replace("%", " pts")}</div>${polls}`;
+    const sub = modo === "sen"
+      ? `À frente: <strong>${r[0][0]}</strong> e <strong>${r[1][0]}</strong> · 2ª vaga: ${r[1][0]} × ${r[2] ? r[2][0] : "—"}, margem de ${pts(margem(e))}`
+      : `Lidera: <strong>${r[0][0]}</strong> · margem de ${pts(margem(e))}`;
+    return `<h4>${e.nome}</h4><div class="sub">${sub}</div>${polls}`;
   }
   function moveTip(ev) {
     const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
@@ -162,6 +202,7 @@
 
   // Mapa
   const svg = d3.select("#mapa");
+  const pintar = () => svg.selectAll("path").attr("fill", d => porUF[d.properties.sigla] ? cor(porUF[d.properties.sigla]) : "#999");
   fetch("data/brasil-estados.geojson").then(r => r.json()).then(geo => {
     const proj = d3.geoMercator().fitExtent([[10, 10], [790, 770]], geo);
     const path = d3.geoPath(proj);
@@ -169,22 +210,23 @@
     g.selectAll("path").data(geo.features).join("path")
       .attr("d", path)
       .attr("data-uf", d => d.properties.sigla)
-      .attr("fill", d => porUF[d.properties.sigla] ? cor(porUF[d.properties.sigla]) : "#999")
       .on("mouseenter", (ev, d) => { const e = porUF[d.properties.sigla]; if (!e) return; tip.innerHTML = tipHTML(e); tip.style.opacity = 1; moveTip(ev); })
       .on("mousemove", moveTip)
       .on("mouseleave", () => { tip.style.opacity = 0; })
       .on("click", (ev, d) => { setEstado(d.properties.sigla); tip.innerHTML = tipHTML(porUF[d.properties.sigla]); tip.style.opacity = 1; moveTip(ev); });
+    pintar();
     const pequenos = { DF: [0, 0], SE: [8, 4], AL: [10, 2], PB: [16, 0], RN: [10, -4], PE: [0, 0], ES: [6, 2], RJ: [4, 6] };
     g.selectAll("text").data(geo.features).join("text")
       .attr("x", d => path.centroid(d)[0] + (pequenos[d.properties.sigla] || [0])[0])
       .attr("y", d => path.centroid(d)[1] + 4 + ((pequenos[d.properties.sigla] || [0, 0])[1]))
       .text(d => d.properties.sigla);
+    render();
   });
   document.addEventListener("touchstart", ev => { if (!ev.target.closest("#mapa")) tip.style.opacity = 0; }, { passive: true });
 
   // Filtros e tabela
   const fEstado = document.getElementById("fEstado"), fRegiao = document.getElementById("fRegiao");
-  [...ESTADOS].sort((a, b) => a.nome.localeCompare(b.nome)).forEach(e => fEstado.add(new Option(`${e.nome} (${e.uf})`, e.uf)));
+  [...MODOS.gov.dados].sort((a, b) => a.nome.localeCompare(b.nome)).forEach(e => fEstado.add(new Option(`${e.nome} (${e.uf})`, e.uf)));
   ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"].forEach(r => fRegiao.add(new Option(r, r)));
 
   function render() {
@@ -197,7 +239,7 @@
       const cands = [...e.candidatos].sort((a, b) => (pct[b.nome] ?? -1) - (pct[a.nome] ?? -1));
       return cands.map((c, i) => `<tr class="${i === 0 ? "first" : ""}">
         <td class="uf">${i === 0 ? `${e.uf}` : ""}</td>
-        <td class="${i === 0 ? "lead" : ""}">${c.nome}</td>
+        <td class="${i < vagas() ? "lead" : ""}">${c.nome}</td>
         <td><span class="party">${c.partido}</span></td>
         <td class="num">${pct[c.nome] != null ? fmt(pct[c.nome]) : "—"}${i === 0 ? `<br><span class="tag">${p.inst} ${p.tipo} · ${p.campo}</span>` : ""}</td>
         <td class="res">${c.resumo}</td></tr>`).join("");
@@ -208,7 +250,29 @@
   fEstado.addEventListener("change", () => { if (fEstado.value) fRegiao.value = ""; render(); });
   fRegiao.addEventListener("change", () => { fEstado.value = ""; render(); });
   document.getElementById("limpar").addEventListener("click", () => { fEstado.value = ""; fRegiao.value = ""; render(); });
-  render();
+
+  // Alternância Governador / Senado
+  function setModo(m) {
+    modo = m;
+    const M = MODOS[m];
+    ESTADOS = M.dados;
+    porUF = Object.fromEntries(ESTADOS.map(e => [e.uf, e]));
+    document.getElementById("titulo").textContent = M.titulo;
+    document.getElementById("legTitulo").textContent = M.legTitulo;
+    document.getElementById("legDesc").textContent = M.legDesc;
+    document.getElementById("atualizado").textContent = M.atualizado;
+    document.title = M.docTitle;
+    document.querySelectorAll(".so-sen").forEach(el => { el.hidden = m !== "sen"; });
+    document.querySelectorAll(".modo button").forEach(b => b.setAttribute("aria-pressed", b.dataset.modo === m));
+    tip.style.opacity = 0;
+    pintar();
+    render();
+  }
+  document.querySelectorAll(".modo button").forEach(b => b.addEventListener("click", () => {
+    history.replaceState(null, "", b.dataset.modo === "sen" ? "#senado" : location.pathname + location.search);
+    setModo(b.dataset.modo);
+  }));
+  setModo(modo);
 })();
 </script>
 </body>

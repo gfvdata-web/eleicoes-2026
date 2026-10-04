@@ -4,6 +4,8 @@ Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-04
 
+- **Senado publicado:** seletor Governador/Senado no topo da página. No modo Senado, o mapa é colorido pela disputa da 2ª vaga (2º − 3º colocado), os dois primeiros aparecem em destaque e o rodapé lista as fontes do Senado. O endereço `…/eleicoes-2026/#senado` abre direto nesse modo.
+
 - **Repositório renomeado** de `governadores-2026` para `eleicoes-2026`. Novo endereço do site: https://gfvdata-web.github.io/eleicoes-2026/
 
 - **Documentação:** atualizada para governador e Senado no mesmo repositório e na mesma página (seletor de cargo, `senado.js`, regras para sessões paralelas).

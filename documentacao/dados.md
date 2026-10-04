@@ -69,6 +69,8 @@ Os dois seguem o mesmo formato por estado; as diferenças do Senado estão na se
 | SE | Partido de Ricardo Marques não confirmado (`"—"`). |
 | AC, CE, RJ, RS | A AtlasIntel divulgou rodadas em outubro, mas os números não foram obtidos; foram usadas as rodadas anteriores disponíveis. |
 | Todos | Resumos escritos com base em conhecimento até meados de 2026. Revisar sobretudo quem assumiu governos em 2026. |
+| DF | O resumo de governador diz que Ibaneis Rocha saiu para disputar o Senado, mas ele não aparece nas pesquisas de Senado do DF (Quaest 02–03/10: Michelle, Leila, Bia Kicis e Erika somam 99%). Confirmar. |
+| Senado | Resumos genéricos a completar: Chicão (PA), Bruno Bolsonaro Scheid (RO), Coronel Hélio e Samanda de Lula (RN), Alliny Serrão (AP), Iran Barbosa (SE). |
 
 # Senado (`senado.js`)
 

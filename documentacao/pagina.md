@@ -15,7 +15,9 @@ Tudo está em [`docs/index.html`](../docs/index.html): HTML, CSS e JavaScript in
 
 No cabeçalho, um grupo de botões (`.modo`, `data-modo="gov"` | `"sen"`) alterna entre **Governador** (dados de `ESTADOS`) e **Senado** (dados de `SENADO`). A troca atualiza título, legenda, cores do mapa, pop-up, tabela e fontes do rodapé. Elementos visíveis só no modo Senado usam a classe `so-sen`.
 
-> A integração do Senado na página está em andamento (feita em sessão paralela). Ao terminar, revise esta seção com os detalhes finais.
+- O modo inicial vem da URL: `#senado` abre direto no Senado; sem hash, abre em Governador. Clicar no seletor atualiza a URL (`history.replaceState`).
+- Cada modo tem sua configuração no objeto `MODOS` (dados, data de atualização, título, textos da legenda e título da aba). `setModo(m)` aplica tudo e repinta o mapa.
+- `vagas()` vale 1 (governador) ou 2 (Senado): define a margem usada no mapa e quantos nomes ficam em negrito na tabela e no pop-up (classes `lead` e `.row.eleito`).
 
 ## Seções
 
@@ -23,7 +25,7 @@ No cabeçalho, um grupo de botões (`.modo`, `data-modo="gov"` | `"sen"`) altern
 
 - Projeção `d3.geoMercator().fitExtent(...)` num `viewBox` de 800×780. O SVG é responsivo pela largura.
 - As siglas são desenhadas no centróide de cada estado. Estados pequenos do litoral têm deslocamento manual no objeto `pequenos` (DF, SE, AL, PB, RN, PE, ES, RJ).
-- **Cor = margem** em `pesquisas[0]`, em pontos. Governador: 1º − 2º colocado. Senado: 2º − 3º (disputa pela 2ª vaga). As faixas abaixo são as de governador; o Senado pode usar faixas próprias.
+- **Cor = margem** em `pesquisas[0]`, em pontos. Governador: 1º − 2º colocado. Senado: 2º − 3º (disputa pela 2ª vaga); se `pesquisas[0]` for do tipo `C`, a margem é dividida por 2. As mesmas faixas valem para os dois cargos.
 
 | Faixa | Margem | Variável CSS |
 |---|---|---|
@@ -37,7 +39,7 @@ No cabeçalho, um grupo de botões (`.modo`, `data-modo="gov"` | `"sen"`) altern
 ### 2. Pop-up (`#tip`)
 
 - Abre em `mouseenter` e acompanha o cursor (`moveTip`, que evita sair da tela). No celular, abre ao tocar e fecha ao tocar fora do mapa.
-- Mostra: nome do estado, líder e margem, e as 3 pesquisas com barras horizontais, instituto, selo V/T e período de campo.
+- Mostra: nome do estado, líder e margem (no Senado: os dois à frente e a disputa pela 2ª vaga), e as pesquisas com barras horizontais, instituto, selo V/T/C e período de campo.
 
 ### 3. Tabela (`#tbody`)
 

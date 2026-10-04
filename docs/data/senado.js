@@ -252,7 +252,8 @@ window.SENADO = [
       { nome: "Edvaldo Nogueira", partido: "PDT", resumo: "Ex-prefeito de Aracaju por vários mandatos." },
       { nome: "Rodrigo Valadares", partido: "PL", resumo: "Deputado federal por Sergipe." },
       { nome: "Eduardo Amorim", partido: "Republicanos", resumo: "Ex-senador por Sergipe (2011–2019)." },
-      { nome: "André Moura", partido: "União Brasil", resumo: "Ex-deputado federal e ex-líder do governo Temer na Câmara." }
+      { nome: "André Moura", partido: "União Brasil", resumo: "Ex-deputado federal e ex-líder do governo Temer na Câmara." },
+      { nome: "Iran Barbosa", partido: "PSOL", resumo: "Candidato do PSOL." }
     ]
   },
 
