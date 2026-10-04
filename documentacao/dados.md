@@ -1,6 +1,15 @@
 # Dados
 
-Todos os dados ficam em [`docs/data/dados.js`](../docs/data/dados.js), carregado pela página como script comum (define variáveis globais em `window`).
+Há dois arquivos de dados, ambos carregados pela página como script comum (definem variáveis globais em `window`):
+
+| Arquivo | Cargo | Variáveis |
+|---|---|---|
+| [`docs/data/dados.js`](../docs/data/dados.js) | Governador | `window.ESTADOS`, `window.ATUALIZADO_EM` |
+| [`docs/data/senado.js`](../docs/data/senado.js) | Senado | `window.SENADO`, `window.ATUALIZADO_EM_SENADO` |
+
+Os dois seguem o mesmo formato por estado; as diferenças do Senado estão na seção [Senado](#senado-senadojs).
+
+# Governador (`dados.js`)
 
 ## Variáveis globais
 
@@ -61,6 +70,20 @@ Todos os dados ficam em [`docs/data/dados.js`](../docs/data/dados.js), carregado
 | AC, CE, RJ, RS | A AtlasIntel divulgou rodadas em outubro, mas os números não foram obtidos; foram usadas as rodadas anteriores disponíveis. |
 | Todos | Resumos escritos com base em conhecimento até meados de 2026. Revisar sobretudo quem assumiu governos em 2026. |
 
+# Senado (`senado.js`)
+
+Mesmo formato de estado, com estas diferenças:
+
+- Campo extra `vagas` (2 em 2026: cada estado elege 2 senadores e cada eleitor dá 2 votos).
+- Os percentuais somam os dois votos. A **margem que importa é a da 2ª vaga: 2º colocado − 3º colocado**.
+- Tipos de número:
+  - `"V"`: votos válidos, os dois votos somados e reduzidos a 100%.
+  - `"T"`: votos totais, os dois votos somados e reduzidos a 100% (brancos, nulos e indecisos na base).
+  - `"C"`: % de eleitores que citam o candidato em qualquer dos dois votos. A soma passa de 100% (até ~200%).
+- As fontes e observações de coleta estão no cabeçalho do próprio `senado.js`. Números de institutos secundários vindos da Wikipédia devem ser conferidos antes de publicar.
+
+# Comum aos dois
+
 ## Malha geográfica
 
 `docs/data/brasil-estados.geojson` vem do [click_that_hood](https://github.com/codeforamerica/click_that_hood), com estas transformações:
@@ -72,7 +95,7 @@ Todos os dados ficam em [`docs/data/dados.js`](../docs/data/dados.js), carregado
 
 ## Como atualizar uma pesquisa
 
-1. Edite o estado em `dados.js`: insira a nova pesquisa **no início** de `pesquisas` e remova a mais antiga, para manter 3.
+1. Edite o estado em `dados.js` (ou `senado.js`): insira a nova pesquisa **no início** de `pesquisas` e remova a mais antiga, para manter 3.
 2. Se surgir um candidato novo, adicione-o em `candidatos` com partido e resumo.
-3. Atualize `window.ATUALIZADO_EM`.
+3. Atualize `window.ATUALIZADO_EM` (ou `window.ATUALIZADO_EM_SENADO`).
 4. Teste localmente e registre a mudança no [CHANGELOG.md](../CHANGELOG.md).

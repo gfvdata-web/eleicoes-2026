@@ -8,8 +8,14 @@ Tudo está em [`docs/index.html`](../docs/index.html): HTML, CSS e JavaScript in
 |---|---|
 | D3.js 7.9.0 | `cdnjs.cloudflare.com` |
 | Fonte Inter | Google Fonts |
-| Dados | `data/dados.js` (script) |
+| Dados | `data/dados.js` (governador) e `data/senado.js` (Senado), como script |
 | Malha | `data/brasil-estados.geojson` (via `fetch`, por isso exige servidor HTTP) |
+
+## Seletor de cargo
+
+No cabeçalho, um grupo de botões (`.modo`, `data-modo="gov"` | `"sen"`) alterna entre **Governador** (dados de `ESTADOS`) e **Senado** (dados de `SENADO`). A troca atualiza título, legenda, cores do mapa, pop-up, tabela e fontes do rodapé. Elementos visíveis só no modo Senado usam a classe `so-sen`.
+
+> A integração do Senado na página está em andamento (feita em sessão paralela). Ao terminar, revise esta seção com os detalhes finais.
 
 ## Seções
 
@@ -17,7 +23,7 @@ Tudo está em [`docs/index.html`](../docs/index.html): HTML, CSS e JavaScript in
 
 - Projeção `d3.geoMercator().fitExtent(...)` num `viewBox` de 800×780. O SVG é responsivo pela largura.
 - As siglas são desenhadas no centróide de cada estado. Estados pequenos do litoral têm deslocamento manual no objeto `pequenos` (DF, SE, AL, PB, RN, PE, ES, RJ).
-- **Cor = margem do líder** em `pesquisas[0]` (1º menos 2º colocado, em pontos):
+- **Cor = margem** em `pesquisas[0]`, em pontos. Governador: 1º − 2º colocado. Senado: 2º − 3º (disputa pela 2ª vaga). As faixas abaixo são as de governador; o Senado pode usar faixas próprias.
 
 | Faixa | Margem | Variável CSS |
 |---|---|---|
@@ -47,4 +53,4 @@ Tudo está em [`docs/index.html`](../docs/index.html): HTML, CSS e JavaScript in
 ## Pontos de extensão previstos
 
 - Trocar a fonte do percentual (pesquisa → apuração): ver [roadmap.md](roadmap.md).
-- Integração com a página de senadores: manter os mesmos nomes de variáveis CSS, a mesma estrutura de `ESTADOS` e o mesmo GeoJSON facilita reaproveitar o código.
+- Novos cargos (se houver): seguir o mesmo padrão do Senado — novo arquivo em `docs/data/`, novo botão no seletor de cargo, mesmo GeoJSON e mesmas variáveis CSS.

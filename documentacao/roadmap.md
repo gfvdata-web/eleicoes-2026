@@ -9,13 +9,11 @@ Status: 🟢 feito · 🟡 em andamento / próximo · ⚪ futuro (ainda não det
 - Tabela com partido e resumo dos candidatos, com filtro por estado e região.
 - Publicado em https://gfvdata-web.github.io/governadores-2026/
 
-## 🟡 Página de senadores (outro projeto)
+## 🟡 Senado na mesma página
 
-- Está sendo criada em outro prompt/sessão, como página equivalente.
-- **Neste repositório:** nada a fazer por enquanto. Quando ela existir, avaliar:
-  - link cruzado entre as duas páginas (no cabeçalho ou no rodapé);
-  - possível unificação futura (mesmo GeoJSON, mesmas cores, mesma estrutura de dados).
-- Não unificar sem pedido explícito do usuário.
+- Em andamento em sessão paralela, **neste mesmo repositório e no mesmo `index.html`**.
+- Já existe: `docs/data/senado.js` (27 UFs, 2 vagas) e o seletor Governador/Senado no cabeçalho.
+- Ao concluir: atualizar [pagina.md](pagina.md) (seção "Seletor de cargo"), o [CHANGELOG](../CHANGELOG.md) e as pendências de dados do Senado em [dados.md](dados.md).
 
 ## 🟡 Ajustes na página atual
 
@@ -24,10 +22,11 @@ Status: 🟢 feito · 🟡 em andamento / próximo · ⚪ futuro (ainda não det
 
 ## ⚪ Troca das pesquisas pela apuração
 
-Objetivo: depois da eleição, substituir (ou complementar) as pesquisas pelos resultados oficiais. **Ainda não iniciado; será planejado quando a apuração começar.** Pontos a decidir na hora:
+Objetivo: depois da eleição, substituir (ou complementar) as pesquisas pelos resultados oficiais, **para governador e Senado**. **Ainda não iniciado; será planejado quando a apuração começar.** Pontos a decidir na hora:
 
 - **Fonte:** provavelmente os dados de divulgação do TSE (resultados por UF). Confirmar formato e disponibilidade.
 - **Atualização:** manual (editar `dados.js`) ou automática (script + GitHub Actions publicando um JSON). Os outros projetos da conta já usam coleta automática versionada, o que pode servir de referência.
 - **Modelo de dados:** provável novo campo por estado, por exemplo `apuracao: { pctUrnas, atualizadoEm, res: [[nome, %válidos], ...], situacao: "eleito" | "2º turno" }`, mantendo `pesquisas` para comparação.
+- **Senado:** não tem 2º turno; são eleitos os 2 mais votados de cada estado.
 - **Exibição:** cor do mapa pelo vencedor ou pela situação (eleito no 1º turno / 2º turno); pop-up com apuração versus última pesquisa; coluna extra na tabela.
 - **2º turno:** estados com 2º turno em 25/10/2026 (data a confirmar) podem precisar de uma nova rodada de pesquisas.
