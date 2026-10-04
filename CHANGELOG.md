@@ -3,6 +3,7 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-04
+- **Apuração, aba Partidos:** nova aba (`apuracao.html#partidos`) para filtrar um partido e ver, por cargo (presidente, governador, senador, deputado federal e estadual), quantos foram eleitos, com estado, % de votos válidos, votos e % de urnas. Em presidente, governador e Senado também mostra quem lidera. `scripts/apuracao.py` passou a gravar `eleitos` (candidatos marcados pelo TSE) nos JSONs; reinicie o coletor para valer.
 - **Apuração, pop-up:** selo "Eleito" ou "Confirmado 2º turno" (governador e presidente), pela marcação do TSE ou, na falta dela, por cálculo matemático com folga de 20% sobre os votos que faltam.
 - **Apuração, tabela:** corrigido o percentual de candidatos homônimos de partidos diferentes (ex.: duas Carol de Toni em SC, PL e PCO); a tabela agora casa por nome e partido, como o pop-up.
 

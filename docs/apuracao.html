@@ -89,6 +89,13 @@
   .modo a:hover { color: var(--text); }
   .row.eleito .nm { font-weight: 600; }
   .ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+  .ptiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .ptile { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: var(--bg); cursor: pointer; font: inherit; color: inherit; text-align: left; }
+  .ptile[aria-pressed="true"] { border-color: var(--accent); }
+  .ptile small { display: block; color: var(--muted); font-size: .78rem; }
+  .ptile strong { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+  .pdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+  .st-eleito { font-weight: 700; color: var(--accent); }
   .seg { display: inline-flex; padding: 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
   .seg button { font: inherit; font-size: .8rem; font-weight: 600; padding: 4px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
   .seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
@@ -173,11 +180,12 @@
       <button type="button" data-modo="pres" aria-pressed="false">Presidente</button>
       <button type="button" data-modo="gov" aria-pressed="true">Governador</button>
       <button type="button" data-modo="sen" aria-pressed="false">Senado</button>
+      <button type="button" data-modo="part" aria-pressed="false">Partidos</button>
       <a href="senado.html?apuracao">Bancada Senado</a>
     </div>
   </header>
 
-  <div class="card map-grid">
+  <div class="card map-grid" id="cardMapa">
     <svg id="mapa" viewBox="0 0 800 780" role="img" aria-label="Mapa do Brasil por estado"></svg>
     <div class="side">
       <div class="brgeral so-pres" id="brGeral" hidden></div>
@@ -226,7 +234,23 @@
     </table></div>
   </div>
 
-  <div class="card">
+  <div class="card" id="cardPart" hidden>
+    <div class="filters">
+      <label for="pPartido">Partido</label>
+      <select id="pPartido"></select>
+      <label for="pCargo">Cargo</label>
+      <select id="pCargo"></select>
+      <label><input type="checkbox" id="pEleitos"> só eleitos</label>
+    </div>
+    <p id="pNota" style="margin:0 0 12px;color:var(--muted);font-size:.85rem"></p>
+    <div id="pResumo"></div>
+    <div class="tbl-wrap" id="pTabWrap"><table>
+      <thead><tr><th>Cargo</th><th>UF</th><th>Candidato</th><th style="text-align:right">% válidos</th><th style="text-align:right">Votos</th><th style="text-align:right">Urnas</th><th>Situação</th></tr></thead>
+      <tbody id="pBody"></tbody>
+    </table></div>
+  </div>
+
+  <div class="card" id="cardTab">
     <div class="filters">
       <label for="fEstado">Estado</label>
       <select id="fEstado"><option value="">Todos os estados</option></select>
@@ -283,6 +307,7 @@
     }
   };
   let modo = location.hash === "#senado" ? "sen" : location.hash === "#presidente" ? "pres" : "gov";
+  let aba = location.hash === "#partidos";   // aba Partidos: `modo` guarda o último cargo do mapa
   let ESTADOS, porUF;
 
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -643,6 +668,20 @@
 
   // Alternância Governador / Senado
   function setModo(m) {
+    aba = m === "part";
+    document.getElementById("cardMapa").hidden = aba;
+    document.getElementById("cardTab").hidden = aba;
+    document.getElementById("cardPart").hidden = !aba;
+    document.getElementById("apu").hidden = aba;
+    document.querySelectorAll(".modo button").forEach(b => b.setAttribute("aria-pressed", b.dataset.modo === m));
+    if (aba) {
+      document.querySelectorAll(".so-pres").forEach(el => { el.hidden = true; });
+      document.getElementById("titulo").textContent = "Partidos: eleitos por cargo — 2026";
+      document.title = "Partidos 2026 — Apuração";
+      tip.style.opacity = 0;
+      carregarPartidos();
+      return;
+    }
     modo = m;
     const M = MODOS[m];
     ESTADOS = M.dados;
@@ -662,11 +701,103 @@
     faixaApu();
   }
   document.querySelectorAll(".modo button").forEach(b => b.addEventListener("click", () => {
-    history.replaceState(null, "", b.dataset.modo === "sen" ? "#senado" : b.dataset.modo === "pres" ? "#presidente" : location.pathname + location.search);
+    history.replaceState(null, "", b.dataset.modo === "sen" ? "#senado" : b.dataset.modo === "pres" ? "#presidente" : b.dataset.modo === "part" ? "#partidos" : location.pathname + location.search);
     setModo(b.dataset.modo);
   }));
   document.querySelectorAll("[data-colorir]").forEach(b => b.setAttribute("aria-pressed", b.dataset.colorir === colorir));
-  setModo(modo);
+  // Aba Partidos: junta os cinco cargos (data/apuracao/*.json) e mostra, por partido, quem já foi eleito
+  // (marcado pelo TSE em `eleitos`) e, em presidente, governador e Senado, quem lidera a apuração.
+  const CARGOS = [
+    { k: "presidente", nome: "Presidente", vagas: 1 },
+    { k: "governador", nome: "Governador", vagas: 1 },
+    { k: "senador", nome: "Senador", vagas: 2 },
+    { k: "deputado-federal", nome: "Deputado federal", dep: true },
+    { k: "deputado-estadual", nome: "Deputado estadual", dep: true }
+  ];
+  const ST = { eleito: "Eleito", "2turno": "2º turno", lider: "Liderando" };
+  const PART = {}, partVersao = {};
+  const pPartido = document.getElementById("pPartido"), pCargo = document.getElementById("pCargo"), pEleitos = document.getElementById("pEleitos");
+  pCargo.add(new Option("Todos os cargos", ""));
+  CARGOS.forEach(c => pCargo.add(new Option(c.nome, c.k)));
+  function linhasPart() {
+    const out = [];
+    CARGOS.forEach(c => {
+      Object.entries((PART[c.k] || {}).ufs || {}).forEach(([uf, a]) => {
+        if (!(a.pct > 0) || !Array.isArray(a.res) || (c.k === "presidente" && uf !== "BR")) return;
+        const mk = (r, st) => ({ cargo: c.k, uf: uf === "BR" ? "Brasil" : uf, nome: r[0], pct: +r[1], partido: r[2] || "—", votos: r[3], urnas: +a.pct, st });
+        const el = a.eleitos || [];
+        if (c.dep) { el.forEach(r => out.push(mk(r, "eleito"))); return; }
+        let rows = el.map(r => mk(r, "eleito"));
+        if (!rows.length && a.situacao === "eleito") rows = a.res.slice(0, c.vagas).map(r => mk(r, "eleito"));
+        if (rows.length < c.vagas) {
+          const ja = new Set(rows.map(x => x.nome)), seg = a.situacao === "2turno";
+          a.res.filter(r => !ja.has(r[0])).slice(0, seg ? 2 : c.vagas - rows.length).forEach(r => rows.push(mk(r, seg ? "2turno" : "lider")));
+        }
+        out.push(...rows);
+      });
+    });
+    return out;
+  }
+  const contar = ls => ({ eleito: ls.filter(l => l.st === "eleito").length, lider: ls.filter(l => l.st === "lider").length, seg: ls.filter(l => l.st === "2turno").length });
+  const textoCont = n => {
+    const p = [];
+    if (n.eleito) p.push(`${n.eleito} ${n.eleito === 1 ? "eleito" : "eleitos"}`);
+    if (n.lider) p.push(`${n.lider} liderando`);
+    if (n.seg) p.push(`${n.seg} no 2º turno`);
+    return p.join(" · ") || "—";
+  };
+  function renderPart() {
+    const todas = linhasPart(), porPart = {};
+    todas.forEach(l => { (porPart[l.partido] = porPart[l.partido] || []).push(l); });
+    const peso = ls => ls.filter(l => l.st === "eleito").length * 1000 + ls.length;
+    const nomes = Object.keys(porPart).sort((a, b) => peso(porPart[b]) - peso(porPart[a]) || a.localeCompare(b));
+    const atual = pPartido.value;
+    pPartido.length = 0;
+    pPartido.add(new Option("Todos os partidos (quadro geral)", ""));
+    nomes.forEach(n => pPartido.add(new Option(`${n} (${porPart[n].filter(l => l.st === "eleito").length} eleitos)`, n)));
+    pPartido.value = nomes.includes(atual) ? atual : "";
+    const sel = pPartido.value, cargoSel = pCargo.value, soEleitos = pEleitos.checked;
+    const resumo = document.getElementById("pResumo"), wrap = document.getElementById("pTabWrap");
+    document.getElementById("pNota").textContent = todas.length
+      ? "Eleito = já marcado pelo TSE. Em presidente, governador e Senado, “liderando” mostra quem está à frente enquanto a apuração segue. Deputados só aparecem quando o TSE os marca como eleitos."
+      : "Aguardando dados da apuração.";
+    if (!sel) {
+      resumo.innerHTML = nomes.length ? `<div class="tbl-wrap"><table><thead><tr><th>Partido</th>${CARGOS.map(c => `<th style="text-align:right">${c.nome}</th>`).join("")}</tr></thead><tbody>` +
+        nomes.map(n => `<tr><td><span class="pdot" style="background:${corPartido(n)}"></span>${esc(n)}</td>${CARGOS.map(c => `<td class="num">${textoCont(contar(porPart[n].filter(l => l.cargo === c.k)))}</td>`).join("")}</tr>`).join("") + "</tbody></table></div>" : "";
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    const meus = porPart[sel];
+    resumo.innerHTML = `<div class="ptiles">` + CARGOS.map(c => {
+      const n = contar(meus.filter(l => l.cargo === c.k)), extra = [n.lider && n.lider + " liderando", n.seg && n.seg + " no 2º turno"].filter(Boolean).join(" · ");
+      return `<button type="button" class="ptile" data-cargo="${c.k}" aria-pressed="${cargoSel === c.k}"><small>${c.nome}</small><strong>${n.eleito}</strong><small>${n.eleito === 1 ? "eleito" : "eleitos"}${extra ? " · " + extra : ""}</small></button>`;
+    }).join("") + "</div>";
+    const ordC = Object.fromEntries(CARGOS.map((c, i) => [c.k, i])), nomeC = Object.fromEntries(CARGOS.map(c => [c.k, c.nome]));
+    const ls = meus.filter(l => (!cargoSel || l.cargo === cargoSel) && (!soEleitos || l.st === "eleito"))
+      .sort((a, b) => ordC[a.cargo] - ordC[b.cargo] || (b.st === "eleito") - (a.st === "eleito") || (b.votos || 0) - (a.votos || 0));
+    document.getElementById("pBody").innerHTML = ls.length ? ls.map(l => `<tr><td>${nomeC[l.cargo]}</td><td>${esc(l.uf)}</td><td>${esc(l.nome)}</td><td class="num">${fmt(l.pct)}</td><td class="num">${l.votos != null ? l.votos.toLocaleString("pt-BR") : "—"}</td><td class="num">${fmtPct(l.urnas)}</td><td class="${l.st === "eleito" ? "st-eleito" : ""}">${ST[l.st]}</td></tr>`).join("")
+      : `<tr><td colspan="7" style="color:var(--muted)">Nenhum resultado com esses filtros.</td></tr>`;
+  }
+  function carregarPartidos() {
+    return Promise.all(CARGOS.map(c =>
+      fetch(`data/apuracao/${c.k}.json?t=${Date.now()}`, { cache: "no-store" })
+        .then(r => (r.ok ? r.text() : null))
+        .then(t => { if (!t || t === partVersao[c.k]) return false; partVersao[c.k] = t; PART[c.k] = JSON.parse(t); return true; })
+        .catch(() => false)))
+      .then(m => { if (m.some(Boolean) || !pPartido.length) renderPart(); });
+  }
+  [pPartido, pCargo, pEleitos].forEach(el => el.addEventListener("change", renderPart));
+  document.getElementById("pResumo").addEventListener("click", ev => {
+    const t = ev.target.closest(".ptile");
+    if (!t) return;
+    pCargo.value = pCargo.value === t.dataset.cargo ? "" : t.dataset.cargo;
+    renderPart();
+  });
+  setInterval(() => { if (aba) carregarPartidos(); }, 60000);
+  const abaInicial = aba;
+  setModo(modo);   // prepara o mapa mesmo quando a página abre na aba Partidos
+  if (abaInicial) setModo("part");
 })();
 </script>
 <script>

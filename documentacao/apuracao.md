@@ -25,6 +25,7 @@ Para voltar ao modo antigo, basta trocar a opção de novo; o workflow pode fica
 - **% apurado no mapa:** abaixo de cada sigla (arredondado para baixo; `<1%` entre 0 e 1; `100%` só quando completo).
 - **Apuração como pesquisa principal:** com `pct > 0`, a apuração vira a "pesquisa principal" (`apuracao(e)` dentro de `principal(e)`). Cor, líder, margem, pop-up e tabela passam a usá-la, com selo "TSE"/"oficial". Com 0%, o estado segue com a pesquisa. As pesquisas continuam no pop-up para comparação.
 - **Aba Presidente** (`#presidente`): mesmo mapa, lendo `presidente.json`. Não há lista própria de candidatos: os estados vêm de `dados.js` e os candidatos, da própria apuração. O número no mapa é o % de votos válidos do líder (nos outros cargos é o % de urnas); a faixa do topo mostra o total `BR`.
+- **Aba Partidos** (`#partidos`): lê os cinco JSONs, filtra por partido e cargo e lista eleitos (campo `eleitos`) e, em presidente/governador/Senado, quem lidera. Deputados só aparecem quando o TSE os marca como eleitos.
 - Lê `data/apuracao/governador.json` e `data/apuracao/senador.json` com `?t=<timestamp>` (evita o cache do Pages) e repinta só se algo mudou.
 
 ## Formato de `docs/data/apuracao/<cargo>.json`
@@ -44,6 +45,7 @@ Um arquivo por cargo: `presidente`, `governador`, `senador`, `deputado-federal`,
 - `pct`: % de seções/urnas totalizadas no local (0–100). Presidente usa também `BR` (Brasil) e `ZZ` (exterior).
 - `hora`: hora em que o TSE gerou o dado daquele local. `atualizado` = a mais recente (HH:MM).
 - `res`: `[nome, % de votos válidos, partido?]`, do mais para o menos votado. Para governador e Senado, o script troca o nome de urna pelo nome de `candidatos[]` (`dados.js`/`senado.js`); o partido (3º elemento) só é preciso para quem não está na lista.
+- `eleitos` (opcional): `[nome, % válidos, partido, votos]` dos candidatos que o TSE já marcou como eleitos (em deputados, todos, não só os 30 de `res`).
 - `situacao` (opcional): `"eleito"` ou `"2turno"`.
 - `simulacao: true` só aparece em dados gerados por `--simular`.
 - Local ausente = 0% apurado.

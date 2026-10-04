@@ -81,21 +81,26 @@ def converter(cargo, uf, bruto):
     Retorna None se o local ainda não tem dado."""
     carg = bruto["carg"][0]
     pct = float(str(bruto.get("s", {}).get("pst", "0")).replace(",", "."))
-    res, eleito, turno2 = [], False, False
+    res, eleitos, eleito, turno2 = [], [], False, False
     for agr in carg.get("agr", []):
         for par in agr.get("par", []):
             for cd in par.get("cand", []):
                 vap = int(cd.get("vap") or 0)
                 res.append((vap, [cd.get("nmu") or cd["nm"], float(str(cd.get("pvapn") or cd.get("pvap") or 0).replace(",", ".")), par["sg"], vap]))
                 eleito |= cd.get("e") == "s"
+                if cd.get("e") == "s":
+                    eleitos.append((vap, [cd.get("nmu") or cd["nm"], float(str(cd.get("pvapn") or cd.get("pvap") or 0).replace(",", ".")), par["sg"], vap]))
                 turno2 |= "2" in (cd.get("st") or "")
     if not res or pct <= 0:
         return None
     res.sort(key=lambda r: -r[0])
     if cargo.startswith("deputado"):
         res = res[:30]   # só os mais votados, para o arquivo não crescer demais
+    eleitos.sort(key=lambda r: -r[0])
     return {"pct": pct, "hora": bruto.get("ht") or bruto.get("hg") or "",
             "res": [[n, round(v, 2), p, vap] for vap, (n, v, p, _) in res],
+            # candidatos que o TSE já marcou como eleitos (para a aba Partidos); em deputados, todos, não só os 30 primeiros
+            "eleitos": [[n, round(v, 2), p, vap] for vap, (n, v, p, _) in eleitos] or None,
             "situacao": "eleito" if eleito else "2turno" if turno2 else None}
 
 
@@ -207,13 +212,17 @@ def baixar(url, loc):
     if loc.modificado:
         cab["If-Modified-Since"] = loc.modificado
     req = urllib.request.Request(url, headers=cab)
-    try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
-            return 200, r.read(), r.headers
-    except urllib.error.HTTPError as e:
-        return e.code, None, e.headers
-    except Exception as e:
-        return 0, str(e).encode(), {}
+    for tentativa in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+                return 200, r.read(), r.headers
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 503) and tentativa < 2:   # TSE limitando o ritmo: espera e tenta de novo
+                time.sleep(2 + 3 * tentativa + random.random() * 2)
+                continue
+            return e.code, None, e.headers
+        except Exception as e:
+            return 0, str(e).encode(), {}
 
 
 def coletar_real(cargo, uf, loc, conhecidos, avisos):
@@ -230,6 +239,9 @@ def coletar_real(cargo, uf, loc, conhecidos, avisos):
         return False
     if cod in (403, 404):
         loc.status = "pendente"
+        return False
+    if cod in (429, 503):   # limite do TSE: mantém o dado anterior e tenta no próximo ciclo
+        loc.status = "limitado"
         return False
     if cod != 200:
         loc.status = "erro"
@@ -264,7 +276,8 @@ def aplicar(cargo, uf, loc, dado, h, conhecidos, avisos):
     for r in dado["res"]:
         nome, ok = casar(cargo, uf, r[0], conhecidos)
         res.append([nome] + list(r[1:]))
-    dado = {**dado, "res": res}
+    eleitos = [[casar(cargo, uf, r[0], conhecidos)[0]] + list(r[1:]) for r in dado.get("eleitos") or []] or None
+    dado = {**dado, "res": res, "eleitos": eleitos}
     if loc.dado and dado["pct"] < loc.dado["pct"]:
         avisos.append(f"{cargo} {uf}: % apurado diminuiu ({pct_br(loc.dado['pct'])} → {pct_br(dado['pct'])})")
     loc.hash = h
@@ -390,6 +403,8 @@ def resumo(cargo, rotulo, locais):
              f"{c(pct_br(pct), 'negrito')}{variacao(cargo, pct)}, {concl}/{len(locais)} concluídos, dado das {c(ultimo, 'ciano')}")
     if st.count("pendente"):
         texto += c(f", {st.count('pendente')} sem dado", "cinza")
+    if st.count("limitado"):
+        texto += c(f", {st.count('limitado')} limitados pelo TSE (repete no próximo ciclo)", "cinza")
     if st.count("erro"):
         texto += c(f", {st.count('erro')} erros", "vermelho")
     return texto
