@@ -7,20 +7,27 @@
 <meta name="description" content="Simulação da composição do Senado a partir de 2027: senadores com mandato até 2031 somados aos favoritos nas pesquisas de 2026.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <style>
   :root {
     --bg: #f7f6f2; --surface: #ffffff; --text: #1d1d1b; --muted: #6b6a65; --border: #e3e1da;
     --accent: #2f5d8a; --bar-bg: #ecebe6; --empate: #c2553d; --changed: #fdf3dc;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
+    color-scheme: dark;
       --bg: #141413; --surface: #1e1e1c; --text: #eeede8; --muted: #a09f99; --border: #33322f;
       --accent: #7fb0e0; --bar-bg: #2a2a27; --empate: #d0644b; --changed: #3a3220;
     }
   }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+  --bg: #141413; --surface: #1e1e1c; --text: #eeede8; --muted: #a09f99; --border: #33322f;
+    --accent: #7fb0e0; --bar-bg: #2a2a27; --empate: #d0644b; --changed: #3a3220;
+  }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; line-height: 1.45; }
-  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+  .wrap { position: relative; max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
   .modo { display: inline-flex; margin-top: 14px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
   .modo a { font-size: .9rem; font-weight: 600; padding: 6px 16px; border-radius: 7px; color: var(--muted); text-decoration: none; }
   .modo a:hover { color: var(--text); }
@@ -92,10 +99,20 @@
   #tip h4 { margin: 0 0 2px; font-size: .95rem; }
   footer { margin-top: 24px; font-size: .8rem; color: var(--muted); }
   footer a { color: var(--accent); }
+
+  .tema-switch { position: absolute; top: 24px; right: 16px; display: flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; z-index: 5; }
+  .tema-switch__btn { display: inline-flex; align-items: center; gap: .3rem; border: 0; background: var(--surface); color: var(--muted); font: inherit; font-size: .75rem; font-weight: 600; padding: .32rem .7rem; cursor: pointer; }
+  .tema-switch__btn + .tema-switch__btn { border-left: 1px solid var(--border); }
+  .tema-switch__btn--ativo { background: var(--accent); color: var(--surface); }
+  @media (max-width: 480px) { .tema-switch__label { display: none; } .tema-switch__btn { padding: .32rem .6rem; font-size: .85rem; } }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="tema-switch" id="tema-switch" role="group" aria-label="Tema da página">
+    <button type="button" class="tema-switch__btn" data-tema="light" aria-pressed="false"><span aria-hidden="true">☀️</span><span class="tema-switch__label">Claro</span></button>
+    <button type="button" class="tema-switch__btn" data-tema="dark" aria-pressed="false"><span aria-hidden="true">🌙</span><span class="tema-switch__label">Escuro</span></button>
+  </div>
   <header>
     <h1>Como pode ficar o Senado a partir de 2027</h1>
     <p>Em 2026 são eleitos 54 dos 81 senadores (2 por estado). Os outros 27, eleitos em 2022, têm mandato até 2031.
@@ -103,6 +120,14 @@
     <nav class="modo" aria-label="Abas">
       <a href="./">Governador</a><a href="./#senado">Senado</a><a href="senado.html" aria-current="page">Bancada Senado</a>
     </nav>
+    <script>
+      if (/[?&]apuracao/.test(location.search)) {
+        document.querySelector(".modo").innerHTML = '<a href="apuracao.html#presidente">Presidente</a><a href="apuracao.html">Governador</a><a href="apuracao.html#senado">Senado</a><a href="senado.html?apuracao" aria-current="page">Bancada Senado</a>';
+        document.querySelector("header h1").textContent = "Como fica o Senado a partir de 2027, pela apuração";
+        document.querySelector("header p").textContent = "Em 2026 são eleitos 54 dos 81 senadores (2 por estado). Os outros 27, eleitos em 2022, têm mandato até 2031. A simulação usa os 2 mais votados no % apurado até agora em cada estado (sem apuração, a pesquisa mais recente). Você pode trocar os eleitos e agrupar partidos.";
+        document.title = "Senado 2027 — Bancada pela apuração";
+      }
+    </script>
   </header>
 
   <div class="card grid">
@@ -168,7 +193,8 @@
 <script src="data/senado.js"></script>
 <script src="data/senado-atual.js"></script>
 <script>
-(function () {
+async function main(APU) {
+  const MODO_APU = !!APU;
   const SENADO = [...window.SENADO].sort((a, b) => a.nome.localeCompare(b.nome));
   const ATUAL = window.SENADO_ATUAL;
   const CORES = window.CORES_PARTIDOS;
@@ -184,10 +210,18 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
   // ---- Candidatos por estado, ordenados pela pesquisa mais recente
+  function fonte(e) {
+    const a = MODO_APU && APU.sen[e.uf];
+    if (a && a.pct > 0 && Array.isArray(a.res) && a.res.length >= 2)
+      return { inst: "Apuração TSE", campo: (a.pct >= 100 ? "100" : a.pct.toFixed(2).replace(".", ",")) + "% das urnas", tipo: "V", res: a.res.map(x => [x[0], +x[1]]), apu: a };
+    return e.pesquisas[0];
+  }
   function candidatosDe(e) {
-    const pct = Object.fromEntries(e.pesquisas[0].res);
+    const f = fonte(e);
+    const pct = Object.fromEntries(f.res);
     const part = Object.fromEntries(e.candidatos.map(c => [c.nome, c.partido]));
-    const nomes = [...new Set([...e.pesquisas[0].res.map(r => r[0]), ...e.candidatos.map(c => c.nome)])];
+    if (f.apu) f.apu.res.forEach(x => { if (!part[x[0]] && x[2]) part[x[0]] = x[2]; });
+    const nomes = [...new Set([...f.res.map(r => r[0]), ...e.candidatos.map(c => c.nome)])];
     return nomes.map((n, i) => ({ nome: n, partido: part[n] || "—", pct: pct[n], i }))
       .sort((a, b) => (b.pct ?? -1) - (a.pct ?? -1) || a.i - b.i);
   }
@@ -195,8 +229,8 @@
   const padrao = uf => CANDS[uf].slice(0, 2).map(c => c.nome);
 
   // ---- Estado (salvo no navegador, se possível)
-  const load = (k, d) => { try { const v = JSON.parse(localStorage.getItem("senado27:" + k)); return v ?? d; } catch (e) { return d; } };
-  const save = (k, v) => { try { localStorage.setItem("senado27:" + k, JSON.stringify(v)); } catch (e) {} };
+  const load = (k, d) => { try { const v = JSON.parse(localStorage.getItem((MODO_APU ? "senado27a:" : "senado27:") + k)); return v ?? d; } catch (e) { return d; } };
+  const save = (k, v) => { try { localStorage.setItem((MODO_APU ? "senado27a:" : "senado27:") + k, JSON.stringify(v)); } catch (e) {} };
   let escolha = load("escolha", {});
   SENADO.forEach(e => {
     const ok = Array.isArray(escolha[e.uf]) && escolha[e.uf].length === 2 && escolha[e.uf].every(n => CANDS[e.uf].some(c => c.nome === n));
@@ -226,7 +260,8 @@
   function govPesquisa(a) {
     const e = GOV[a.uf];
     if (!e || !a.governador) return null;
-    const p = e.pesquisas[0];
+    const ga = MODO_APU && APU.gov[a.uf];
+    const p = ga && ga.pct > 0 && Array.isArray(ga.res) && ga.res.length ? { res: ga.res, inst: "Apuração TSE", tipo: "V" } : e.pesquisas[0];
     const ord = [...p.res].sort((x, y) => y[1] - x[1]);
     const pos = ord.findIndex(x => x[0] === a.governador);
     return pos < 0 ? null : { pos: pos + 1, pct: ord[pos][1], inst: p.inst, tipo: p.tipo };
@@ -243,7 +278,7 @@
       : { ...s, origem: "atual" });
     SENADO.forEach(e => escolha[e.uf].forEach(n => {
       const c = CANDS[e.uf].find(x => x.nome === n);
-      const p = e.pesquisas[0];
+      const p = fonte(e);
       lista.push({ uf: e.uf, nome: c.nome, partido: c.partido, origem: "novo", pct: c.pct, inst: p.inst, tipo: p.tipo });
     }));
     return lista;
@@ -394,7 +429,7 @@
     document.getElementById("tbody").innerHTML = SENADO.map(e => {
       const a = atualPorUF[e.uf];
       const cs = CANDS[e.uf];
-      const p = e.pesquisas[0];
+      const p = fonte(e);
       const alterado = escolha[e.uf].join("|") !== padrao(e.uf).join("|") && escolha[e.uf].slice().sort().join("|") !== padrao(e.uf).slice().sort().join("|");
       const apertada = cs[1] && cs[2] && cs[1].pct != null && cs[2].pct != null && cs[1].pct - cs[2].pct <= 4;
       const sel = k => `<select data-uf="${e.uf}" data-k="${k}" aria-label="${e.nome}, vaga ${k + 1}">` +
@@ -452,6 +487,29 @@
   document.addEventListener("touchstart", ev => { if (!ev.target.closest("#hemi, #stack")) hideTip(); }, { passive: true });
 
   render();
+}
+// Vindo da página de apuração (?apuracao): as vagas de 2026 partem dos mais votados no % apurado parcial.
+(async function () {
+  const apu = /[?&]apuracao/.test(location.search);
+  const ler = async arq => { try { const r = await fetch(`data/apuracao/${arq}.json?t=${Date.now()}`, { cache: "no-store" }); return r.ok ? (await r.json()).ufs || {} : {}; } catch (_) { return {}; } };
+  if (!apu) return main(null);
+  const [sen, gov] = await Promise.all([ler("senador"), ler("governador")]);
+  main({ sen, gov });
+})();
+</script>
+<script>
+(function () {
+  var R = document.documentElement, bs = document.querySelectorAll("#tema-switch .tema-switch__btn");
+  var mq = window.matchMedia("(prefers-color-scheme: dark)");
+  function efetivo() { var a = R.getAttribute("data-theme"); return a === "dark" || a === "light" ? a : (mq.matches ? "dark" : "light"); }
+  function sync() { var e = efetivo(); bs.forEach(function (b) { var on = b.dataset.tema === e; b.classList.toggle("tema-switch__btn--ativo", on); b.setAttribute("aria-pressed", on); }); }
+  bs.forEach(function (b) { b.addEventListener("click", function () {
+    R.setAttribute("data-theme", b.dataset.tema);
+    try { localStorage.setItem("tema", b.dataset.tema); } catch (e) {}
+    sync();
+  }); });
+  mq.addEventListener("change", function () { if (!R.getAttribute("data-theme")) sync(); });
+  sync();
 })();
 </script>
 </body>

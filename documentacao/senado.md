@@ -27,3 +27,7 @@ Simula a composição do Senado a partir de 01/02/2027. É uma página separada,
 - Barra empilhada com marcas em 41 (maioria absoluta) e 49 (3/5, quórum de PEC).
 - A lista de bancadas mostra cadeiras e % sobre 81.
 - Os botões "Todos / Mandato até 2031 / Eleitos em 2026" esmaecem as outras cadeiras.
+
+## Versão da apuração (`senado.html?apuracao`)
+
+`apuracao.html` aponta "Bancada Senado" para `senado.html?apuracao`. Nesse modo a página mantém as abas da apuração (Presidente / Governador / Senado voltam para `apuracao.html`), lê `data/apuracao/senador.json` e, por UF com `pct > 0`, usa os 2 mais votados no % apurado como eleitos de 2026 (sem apuração, vale a pesquisa). Os substitutos usam o líder de `governador.json`. Escolhas do leitor ficam em chaves `senado27a:*`, separadas da versão de pesquisas.
