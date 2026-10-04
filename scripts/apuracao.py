@@ -63,8 +63,8 @@ URLS = {
     "presidente": _BASE + "/6257/dados/{uf}/{uf}-c0001-e006257-u.json",
     "governador": _BASE + "/6259/dados/{uf}/{uf}-c0003-e006259-u.json",
     "senador": _BASE + "/6259/dados/{uf}/{uf}-c0005-e006259-u.json",
-    "deputado-federal": None,    # decidir o que mostrar (eleitos, quociente)
-    "deputado-estadual": None,
+    "deputado-federal": _BASE + "/6259/dados/{uf}/{uf}-c0006-e006259-u.json",
+    "deputado-estadual": _BASE + "/6259/dados/{uf}/{uf}-c0007-e006259-u.json",   # DF: c0008 (distrital)
 }
 
 # Correções manuais de nome: (cargo, UF, nome no TSE) -> nome igual ao de dados.js / senado.js
@@ -92,6 +92,8 @@ def converter(cargo, uf, bruto):
     if not res or pct <= 0:
         return None
     res.sort(key=lambda r: -r[0])
+    if cargo.startswith("deputado"):
+        res = res[:30]   # só os mais votados, para o arquivo não crescer demais
     return {"pct": pct, "hora": bruto.get("ht") or bruto.get("hg") or "",
             "res": [[n, round(v, 2), p, vap] for vap, (n, v, p, _) in res],
             "situacao": "eleito" if eleito else "2turno" if turno2 else None}
@@ -205,6 +207,8 @@ def coletar_real(cargo, uf, loc, conhecidos, avisos):
         loc.status = "sem endereço"
         return False
     url = modelo.format(uf=uf.lower(), UF=uf)
+    if cargo == "deputado-estadual" and uf == "DF":
+        url = url.replace("c0007", "c0008")
     cod, corpo, cab = baixar(url, loc)
     if cod == 304:
         loc.status = "igual"
@@ -244,8 +248,6 @@ def aplicar(cargo, uf, loc, dado, h, conhecidos, avisos):
     res = []
     for r in dado["res"]:
         nome, ok = casar(cargo, uf, r[0], conhecidos)
-        if not ok and r[1] >= 1:
-            avisos.append(f"{cargo} {uf}: \"{r[0]}\" sem correspondência na lista do site")
         res.append([nome] + list(r[1:]))
     dado = {**dado, "res": res}
     if loc.dado and dado["pct"] < loc.dado["pct"]:
@@ -354,27 +356,24 @@ def retomar(cargo, locais):
 def resumo(cargo, rotulo, locais):
     st = [l.status for l in locais.values()]
     dados = [l.dado for l in locais.values() if l.dado]
-    cont = lambda s: st.count(s)
-    partes = [f"{c(cont('novo'), 'verde')} novos", f"{cont('igual')} iguais"]
-    if cont("pendente"):
-        partes.append(c(f"{cont('pendente')} pendentes", "cinza"))
-    if cont("erro"):
-        partes.append(c(f"{cont('erro')} erros", "vermelho"))
-    if cont("sem endereço") == len(st):
-        partes = [c("sem endereço configurado", "cinza")]
+    if st.count("sem endereço") == len(st):
+        return f"  {rotulo.lower()}: " + c("sem endereço configurado", "cinza")
     if dados:
         if "BR" in locais and locais["BR"].dado:
-            andamento = f"BR {pct_br(locais['BR'].dado['pct'])}"
+            pct = locais["BR"].dado["pct"]
         else:
-            media = sum(d["pct"] for d in dados) / len(locais)
-            andamento = f"média {pct_br(media)}"
+            pct = sum(d["pct"] for d in dados) / len(locais)
         concl = sum(1 for d in dados if d["pct"] >= 100)
-        andamento += f" · {concl} concluídos"
         ultimo = max(d.get("hora", "") for d in dados)
     else:
-        andamento, ultimo = "—", "—"
-    return (f"  {rotulo:<14}{len(locais):>3} locais | " + "  ".join(partes)
-            + f" | {andamento} | último dado {c(ultimo, 'ciano')}")
+        pct, concl, ultimo = 0.0, 0, "—"
+    texto = (f"  {rotulo.lower()}: {c(st.count('novo'), 'verde')} novos, {st.count('igual')} já lidos, "
+             f"{c(pct_br(pct), 'negrito')}, {concl}/{len(locais)} concluídos, dado das {c(ultimo, 'ciano')}")
+    if st.count("pendente"):
+        texto += c(f", {st.count('pendente')} sem dado", "cinza")
+    if st.count("erro"):
+        texto += c(f", {st.count('erro')} erros", "vermelho")
+    return texto
 
 
 def main():
@@ -412,10 +411,10 @@ def main():
         log()
         log(c(f"════ {agora()} · ciclo {ciclo} ", "negrito") + "═" * 40)
         avisos, mudou_algo = [], False
-        tarefas = [(cargo, uf) for cargo, _, ufs in cargos for uf in ufs]
-        with cf.ThreadPoolExecutor(PARALELO) as ex:
-            list(ex.map(lambda t: coletar(t[0], t[1], estado[t[0]][t[1]], conhecidos, avisos), tarefas))
-        for cargo, rotulo, _ in cargos:
+        for cargo, rotulo, ufs in cargos:
+            print(f"\r\033[K  Tentando ler {c(rotulo.lower(), 'negrito')}...", end="", flush=True)
+            with cf.ThreadPoolExecutor(PARALELO) as ex:
+                list(ex.map(lambda uf: coletar(cargo, uf, estado[cargo][uf], conhecidos, avisos), ufs))
             if gravar(cargo, estado[cargo], a.simular):
                 mudou_algo = True
             log(resumo(cargo, rotulo, estado[cargo]))
