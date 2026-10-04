@@ -89,10 +89,19 @@ def converter(cargo, uf, bruto):
                 res.append((vap, [cd.get("nmu") or cd["nm"], float(str(cd.get("pvapn") or cd.get("pvap") or 0).replace(",", ".")), par["sg"], vap]))
                 eleito |= cd.get("e") == "s"
                 if cd.get("e") == "s":
-                    eleitos.append((vap, [cd.get("nmu") or cd["nm"], float(str(cd.get("pvapn") or cd.get("pvap") or 0).replace(",", ".")), par["sg"], vap]))
+                    eleitos.append((vap, [cd.get("nmu") or cd["nm"], float(str(cd.get("pvapn") or cd.get("pvap") or 0).replace(",", ".")), par["sg"], vap, 1]))
                 turno2 |= "2" in (cd.get("st") or "")
     if not res or pct <= 0:
         return None
+    if cargo.startswith("deputado"):
+        # Projeção do TSE: cada lista/federação (agr) tem `vag` cadeiras provisórias, que vão para os mais votados dela.
+        # O 5º elemento 0 = ainda não confirmado (e != "s").
+        for agr in carg.get("agr", []):
+            cands = [(int(cd.get("vap") or 0), cd, par["sg"]) for par in agr.get("par", []) for cd in par.get("cand", [])]
+            cands.sort(key=lambda t: -t[0])
+            for vap, cd, sg in cands[:int(agr.get("vag") or 0)]:
+                if cd.get("e") != "s":
+                    eleitos.append((vap, [cd.get("nmu") or cd["nm"], float(str(cd.get("pvapn") or cd.get("pvap") or 0).replace(",", ".")), sg, vap, 0]))
     res.sort(key=lambda r: -r[0])
     if cargo.startswith("deputado"):
         res = res[:30]   # só os mais votados, para o arquivo não crescer demais
@@ -100,7 +109,7 @@ def converter(cargo, uf, bruto):
     return {"pct": pct, "hora": bruto.get("ht") or bruto.get("hg") or "",
             "res": [[n, round(v, 2), p, vap] for vap, (n, v, p, _) in res],
             # candidatos que o TSE já marcou como eleitos (para a aba Partidos); em deputados, todos, não só os 30 primeiros
-            "eleitos": [[n, round(v, 2), p, vap] for vap, (n, v, p, _) in eleitos] or None,
+            "eleitos": [[n, round(v, 2), p, vap, conf] for vap, (n, v, p, _, conf) in eleitos] or None,
             "situacao": "eleito" if eleito else "2turno" if turno2 else None}
 
 

@@ -96,6 +96,7 @@
   .ptile strong { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
   .pdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
   .st-eleito { font-weight: 700; color: var(--accent); }
+  [hidden] { display: none !important; }
   .seg { display: inline-flex; padding: 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
   .seg button { font: inherit; font-size: .8rem; font-weight: 600; padding: 4px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
   .seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
@@ -714,7 +715,7 @@
     { k: "deputado-federal", nome: "Deputado federal", dep: true },
     { k: "deputado-estadual", nome: "Deputado estadual", dep: true }
   ];
-  const ST = { eleito: "Eleito", "2turno": "2º turno", lider: "Liderando" };
+  const ST = { eleito: "Eleito", proj: "Projetado", "2turno": "2º turno", lider: "Liderando" };
   const PART = {}, partVersao = {};
   const pPartido = document.getElementById("pPartido"), pCargo = document.getElementById("pCargo"), pEleitos = document.getElementById("pEleitos");
   pCargo.add(new Option("Todos os cargos", ""));
@@ -726,7 +727,7 @@
         if (!(a.pct > 0) || !Array.isArray(a.res) || (c.k === "presidente" && uf !== "BR")) return;
         const mk = (r, st) => ({ cargo: c.k, uf: uf === "BR" ? "Brasil" : uf, nome: r[0], pct: +r[1], partido: r[2] || "—", votos: r[3], urnas: +a.pct, st });
         const el = a.eleitos || [];
-        if (c.dep) { el.forEach(r => out.push(mk(r, "eleito"))); return; }
+        if (c.dep) { el.forEach(r => out.push(mk(r, r[4] === 0 ? "proj" : "eleito"))); return; }
         let rows = el.map(r => mk(r, "eleito"));
         if (!rows.length && a.situacao === "eleito") rows = a.res.slice(0, c.vagas).map(r => mk(r, "eleito"));
         if (rows.length < c.vagas) {
@@ -738,10 +739,11 @@
     });
     return out;
   }
-  const contar = ls => ({ eleito: ls.filter(l => l.st === "eleito").length, lider: ls.filter(l => l.st === "lider").length, seg: ls.filter(l => l.st === "2turno").length });
+  const contar = ls => ({ eleito: ls.filter(l => l.st === "eleito").length, lider: ls.filter(l => l.st === "lider").length, seg: ls.filter(l => l.st === "2turno").length, proj: ls.filter(l => l.st === "proj").length });
   const textoCont = n => {
     const p = [];
     if (n.eleito) p.push(`${n.eleito} ${n.eleito === 1 ? "eleito" : "eleitos"}`);
+    if (n.proj) p.push(`${n.proj} ${n.proj === 1 ? "projetado" : "projetados"}`);
     if (n.lider) p.push(`${n.lider} liderando`);
     if (n.seg) p.push(`${n.seg} no 2º turno`);
     return p.join(" · ") || "—";
@@ -749,17 +751,17 @@
   function renderPart() {
     const todas = linhasPart(), porPart = {};
     todas.forEach(l => { (porPart[l.partido] = porPart[l.partido] || []).push(l); });
-    const peso = ls => ls.filter(l => l.st === "eleito").length * 1000 + ls.length;
+    const peso = ls => ls.filter(l => l.st === "eleito" || l.st === "proj").length * 1000 + ls.length;
     const nomes = Object.keys(porPart).sort((a, b) => peso(porPart[b]) - peso(porPart[a]) || a.localeCompare(b));
     const atual = pPartido.value;
     pPartido.length = 0;
     pPartido.add(new Option("Todos os partidos (quadro geral)", ""));
-    nomes.forEach(n => pPartido.add(new Option(`${n} (${porPart[n].filter(l => l.st === "eleito").length} eleitos)`, n)));
+    nomes.forEach(n => pPartido.add(new Option(`${n} (${porPart[n].filter(l => l.st === "eleito" || l.st === "proj").length} eleitos/projetados)`, n)));
     pPartido.value = nomes.includes(atual) ? atual : "";
     const sel = pPartido.value, cargoSel = pCargo.value, soEleitos = pEleitos.checked;
     const resumo = document.getElementById("pResumo"), wrap = document.getElementById("pTabWrap");
     document.getElementById("pNota").textContent = todas.length
-      ? "Eleito = já marcado pelo TSE. Em presidente, governador e Senado, “liderando” mostra quem está à frente enquanto a apuração segue. Deputados só aparecem quando o TSE os marca como eleitos."
+      ? "Eleito = já marcado pelo TSE. Em presidente, governador e Senado, “liderando” mostra quem está à frente enquanto a apuração segue. Em deputados, “projetado” = ocupa uma das cadeiras que o TSE já distribui provisoriamente à lista do partido (os mais votados da lista); muda até o fim da apuração."
       : "Aguardando dados da apuração.";
     if (!sel) {
       resumo.innerHTML = nomes.length ? `<div class="tbl-wrap"><table><thead><tr><th>Partido</th>${CARGOS.map(c => `<th style="text-align:right">${c.nome}</th>`).join("")}</tr></thead><tbody>` +
@@ -770,12 +772,12 @@
     wrap.hidden = false;
     const meus = porPart[sel];
     resumo.innerHTML = `<div class="ptiles">` + CARGOS.map(c => {
-      const n = contar(meus.filter(l => l.cargo === c.k)), extra = [n.lider && n.lider + " liderando", n.seg && n.seg + " no 2º turno"].filter(Boolean).join(" · ");
-      return `<button type="button" class="ptile" data-cargo="${c.k}" aria-pressed="${cargoSel === c.k}"><small>${c.nome}</small><strong>${n.eleito}</strong><small>${n.eleito === 1 ? "eleito" : "eleitos"}${extra ? " · " + extra : ""}</small></button>`;
+      const n = contar(meus.filter(l => l.cargo === c.k)), extra = [n.proj && "inclui " + n.proj + (n.proj === 1 ? " projetado" : " projetados"), n.lider && n.lider + " liderando", n.seg && n.seg + " no 2º turno"].filter(Boolean).join(" · ");
+      return `<button type="button" class="ptile" data-cargo="${c.k}" aria-pressed="${cargoSel === c.k}"><small>${c.nome}</small><strong>${n.eleito + n.proj}</strong><small>${n.eleito + n.proj === 1 ? "eleito" : "eleitos"}${extra ? " · " + extra : ""}</small></button>`;
     }).join("") + "</div>";
     const ordC = Object.fromEntries(CARGOS.map((c, i) => [c.k, i])), nomeC = Object.fromEntries(CARGOS.map(c => [c.k, c.nome]));
-    const ls = meus.filter(l => (!cargoSel || l.cargo === cargoSel) && (!soEleitos || l.st === "eleito"))
-      .sort((a, b) => ordC[a.cargo] - ordC[b.cargo] || (b.st === "eleito") - (a.st === "eleito") || (b.votos || 0) - (a.votos || 0));
+    const ls = meus.filter(l => (!cargoSel || l.cargo === cargoSel) && (!soEleitos || l.st === "eleito" || l.st === "proj"))
+      .sort((a, b) => ordC[a.cargo] - ordC[b.cargo] || (b.st === "eleito" || b.st === "proj") - (a.st === "eleito" || a.st === "proj") || (b.votos || 0) - (a.votos || 0));
     document.getElementById("pBody").innerHTML = ls.length ? ls.map(l => `<tr><td>${nomeC[l.cargo]}</td><td>${esc(l.uf)}</td><td>${esc(l.nome)}</td><td class="num">${fmt(l.pct)}</td><td class="num">${l.votos != null ? l.votos.toLocaleString("pt-BR") : "—"}</td><td class="num">${fmtPct(l.urnas)}</td><td class="${l.st === "eleito" ? "st-eleito" : ""}">${ST[l.st]}</td></tr>`).join("")
       : `<tr><td colspan="7" style="color:var(--muted)">Nenhum resultado com esses filtros.</td></tr>`;
   }
