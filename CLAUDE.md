@@ -6,6 +6,7 @@ Leia este arquivo antes de qualquer mudança. Para detalhes, consulte:
 - [documentacao/roadmap.md](documentacao/roadmap.md): o que está planejado
 - [documentacao/senado.md](documentacao/senado.md): página de bancadas do Senado (`senado.html`)
 - [documentacao/apuracao.md](documentacao/apuracao.md): página de apuração (`apuracao.html`, dados em `docs/data/apuracao/`, coleta em `scripts/apuracao.py`)
+- [documentacao/es.md](documentacao/es.md): página do Espírito Santo (`es.html`, só apuração do TSE por município, dados em `docs/data/es/`, coleta em `scripts/apuracao_es.py`)
 
 ## Contexto
 
@@ -16,9 +17,9 @@ Leia este arquivo antes de qualquer mudança. Para detalhes, consulte:
 
 ## Regras do projeto
 
-1. **Sem build, sem framework, sem testes automatizados.** O site é só `docs/index.html` + `docs/data/`. Não adicione npm, bundler, CI de testes nem subagentes. Exceções combinadas para a apuração: `scripts/apuracao.py` (Python, só biblioteca padrão, roda no computador do usuário) e `.github/workflows/pages.yml` (só publica `docs/`).
+1. **Sem build, sem framework, sem testes automatizados.** O site é só `docs/index.html` + `docs/data/`. Não adicione npm, bundler, CI de testes nem subagentes. Exceções combinadas para a apuração: `scripts/apuracao.py` e `scripts/apuracao_es.py` (Python, só biblioteca padrão, roda no computador do usuário) e `.github/workflows/pages.yml` (só publica `docs/`).
 2. **Dados só nos arquivos de dados:** governador em `docs/data/dados.js` (`window.ESTADOS`), Senado em `docs/data/senado.js` (`window.SENADO`); senadores com mandato até 2031 e cores dos partidos em `docs/data/senado-atual.js`. Não coloque números de pesquisa dentro do HTML.
-3. **Uma única página.** Governador e Senado convivem em `index.html` via seletor de cargo; a exceção é `senado.html` (simulação das bancadas do Senado, criada a pedido do usuário; ver [documentacao/senado.md](documentacao/senado.md)) e `apuracao.html` (réplica de `index.html` para a apuração; ver [documentacao/apuracao.md](documentacao/apuracao.md)). Não crie outras páginas sem pedido explícito.
+3. **Uma única página.** Governador e Senado convivem em `index.html` via seletor de cargo; a exceção é `senado.html` (simulação das bancadas do Senado, criada a pedido do usuário; ver [documentacao/senado.md](documentacao/senado.md)) `apuracao.html` (réplica de `index.html` para a apuração; ver [documentacao/apuracao.md](documentacao/apuracao.md)) e `es.html` (apuração do Espírito Santo por município, sem pesquisas; ver [documentacao/es.md](documentacao/es.md)). Não crie outras páginas sem pedido explícito.
 4. **Dependências externas só via CDN confiável** (cdnjs para D3; Google Fonts para a fonte Inter).
 5. **Verifique localmente antes do push**: `python -m http.server 8765 --directory docs` e confira, **nos dois modos** (Governador e Senado), que o mapa mostra 27 estados, que o pop-up abre e que o filtro funciona.
 6. **Commits** em português, descrevendo o que mudou. Atualize o [CHANGELOG.md](CHANGELOG.md) a cada mudança visível.
