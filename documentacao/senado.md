@@ -18,7 +18,7 @@ Simula a composição do Senado a partir de 01/02/2027. É uma página separada,
 - Ponto de partida: os 2 primeiros de `pesquisas[0]` em cada UF. Em caso de empate, vale a ordem do array `res`.
 - O leitor troca os eleitos em cada linha da tabela. Escolher na vaga 1 quem estava na vaga 2 faz os dois trocarem de lugar.
 - **Substitutos** (switch): troca o titular pelo 1º suplente quando ele é marcado como "eleito governador". O ponto de partida marca quem lidera `pesquisas[0]` em `dados.js` (por isso a página carrega `dados.js`). O leitor marca/desmarca cada um na tabela. Cadeira de suplente tem contorno tracejado.
-- Grupos: até 6, com cores fixas. Cada partido pertence a no máximo um grupo. "Carregar exemplo" monta um agrupamento de exemplo (governo / centro / oposição), que o leitor pode editar.
+- Grupos: até 6. Cada partido pertence a no máximo um grupo. Na primeira visita, os partidos vêm em **Esquerda / Centro / Direita** (`GRUPOS_PADRAO` em `senado.html`; classificação aproximada, editorial — revise com cuidado). O leitor muda o grupo de qualquer partido pelo menu da lista de bancadas; "Restaurar esquerda / centro / direita" volta ao padrão. Partidos fora da lista (ex.: "Sem partido") ficam em "Sem grupo".
 - Escolhas e grupos ficam salvos no `localStorage` do navegador (chaves `senado27:*`: `escolha`, `grupos`, `partidoGrupo`, `subs`, `eleitoGov`). "Voltar às pesquisas" restaura as vagas.
 
 ## Visual

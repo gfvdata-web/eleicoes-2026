@@ -73,6 +73,7 @@
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; padding: 3px 4px 3px 10px; border-radius: 999px; border: 1px solid var(--border); }
   .chip b { font-variant-numeric: tabular-nums; }
+  .chip .pc { color: var(--muted); font-size: .78rem; font-variant-numeric: tabular-nums; }
   .chip button { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: .9rem; padding: 0 4px; }
   select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
   button.btn { font: inherit; font-size: .85rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--accent); cursor: pointer; }
@@ -128,11 +129,11 @@
     </div>
     <div>
       <h3>Grupos políticos</h3>
-      <p class="muted">Crie grupos e escolha o grupo de cada partido na lista abaixo. Use "Por grupo" para ver o resultado.</p>
+      <p class="muted">Os partidos começam divididos em esquerda, centro e direita, numa classificação aproximada. Mude o grupo de qualquer partido no menu da lista abaixo, ou crie seus próprios grupos. Use "Por grupo" para ver o resultado.</p>
       <div class="groups">
         <form class="gform" id="gform"><input id="gnome" placeholder="Nome do grupo (ex.: Oposição)" maxlength="30"><button class="btn" type="submit">Criar</button></form>
         <div class="chips" id="chips"></div>
-        <div class="toolbar" style="margin-top:8px"><button class="btn" id="exemplo">Carregar exemplo</button><button class="btn" id="limparG">Apagar grupos</button></div>
+        <div class="toolbar" style="margin-top:8px"><button class="btn" id="exemplo">Restaurar esquerda / centro / direita</button><button class="btn" id="limparG">Apagar grupos</button></div>
       </div>
       <h3>Bancadas</h3>
       <table class="plist"><tbody id="plist"></tbody></table>
@@ -157,7 +158,7 @@
   <footer>
     Pesquisas: Quaest, Datafolha, AtlasIntel, Paraná Pesquisas, Real Time Big Data e outros institutos, compiladas de Gazeta do Povo, CartaCapital, CNN Brasil e
     <a href="https://pt.wikipedia.org/">Wikipédia</a>. Partidos dos senadores com mandato até 2031 conforme a filiação atual conhecida, que pode mudar.
-    Se um desses senadores for eleito governador, a vaga passa ao 1º suplente (nomes da Wikipédia; partidos conferidos na imprensa em 04/10/2026). Os grupos são criados por você e não representam uma classificação deste site.
+    Se um desses senadores for eleito governador, a vaga passa ao 1º suplente (nomes da Wikipédia; partidos conferidos na imprensa em 04/10/2026). A divisão inicial em esquerda, centro e direita é aproximada, segue o uso comum na imprensa e pode ser alterada pelo leitor.
     Esta é uma simulação, não uma previsão. Resumos e filiações podem conter imprecisões. Atualizado em <span id="atualizado"></span>.
   </footer>
 </div>
@@ -201,8 +202,23 @@
     const ok = Array.isArray(escolha[e.uf]) && escolha[e.uf].length === 2 && escolha[e.uf].every(n => CANDS[e.uf].some(c => c.nome === n));
     if (!ok) escolha[e.uf] = padrao(e.uf);
   });
-  let grupos = load("grupos", []);
+  // Grupos iniciais (o leitor pode mudar qualquer partido de grupo). Ordem = esquerda → direita no hemiciclo.
+  const GRUPOS_PADRAO = [
+    ["Esquerda", "#c2553d", ["PT", "PSOL", "PCdoB", "Rede", "PSB", "PDT", "PV"]],
+    ["Centro", "#e0a43a", ["MDB", "PSD", "PSDB", "Podemos", "Solidariedade", "Avante", "Cidadania"]],
+    ["Direita", "#2f5d8a", ["PL", "Novo", "PP", "Republicanos", "União Brasil", "PRD"]]
+  ];
+  let grupos = load("grupos", null);
   let partidoGrupo = load("partidoGrupo", {});
+  if (!Array.isArray(grupos)) aplicarPadrao();
+  function aplicarPadrao() {
+    grupos = []; partidoGrupo = {};
+    GRUPOS_PADRAO.forEach(([nome, cor, ps], i) => {
+      const g = { id: "p" + i, nome, cor };
+      grupos.push(g);
+      ps.forEach(p => (partidoGrupo[p] = g.id));
+    });
+  }
   let modo = "partido", destaque = "todos";
 
   // ---- Substitutos: senadores com mandato até 2031 que disputam o governo
@@ -333,14 +349,17 @@
       `<tr><td colspan="4" class="det">Entre parênteses: mandato até 2031 + eleitos em 2026. % sobre as 81 cadeiras.</td></tr>`;
     document.querySelectorAll("#plist select").forEach(sel => sel.addEventListener("change", () => {
       if (sel.value) partidoGrupo[sel.dataset.p] = sel.value; else delete partidoGrupo[sel.dataset.p];
-      save("partidoGrupo", partidoGrupo); render();
+      salvarGrupos(); render();
     }));
 
     // Chips dos grupos
     document.getElementById("chips").innerHTML = grupos.map(g => {
       const c = lista.filter(s => grupoDe(s.partido) === g).length;
-      return `<span class="chip"><span class="sw" style="background:${g.cor};margin:0"></span>${esc(g.nome)} <b>${c}</b><button data-id="${g.id}" aria-label="Apagar grupo ${esc(g.nome)}">✕</button></span>`;
-    }).join("") || `<span class="muted">Nenhum grupo criado.</span>`;
+      return `<span class="chip"><span class="sw" style="background:${g.cor};margin:0"></span>${esc(g.nome)} <b>${c}</b> <span class="pc">${pct(c)}</span><button data-id="${g.id}" aria-label="Apagar grupo ${esc(g.nome)}">✕</button></span>`;
+    }).join("") + (() => {
+      const c = grupos.length ? lista.filter(s => !grupoDe(s.partido).id).length : 0;
+      return c ? `<span class="chip" style="padding-right:10px"><span class="sw" style="background:${SEM_GRUPO.cor};margin:0"></span>Sem grupo <b>${c}</b> <span class="pc">${pct(c)}</span></span>` : "";
+    })() || `<span class="muted">Nenhum grupo criado.</span>`;
     document.querySelectorAll("#chips button").forEach(b => b.addEventListener("click", () => {
       grupos = grupos.filter(g => g.id !== b.dataset.id);
       Object.keys(partidoGrupo).forEach(p => { if (partidoGrupo[p] === b.dataset.id) delete partidoGrupo[p]; });
@@ -413,16 +432,7 @@
     if (!nome) return;
     if (novoGrupo(nome)) { inp.value = ""; salvarGrupos(); render(); }
   });
-  document.getElementById("exemplo").addEventListener("click", () => {
-    grupos = []; partidoGrupo = {};
-    const ex = [
-      ["Base do governo Lula", ["PT", "PSB", "PDT", "PSOL", "Rede", "PCdoB", "PV"]],
-      ["Centro", ["MDB", "PSD", "União Brasil", "PP", "Republicanos", "PSDB", "Podemos", "Solidariedade", "Avante", "PRD"]],
-      ["Oposição", ["PL", "Novo"]]
-    ];
-    ex.forEach(([nome, ps]) => { const g = novoGrupo(nome); ps.forEach(p => (partidoGrupo[p] = g.id)); });
-    salvarGrupos(); setModo("grupo");
-  });
+  document.getElementById("exemplo").addEventListener("click", () => { aplicarPadrao(); salvarGrupos(); setModo("grupo"); });
   document.getElementById("limparG").addEventListener("click", () => { grupos = []; partidoGrupo = {}; salvarGrupos(); setModo("partido"); });
   document.getElementById("reset").addEventListener("click", () => {
     SENADO.forEach(e => (escolha[e.uf] = padrao(e.uf))); eleitoGov = govPadrao();
