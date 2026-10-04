@@ -5,6 +5,7 @@ Leia este arquivo antes de qualquer mudança. Para detalhes, consulte:
 - [documentacao/pagina.md](documentacao/pagina.md): funcionamento da página
 - [documentacao/roadmap.md](documentacao/roadmap.md): o que está planejado
 - [documentacao/senado.md](documentacao/senado.md): página de bancadas do Senado (`senado.html`)
+- [documentacao/apuracao.md](documentacao/apuracao.md): página de apuração (`apuracao.html`, dados em `docs/data/apuracao/`, coleta em `scripts/apuracao.py`)
 
 ## Contexto
 
@@ -15,9 +16,9 @@ Leia este arquivo antes de qualquer mudança. Para detalhes, consulte:
 
 ## Regras do projeto
 
-1. **Sem build, sem framework, sem testes automatizados.** O site é só `docs/index.html` + `docs/data/`. Não adicione npm, bundler, CI de testes nem subagentes.
+1. **Sem build, sem framework, sem testes automatizados.** O site é só `docs/index.html` + `docs/data/`. Não adicione npm, bundler, CI de testes nem subagentes. Exceções combinadas para a apuração: `scripts/apuracao.py` (Python, só biblioteca padrão, roda no computador do usuário) e `.github/workflows/pages.yml` (só publica `docs/`).
 2. **Dados só nos arquivos de dados:** governador em `docs/data/dados.js` (`window.ESTADOS`), Senado em `docs/data/senado.js` (`window.SENADO`); senadores com mandato até 2031 e cores dos partidos em `docs/data/senado-atual.js`. Não coloque números de pesquisa dentro do HTML.
-3. **Uma única página.** Governador e Senado convivem em `index.html` via seletor de cargo; a exceção é `senado.html` (simulação das bancadas do Senado, criada a pedido do usuário; ver [documentacao/senado.md](documentacao/senado.md)). Não crie outras páginas sem pedido explícito.
+3. **Uma única página.** Governador e Senado convivem em `index.html` via seletor de cargo; a exceção é `senado.html` (simulação das bancadas do Senado, criada a pedido do usuário; ver [documentacao/senado.md](documentacao/senado.md)) e `apuracao.html` (réplica de `index.html` para a apuração; ver [documentacao/apuracao.md](documentacao/apuracao.md)). Não crie outras páginas sem pedido explícito.
 4. **Dependências externas só via CDN confiável** (cdnjs para D3; Google Fonts para a fonte Inter).
 5. **Verifique localmente antes do push**: `python -m http.server 8765 --directory docs` e confira, **nos dois modos** (Governador e Senado), que o mapa mostra 27 estados, que o pop-up abre e que o filtro funciona.
 6. **Commits** em português, descrevendo o que mudou. Atualize o [CHANGELOG.md](CHANGELOG.md) a cada mudança visível.
@@ -28,7 +29,7 @@ Leia este arquivo antes de qualquer mudança. Para detalhes, consulte:
 Valem para `ESTADOS` (governador) e `SENADO`. Diferenças do Senado estão em [documentacao/dados.md](documentacao/dados.md#senado-senadojs).
 
 - Cada estado tem `uf`, `nome`, `regiao`, `pesquisas[]` (a mais recente primeiro) e `candidatos[]`.
-- `pesquisas[0]` define a cor do estado no mapa e o percentual mostrado na tabela.
+- A **pesquisa principal** define a cor do estado no mapa e o percentual mostrado na tabela: no governador, a AtlasIntel quando o estado tiver uma; senão (e sempre no Senado), `pesquisas[0]`.
 - `tipo: "V"` = votos válidos; `tipo: "T"` = votos totais (estimulada); no Senado também `tipo: "C"` = % de eleitores que citam o nome em um dos 2 votos. Sempre indique qual.
 - Margem que colore o mapa: governador = 1º − 2º; Senado = 2º − 3º (disputa pela 2ª vaga).
 - Nomes em `pesquisas[].res` devem ser **idênticos** aos de `candidatos[].nome`, senão a tabela mostra "—".

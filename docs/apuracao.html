@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apuração 2026 — Governador e Senado</title>
+<meta name="description" content="Apuração oficial das eleições de 2026 para governador e Senado, por estado, com o percentual de urnas apuradas.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f6f2; --surface: #ffffff; --text: #1d1d1b; --muted: #6b6a65; --border: #e3e1da;
+    --accent: #2f5d8a;
+    --folgada: #2f6f5e; --competitiva: #9bbf8a; --apertada: #e0a43a; --empate: #c2553d;
+    --state-stroke: #ffffff; --bar: #2f5d8a; --bar-bg: #ecebe6;
+    --ao-vivo: #b3261e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413; --surface: #1e1e1c; --text: #eeede8; --muted: #a09f99; --border: #33322f;
+      --accent: #7fb0e0;
+      --folgada: #4f9c86; --competitiva: #7f9f6e; --apertada: #d39a35; --empate: #d0644b;
+      --state-stroke: #141413; --bar: #7fb0e0; --bar-bg: #2a2a27;
+      --ao-vivo: #ef6b5f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; line-height: 1.45; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+  header h1 { font-size: 1.7rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); font-size: .95rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 20px; }
+  .map-grid { display: grid; grid-template-columns: 1fr 300px; gap: 16px; align-items: start; }
+  @media (max-width: 820px) { .map-grid { grid-template-columns: 1fr; } }
+  #mapa { width: 100%; height: auto; display: block; }
+  #mapa path { stroke: var(--state-stroke); stroke-width: .8; cursor: pointer; transition: opacity .15s; }
+  #mapa path:hover, #mapa path.sel { stroke: var(--text); stroke-width: 1.6; }
+  #mapa text { font-size: 10px; font-weight: 600; fill: #fff; pointer-events: none; text-anchor: middle; paint-order: stroke; stroke: rgba(0,0,0,.35); stroke-width: 2px; }
+  .legend h3, .side h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
+  .legend ul { list-style: none; padding: 0; margin: 0 0 16px; }
+  .legend li { display: flex; align-items: center; gap: 8px; font-size: .9rem; margin: 4px 0; }
+  .sw { width: 14px; height: 14px; border-radius: 3px; flex: none; }
+  .side p { font-size: .85rem; color: var(--muted); margin: 0 0 8px; }
+  #tip { position: fixed; z-index: 10; pointer-events: none; opacity: 0; transition: opacity .1s; width: 330px; max-width: calc(100vw - 24px);
+         background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.18); font-size: .82rem; }
+  #tip h4 { margin: 0 0 2px; font-size: 1rem; }
+  #tip .sub { color: var(--muted); margin-bottom: 8px; }
+  .poll { margin-top: 8px; }
+  .poll .ph { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 3px; }
+  .poll .ph span:last-child { color: var(--muted); font-weight: 400; }
+  .row { display: grid; grid-template-columns: 1fr 70px 36px; gap: 6px; align-items: center; margin: 2px 0; }
+  .row .nm { line-height: 1.25; }
+  .row .nm .pt { color: var(--muted); font-weight: 400; }
+  .bar { height: 7px; background: var(--bar-bg); border-radius: 4px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--bar); border-radius: 4px; }
+  .row .v { text-align: right; font-variant-numeric: tabular-nums; }
+  .tag { display: inline-block; font-size: .7rem; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); margin-left: 4px; font-weight: 400; }
+  .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .filters label { font-size: .85rem; color: var(--muted); }
+  select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+  button.clear { font: inherit; font-size: .85rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--accent); cursor: pointer; }
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th { text-align: left; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border-bottom: 1px solid var(--border); padding: 8px; }
+  td { border-bottom: 1px solid var(--border); padding: 10px 8px; vertical-align: top; }
+  td.uf { font-weight: 700; white-space: nowrap; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.res { color: var(--muted); min-width: 260px; }
+  tr.first td { border-top: 2px solid var(--border); }
+  .lead { font-weight: 600; }
+  .party { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--bar-bg); font-size: .8rem; white-space: nowrap; }
+  .modo { display: inline-flex; margin-top: 14px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .modo button { font: inherit; font-size: .9rem; font-weight: 600; padding: 6px 16px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
+  .modo button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+  .modo a { font-size: .9rem; font-weight: 600; padding: 6px 16px; border-radius: 7px; color: var(--muted); text-decoration: none; }
+  .modo a:hover { color: var(--text); }
+  .row.eleito .nm { font-weight: 600; }
+  .ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+  .seg { display: inline-flex; padding: 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+  .seg button { font: inherit; font-size: .8rem; font-weight: 600; padding: 4px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+  button.lnk { font: inherit; font-size: .8rem; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--accent); cursor: pointer; }
+  button.lnk[aria-expanded="true"] { border-color: var(--accent); }
+  .grupos { border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 16px; font-size: .85rem; }
+  .grupos ul { list-style: none; padding: 0; margin: 0 0 8px; }
+  .grupos li { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .grupos li .gi { flex: 1; min-width: 0; }
+  .grupos li .gp { color: var(--muted); font-size: .78rem; }
+  .grupos li button { font: inherit; font-size: .75rem; border: 0; background: transparent; color: var(--accent); cursor: pointer; padding: 0 2px; }
+  .grupos .vazio { color: var(--muted); margin: 0 0 8px; }
+  .grupos form { display: grid; gap: 8px; }
+  .grupos .linha { display: flex; gap: 6px; }
+  .grupos input[type=text] { flex: 1; min-width: 0; font: inherit; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+  .grupos input[type=color] { width: 38px; height: 32px; padding: 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); cursor: pointer; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chips label { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; padding: 2px 8px 2px 4px; border: 1px solid var(--border); border-radius: 999px; cursor: pointer; user-select: none; }
+  .chips label:has(input:checked) { border-color: var(--text); background: var(--bar-bg); }
+  .chips input { margin: 0; accent-color: var(--accent); }
+  .chips .sw { width: 10px; height: 10px; border-radius: 2px; }
+  .chips em { font-style: normal; color: var(--muted); }
+  .grupos .acoes { display: flex; gap: 6px; }
+  .grupos .acoes button { font: inherit; font-size: .8rem; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--surface); cursor: pointer; }
+  .grupos .acoes button.sec { background: transparent; color: var(--accent); }
+  .legend li small { color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+  .apu { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--ao-vivo); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; }
+  .apu-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+  .apu-top > strong { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ao-vivo); display: inline-flex; align-items: center; gap: 6px; }
+  .apu-top > strong::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ao-vivo); }
+  .apu.ativa .apu-top > strong::before { animation: pulsa 1.6s ease-in-out infinite; }
+  @keyframes pulsa { 50% { opacity: .25; } }
+  @media (prefers-reduced-motion: reduce) { .apu.ativa .apu-top > strong::before { animation: none; } }
+  #apuStatus { font-size: .92rem; }
+  #apuHora { margin-left: auto; font-size: .8rem; color: var(--muted); }
+  .apu-bar { height: 8px; background: var(--bar-bg); border-radius: 4px; overflow: hidden; margin-top: 10px; }
+  .apu-bar i { display: block; height: 100%; width: 0; background: var(--ao-vivo); border-radius: 4px; transition: width .4s; }
+  #mapa text.pct { font-size: 8px; font-weight: 500; }
+  .tag.tse { border-color: var(--ao-vivo); color: var(--ao-vivo); }
+  .sim { background: #f2c94c; color: #1d1d1b; padding: 1px 6px; border-radius: 4px; }
+  footer { margin-top: 24px; font-size: .8rem; color: var(--muted); }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="apu" id="apu" aria-live="polite">
+    <div class="apu-top">
+      <strong>Apuração oficial</strong>
+      <span id="apuStatus">Aguardando o início da apuração. O TSE começa a divulgar os resultados às 17h (horário de Brasília).</span>
+      <span id="apuHora"></span>
+    </div>
+    <div class="apu-bar" role="progressbar" aria-label="Urnas apuradas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="apuBar"></i></div>
+  </section>
+  <header>
+    <h1 id="titulo">Disputa pelos governos estaduais — 2026</h1>
+    <p id="subtitulo">Resultados do 1º turno (04/10/2026) à medida que as urnas são apuradas. Enquanto um estado não tem urnas apuradas, o mapa mostra a última pesquisa. Passe o mouse (ou toque) sobre um estado para ver os números.</p>
+    <div class="modo" role="group" aria-label="Cargo">
+      <button type="button" data-modo="gov" aria-pressed="true">Governador</button>
+      <button type="button" data-modo="sen" aria-pressed="false">Senado</button>
+      <a href="senado.html">Bancada Senado</a>
+    </div>
+  </header>
+
+  <div class="card map-grid">
+    <svg id="mapa" viewBox="0 0 800 780" role="img" aria-label="Mapa do Brasil por estado"></svg>
+    <div class="side">
+      <div class="ctrl">
+        <div class="seg" role="group" aria-label="Colorir o mapa por">
+          <button type="button" data-colorir="folga" aria-pressed="true">Folga</button>
+          <button type="button" data-colorir="partido" aria-pressed="false">Partido</button>
+        </div>
+        <button type="button" class="lnk" id="gAbrir" aria-expanded="false" aria-controls="grupos">Grupos políticos</button>
+      </div>
+      <div class="grupos" id="grupos" hidden>
+        <ul id="gLista"></ul>
+        <form id="gForm" autocomplete="off">
+          <div class="linha">
+            <input type="text" id="gNome" placeholder="Nome do grupo" maxlength="30" required aria-label="Nome do grupo">
+            <input type="color" id="gCor" aria-label="Cor do grupo">
+          </div>
+          <div class="chips" id="gPartidos" aria-label="Partidos do grupo"></div>
+          <div class="acoes">
+            <button type="submit" id="gSalvar">Criar grupo</button>
+            <button type="button" class="sec" id="gCancelar" hidden>Cancelar</button>
+          </div>
+        </form>
+      </div>
+      <div class="legend">
+        <h3 id="legTitulo">Vantagem do líder</h3>
+        <p id="legDesc">Pela AtlasIntel quando disponível; senão, pela pesquisa mais recente</p>
+        <ul id="legenda"></ul>
+      </div>
+      <h3>Como ler</h3>
+      <p class="so-sen" hidden>Cada estado elege <strong>2 senadores</strong> e cada eleitor vota duas vezes. Os dois votos aparecem somados.</p>
+      <p><strong>V</strong> = votos válidos, sem brancos, nulos e indecisos. <strong>T</strong> = votos totais, no cenário estimulado.</p>
+      <p class="so-sen" hidden><strong>C</strong> = % de eleitores que citam o nome em um dos dois votos; a soma passa de 100%.</p>
+      <p>O número abaixo da sigla é o <strong>% de urnas apuradas</strong> no estado. Com urnas apuradas, cor, pop-up e tabela passam a usar a apuração (votos válidos); com 0%, ainda mostram a pesquisa.</p>
+      <p>Clique em um estado para filtrar a tabela abaixo.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="filters">
+      <label for="fEstado">Estado</label>
+      <select id="fEstado"><option value="">Todos os estados</option></select>
+      <label for="fRegiao">Região</label>
+      <select id="fRegiao"><option value="">Todas</option></select>
+      <button class="clear" id="limpar">Limpar filtros</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>UF</th><th>Candidato</th><th>Partido</th><th style="text-align:right">Apuração / pesquisa</th><th>Resumo</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    <span class="so-sen" hidden>Senado: pesquisas compiladas da
+    <a href="https://www.gazetadopovo.com.br/eleicoes/2026/pesquisa-eleitoral-2026/">Gazeta do Povo</a>,
+    <a href="https://www.cartacapital.com.br/politica/quaest-veja-as-intencoes-de-voto-para-o-senado-em-sp-mg-rj-pe-e-df/">CartaCapital</a>,
+    <a href="https://www.cnnbrasil.com.br/eleicoes/quaest-senado-df-michelle-tem-31-dos-votos-validos-leila-27-bia-24/">CNN Brasil</a>,
+    <a href="https://www.brasildefato.com.br/2026/10/01/datafolha-aponta-michelle-com-23-leila-e-bia-kicis-aparecem-com-18-para-o-senado-no-df/">Brasil de Fato</a> e Wikipédia.<br></span>
+    Fontes: Quaest, Datafolha, AtlasIntel, Paraná Pesquisas, Real Time Big Data e outros institutos registrados no TSE, compilados de
+    <a href="https://www.opovo.com.br/noticias/politica/eleicoes/2026/10/04/resultados-das-pesquisas-datafolha-e-quaest-para-governador.html">O Povo</a>,
+    <a href="https://www.gazetadopovo.com.br/eleicoes/2026/pesquisa-eleitoral-2026/">Gazeta do Povo</a> e das páginas "Pesquisas eleitorais para a eleição estadual de 2026" da
+    <a href="https://pt.wikipedia.org/">Wikipédia</a>. Apuração: Tribunal Superior Eleitoral (TSE), votos válidos. Resumos dos candidatos são sínteses editoriais e podem conter imprecisões. Atualizado em <span id="atualizado"></span>.
+  </footer>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="data/dados.js"></script>
+<script src="data/senado.js"></script>
+<script src="data/senado-atual.js"></script>
+<script>
+(function () {
+  const MODOS = {
+    gov: {
+      dados: window.ESTADOS, atualizado: window.ATUALIZADO_EM,
+      titulo: "Disputa pelos governos estaduais — 2026",
+      legTitulo: "Vantagem do líder", legDesc: "Pela apuração quando já há urnas apuradas; senão, pela AtlasIntel ou pela pesquisa mais recente",
+      docTitle: "Governadores 2026 — Apuração"
+    },
+    sen: {
+      dados: window.SENADO, atualizado: window.ATUALIZADO_EM_SENADO,
+      titulo: "Disputa pelo Senado — 2026",
+      legTitulo: "Disputa pela 2ª vaga", legDesc: "Diferença entre o 2º e o 3º colocados na apuração (ou na pesquisa mais recente, se ainda não há urnas apuradas)",
+      docTitle: "Senado 2026 — Apuração"
+    }
+  };
+  let modo = location.hash === "#senado" ? "sen" : "gov";
+  let ESTADOS, porUF;
+
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const FAIXAS = [
+    { id: "empate", nome: "Empate técnico (até 4 pts)", max: 4 },
+    { id: "apertada", nome: "Apertada (4 a 10 pts)", max: 10 },
+    { id: "competitiva", nome: "Vantagem (10 a 20 pts)", max: 20 },
+    { id: "folgada", nome: "Folgada (mais de 20 pts)", max: Infinity }
+  ];
+  const fmt = v => (Number.isInteger(v) ? v : v.toFixed(1).replace(".", ",")) + "%";
+  const pts = v => fmt(v).replace("%", " pts");
+  const ordenado = p => [...p.res].sort((a, b) => b[1] - a[1]);
+  const vagas = () => (modo === "sen" ? 2 : 1);
+  // Pesquisa que colore o mapa e alimenta a tabela: no governador, a AtlasIntel quando houver; senão, a mais recente.
+  const principal = e => apuracao(e) || (modo === "gov" && e.pesquisas.find(p => /atlas/i.test(p.inst))) || e.pesquisas[0];
+
+  // Apuração oficial (data/apuracao/<cargo>.json, gerado por scripts/apuracao.py): quando o estado tem urnas
+  // apuradas, ela vira a "pesquisa principal". Formato: { cargo, atualizado, simulacao?, ufs: { UF: { pct, hora, res: [[nome, %válidos, partido?], ...], situacao? } } }
+  const ARQ_APU = { gov: "governador", sen: "senador" };
+  let APU = { gov: { ufs: {} }, sen: { ufs: {} } };
+  const apuUF = uf => (APU[modo].ufs || {})[uf];
+  const pctUrnas = uf => { const a = apuUF(uf); return a ? +a.pct || 0 : 0; };
+  const apuCache = new Map();
+  function apuracao(e) {
+    const a = apuUF(e.uf);
+    if (!a || !(a.pct > 0) || !Array.isArray(a.res) || a.res.length < 2) return null;
+    if (!apuCache.has(a)) apuCache.set(a, { inst: "Apuração TSE", tipo: "V", campo: fmtPct(a.pct) + " das urnas" + (a.hora ? " · " + a.hora.slice(0, 5) : ""), res: a.res.map(r => [r[0], +r[1]]), apu: a });
+    return apuCache.get(a);
+  }
+  const fmtPct = v => (v >= 100 ? "100" : v.toFixed(2).replace(".", ",")) + "%";
+  const pctMapa = v => (v >= 100 ? "100" : v > 0 && v < 1 ? "<1" : String(Math.floor(v))) + "%";
+  // Governador: 1º − 2º. Senado (2 vagas): 2º − 3º. Pesquisas tipo "C" somam até 200%, então a margem é dividida por 2.
+  const margem = e => {
+    const p = principal(e), r = ordenado(p), i = vagas() - 1;
+    const m = r[i][1] - (r[i + 1] ? r[i + 1][1] : 0);
+    return p.tipo === "C" ? m / 2 : m;
+  };
+  const faixa = e => FAIXAS.find(f => margem(e) <= f.max);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // Preferências do leitor (só neste navegador)
+  const ler = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (_) { return null; } };
+  const gravar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
+  let colorir = ler("colorir") === "partido" ? "partido" : "folga";
+  let grupos = Array.isArray(ler("grupos")) ? ler("grupos") : []; // [{ nome, cor, partidos: [] }]
+
+  // Partidos: cor própria (CORES_PARTIDOS) ou a cor do grupo político que o contém
+  const CORES = window.CORES_PARTIDOS || {};
+  const partidoDe = (e, nome) => {
+    const c = e.candidatos.find(c => c.nome === nome);
+    if (c) return c.partido;
+    const a = apuUF(e.uf), r = a && Array.isArray(a.res) && a.res.find(r => r[0] === nome);
+    return (r && r[2]) || "—";
+  };
+  const lideres = e => ordenado(principal(e)).slice(0, vagas()).map(([n]) => partidoDe(e, n));
+  const grupoDe = p => grupos.find(g => g.partidos.includes(p));
+  const corPartido = p => { const g = grupoDe(p); return g ? g.cor : (CORES[p] || CORES["—"] || "#b9b7af"); };
+  const rotulo = p => { const g = grupoDe(p); return g ? g.nome : p; };
+
+  function cor(e) {
+    if (colorir === "folga") return css("--" + faixa(e).id);
+    const cs = [...new Set(lideres(e).map(corPartido))];
+    return cs.length === 1 ? cs[0] : metades(cs);
+  }
+  // Senado com as duas vagas em partidos/grupos diferentes: estado dividido ao meio,
+  // 1º colocado à esquerda e 2º à direita (gradiente com corte seco no meio da caixa do estado)
+  function metades(cs) {
+    const id = "met" + cs.join("").replace(/#/g, "-");
+    if (svg.select("#" + id).empty()) {
+      const g = svg.select("defs").append("linearGradient").attr("id", id);
+      [[0, cs[0]], [50, cs[0]], [50, cs[1]], [100, cs[1]]].forEach(([o, c]) =>
+        g.append("stop").attr("offset", o + "%").attr("stop-color", c));
+    }
+    return `url(#${id})`;
+  }
+
+  // Legenda
+  function legenda() {
+    const M = MODOS[modo], ul = document.getElementById("legenda");
+    const sen = modo === "sen";
+    if (colorir === "folga") {
+      document.getElementById("legTitulo").textContent = M.legTitulo;
+      document.getElementById("legDesc").textContent = M.legDesc;
+      ul.innerHTML = FAIXAS.map(f => `<li><span class="sw" style="background:var(--${f.id})"></span>${f.nome}</li>`).join("");
+      return;
+    }
+    document.getElementById("legTitulo").textContent = sen ? "Partidos à frente" : "Partido do líder";
+    document.getElementById("legDesc").textContent = sen
+      ? "Partidos dos dois primeiros colocados na pesquisa mais recente. Estado dividido ao meio = vagas em partidos diferentes (1º à esquerda, 2º à direita)."
+      : "Partido do 1º colocado (AtlasIntel quando disponível; senão, a pesquisa mais recente)";
+    const cont = {};
+    ESTADOS.forEach(e => lideres(e).forEach(p => {
+      const k = rotulo(p);
+      cont[k] = cont[k] || { cor: corPartido(p), n: 0 };
+      cont[k].n++;
+    }));
+    ul.innerHTML = Object.entries(cont).sort((a, b) => b[1].n - a[1].n || a[0].localeCompare(b[0]))
+      .map(([k, v]) => `<li><span class="sw" style="background:${v.cor}"></span>${esc(k)}<small>${v.n} ${sen ? (v.n > 1 ? "vagas" : "vaga") : (v.n > 1 ? "estados" : "estado")}</small></li>`).join("");
+  }
+
+  // Tooltip
+  const tip = document.getElementById("tip");
+  function tipHTML(e) {
+    const r = ordenado(principal(e));
+    const pp = principal(e);
+    const polls = [pp, ...e.pesquisas.filter(p => p !== pp)].map(p => {
+      const rows = ordenado(p).map(([n, v], i) =>
+        `<div class="row${i < vagas() ? " eleito" : ""}"><span class="nm">${n}${partidoDe(e, n) !== "—" ? ` <span class="pt">(${partidoDe(e, n)})</span>` : ""}</span><span class="bar"><i style="width:${Math.min(v, 100)}%"></i></span><span class="v">${fmt(v)}</span></div>`).join("");
+      return `<div class="poll"><div class="ph"><span>${p.inst}<span class="tag${p.apu ? " tse" : ""}">${p.apu ? "oficial" : p.tipo}</span></span><span>${p.campo}</span></div>${rows}</div>`;
+    }).join("");
+    const sub = modo === "sen"
+      ? `${pp.apu ? "Mais votados" : "À frente"}: <strong>${r[0][0]}</strong> (${partidoDe(e, r[0][0])}) e <strong>${r[1][0]}</strong> (${partidoDe(e, r[1][0])}) · 2ª vaga: ${r[1][0]} × ${r[2] ? r[2][0] : "—"}, margem de ${pts(margem(e))}`
+      : `${pp.apu ? "Mais votado" : "Lidera"}: <strong>${r[0][0]}</strong> (${partidoDe(e, r[0][0])}) · margem de ${pts(margem(e))}`;
+    const a = pp.apu, sit = a && a.situacao;
+    const situ = !sit ? ""
+      : modo === "sen" ? `<strong>Eleitos:</strong> ${r[0][0]} e ${r[1][0]}<br>`
+      : sit === "eleito" ? `<strong>Eleito:</strong> ${r[0][0]}<br>`
+      : sit === "2turno" ? `<strong>2º turno:</strong> ${r[0][0]} × ${r[1][0]}<br>` : "";
+    const urnas = `<span class="tag tse" style="margin:0">${a ? fmtPct(a.pct) + " das urnas apuradas" : "0% das urnas apuradas · mostrando pesquisa"}</span>`;
+    return `<h4>${e.nome}</h4><div class="sub">${situ}${sub}<br>${urnas}</div>${polls}`;
+  }
+  function moveTip(ev) {
+    const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+    let x = ev.clientX + pad, y = ev.clientY + pad;
+    if (x + w > innerWidth - 8) x = ev.clientX - w - pad;
+    if (x < 8) x = 8;
+    if (y + h > innerHeight - 8) y = Math.max(8, innerHeight - h - 8);
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  }
+
+  // Mapa
+  const svg = d3.select("#mapa");
+  svg.append("defs");
+  const pintar = () => svg.selectAll("path").attr("fill", d => porUF[d.properties.sigla] ? cor(porUF[d.properties.sigla]) : "#999");
+  fetch("data/brasil-estados.geojson").then(r => r.json()).then(geo => {
+    const proj = d3.geoMercator().fitExtent([[10, 10], [790, 770]], geo);
+    const path = d3.geoPath(proj);
+    const g = svg.append("g");
+    g.selectAll("path").data(geo.features).join("path")
+      .attr("d", path)
+      .attr("data-uf", d => d.properties.sigla)
+      .on("mouseenter", (ev, d) => { const e = porUF[d.properties.sigla]; if (!e) return; tip.innerHTML = tipHTML(e); tip.style.opacity = 1; moveTip(ev); })
+      .on("mousemove", moveTip)
+      .on("mouseleave", () => { tip.style.opacity = 0; })
+      .on("click", (ev, d) => { setEstado(d.properties.sigla); tip.innerHTML = tipHTML(porUF[d.properties.sigla]); tip.style.opacity = 1; moveTip(ev); });
+    pintar();
+    const pequenos = { DF: [0, 0], SE: [8, 4], AL: [10, 2], PB: [16, 0], RN: [10, -4], PE: [0, 0], ES: [6, 2], RJ: [4, 6] };
+    const px = d => path.centroid(d)[0] + (pequenos[d.properties.sigla] || [0])[0];
+    const py = d => path.centroid(d)[1] + 4 + ((pequenos[d.properties.sigla] || [0, 0])[1]);
+    g.selectAll("text.uf").data(geo.features).join("text").attr("class", "uf")
+      .attr("x", px).attr("y", py).text(d => d.properties.sigla);
+    g.selectAll("text.pct").data(geo.features).join("text").attr("class", "pct")
+      .attr("x", px).attr("y", d => py(d) + 9);
+    rotulos();
+    render();
+  });
+  const rotulos = () => svg.selectAll("text.pct").text(d => pctMapa(pctUrnas(d.properties.sigla)));
+
+  // Faixa "Apuração oficial": média do % de urnas apuradas nos 27 estados do cargo selecionado
+  function faixaApu() {
+    const ufs = MODOS.gov.dados.map(e => e.uf), ps = ufs.map(pctUrnas);
+    const iniciados = ps.filter(v => v > 0).length, fechados = ps.filter(v => v >= 100).length;
+    const media = ps.reduce((s, v) => s + v, 0) / ufs.length;
+    const cargo = modo === "sen" ? "Senado" : "Governador";
+    document.getElementById("apu").classList.toggle("ativa", iniciados > 0 && fechados < ufs.length);
+    document.getElementById("apuStatus").innerHTML = (APU[modo].simulacao ? "<b class=\"sim\">Dados simulados, não oficiais</b> · " : "") + (iniciados
+      ? `${cargo}: <strong>${fmtPct(media)}</strong> das urnas apuradas (média dos 27 estados) · ${iniciados} ${iniciados > 1 ? "estados" : "estado"} com apuração · ${fechados} ${fechados === 1 ? "concluído" : "concluídos"}`
+      : "Aguardando o início da apuração. O TSE começa a divulgar os resultados às 17h (horário de Brasília).");
+    document.getElementById("apuHora").textContent = APU[modo].atualizado ? "Dados do TSE de " + APU[modo].atualizado : "";
+    document.getElementById("apuBar").style.width = media + "%";
+    document.querySelector(".apu-bar").setAttribute("aria-valuenow", Math.floor(media));
+  }
+
+  // Busca a apuração dos dois cargos a cada 60 s (o parâmetro ?t= evita o cache do GitHub Pages)
+  const apuVersao = {};
+  function carregarApu() {
+    return Promise.all(Object.entries(ARQ_APU).map(([m, arq]) =>
+      fetch(`data/apuracao/${arq}.json?t=${Date.now()}`, { cache: "no-store" })
+        .then(r => (r.ok ? r.text() : null))
+        .then(t => {
+          if (!t || t === apuVersao[m]) return false;
+          apuVersao[m] = t;
+          const j = JSON.parse(t);
+          APU[m] = { ufs: j.ufs || {}, atualizado: j.atualizado || "", simulacao: !!j.simulacao };
+          return true;
+        })
+        .catch(() => false)))
+      .then(mudou => {
+        if (!mudou.some(Boolean)) return;
+        apuCache.clear();
+        if (porUF) { pintar(); legenda(); render(); rotulos(); faixaApu(); }
+      });
+  }
+  carregarApu();
+  setInterval(carregarApu, 60000);
+
+  document.addEventListener("touchstart", ev => { if (!ev.target.closest("#mapa")) tip.style.opacity = 0; }, { passive: true });
+
+  // Filtros e tabela
+  const fEstado = document.getElementById("fEstado"), fRegiao = document.getElementById("fRegiao");
+  [...MODOS.gov.dados].sort((a, b) => a.nome.localeCompare(b.nome)).forEach(e => fEstado.add(new Option(`${e.nome} (${e.uf})`, e.uf)));
+  ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"].forEach(r => fRegiao.add(new Option(r, r)));
+
+  function render() {
+    const uf = fEstado.value, reg = fRegiao.value;
+    const lista = ESTADOS.filter(e => (!uf || e.uf === uf) && (!reg || e.regiao === reg))
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+    document.getElementById("tbody").innerHTML = lista.map(e => {
+      const p = principal(e);
+      const pct = Object.fromEntries(p.res);
+      const cands = [...e.candidatos].sort((a, b) => (pct[b.nome] ?? -1) - (pct[a.nome] ?? -1));
+      return cands.map((c, i) => `<tr class="${i === 0 ? "first" : ""}">
+        <td class="uf">${i === 0 ? `${e.uf}` : ""}</td>
+        <td class="${i < vagas() ? "lead" : ""}">${c.nome}</td>
+        <td><span class="party">${c.partido}</span></td>
+        <td class="num">${pct[c.nome] != null ? fmt(pct[c.nome]) : "—"}${i === 0 ? (p.apu ? `<br><span class="tag tse">TSE · ${p.campo}</span>` : `<br><span class="tag">${p.inst} ${p.tipo} · ${p.campo}</span>`) : ""}</td>
+        <td class="res">${c.resumo}</td></tr>`).join("");
+    }).join("");
+    d3.selectAll("#mapa path").classed("sel", d => d && d.properties.sigla === uf);
+  }
+  function setEstado(uf) { fEstado.value = uf; fRegiao.value = ""; render(); }
+  fEstado.addEventListener("change", () => { if (fEstado.value) fRegiao.value = ""; render(); });
+  fRegiao.addEventListener("change", () => { fEstado.value = ""; render(); });
+  document.getElementById("limpar").addEventListener("click", () => { fEstado.value = ""; fRegiao.value = ""; render(); });
+
+  // Colorir por folga ou por partido
+  function setColorir(c) {
+    colorir = c;
+    gravar("colorir", c);
+    document.querySelectorAll("[data-colorir]").forEach(b => b.setAttribute("aria-pressed", b.dataset.colorir === c));
+    pintar();
+    legenda();
+  }
+  document.querySelectorAll("[data-colorir]").forEach(b => b.addEventListener("click", () => setColorir(b.dataset.colorir)));
+
+  // Grupos políticos: o leitor junta partidos sob um nome e uma cor
+  const gPainel = document.getElementById("grupos"), gAbrir = document.getElementById("gAbrir");
+  const gForm = document.getElementById("gForm"), gNome = document.getElementById("gNome"), gCor = document.getElementById("gCor");
+  const gSalvar = document.getElementById("gSalvar"), gCancelar = document.getElementById("gCancelar");
+  const CORES_GRUPO = ["#c8102e", "#1b2f6e", "#e3b505", "#2e7d4f", "#7a1f4b", "#ef8a17", "#14a79d", "#6b3fa0"];
+  const presentes = new Set([...MODOS.gov.dados, ...MODOS.sen.dados].flatMap(e => e.candidatos.map(c => c.partido)));
+  const PARTIDOS = [...presentes].filter(p => p !== "—").sort((a, b) => a.localeCompare(b));
+  let editando = -1;
+
+  function desenharGrupos() {
+    document.getElementById("gLista").innerHTML = grupos.length
+      ? grupos.map((g, i) => `<li><span class="sw" style="background:${esc(g.cor)}"></span><span class="gi"><strong>${esc(g.nome)}</strong><br><span class="gp">${g.partidos.map(esc).join(", ") || "sem partidos"}</span></span><button type="button" data-ed="${i}">Editar</button><button type="button" data-rm="${i}" aria-label="Remover ${esc(g.nome)}">Remover</button></li>`).join("")
+      : "";
+    if (!grupos.length) document.getElementById("gLista").innerHTML = `<p class="vazio">Junte partidos em um grupo (ex.: uma federação ou coligação) para pintá-los com a mesma cor no modo Partido.</p>`;
+    const atual = editando >= 0 ? grupos[editando].partidos : [];
+    document.getElementById("gPartidos").innerHTML = PARTIDOS.map(p => {
+      const g = grupoDe(p), outro = g && g !== grupos[editando];
+      return `<label title="${outro ? "Hoje em " + esc(g.nome) + "; marcar move para este grupo" : ""}"><input type="checkbox" value="${esc(p)}"${atual.includes(p) ? " checked" : ""}><span class="sw" style="background:${CORES[p] || "#b9b7af"}"></span>${esc(p)}${outro ? ` <em>· ${esc(g.nome)}</em>` : ""}</label>`;
+    }).join("");
+    gSalvar.textContent = editando >= 0 ? "Salvar grupo" : "Criar grupo";
+    gCancelar.hidden = editando < 0;
+  }
+  function limparForm() {
+    editando = -1;
+    gNome.value = "";
+    gCor.value = CORES_GRUPO[grupos.length % CORES_GRUPO.length];
+    desenharGrupos();
+  }
+  function aplicarGrupos() {
+    gravar("grupos", grupos);
+    if (colorir !== "partido") setColorir("partido"); else { pintar(); legenda(); }
+  }
+  gAbrir.addEventListener("click", () => {
+    gPainel.hidden = !gPainel.hidden;
+    gAbrir.setAttribute("aria-expanded", !gPainel.hidden);
+    if (!gPainel.hidden) limparForm();
+  });
+  gForm.addEventListener("submit", ev => {
+    ev.preventDefault();
+    const nome = gNome.value.trim();
+    const partidos = [...gForm.querySelectorAll("#gPartidos input:checked")].map(i => i.value);
+    if (!nome) return;
+    if (!partidos.length) { alert("Escolha ao menos um partido para o grupo."); return; }
+    const novo = { nome, cor: gCor.value, partidos };
+    // Um partido pertence a um só grupo: sai dos outros
+    grupos.forEach((g, i) => { if (i !== editando) g.partidos = g.partidos.filter(p => !partidos.includes(p)); });
+    if (editando >= 0) grupos[editando] = novo; else grupos.push(novo);
+    grupos = grupos.filter(g => g.partidos.length);
+    limparForm();
+    aplicarGrupos();
+  });
+  gCancelar.addEventListener("click", limparForm);
+  document.getElementById("gLista").addEventListener("click", ev => {
+    const b = ev.target.closest("button");
+    if (!b) return;
+    if (b.dataset.rm != null) { grupos.splice(+b.dataset.rm, 1); limparForm(); aplicarGrupos(); return; }
+    editando = +b.dataset.ed;
+    gNome.value = grupos[editando].nome;
+    gCor.value = grupos[editando].cor;
+    desenharGrupos();
+    gNome.focus();
+  });
+
+  // Alternância Governador / Senado
+  function setModo(m) {
+    modo = m;
+    const M = MODOS[m];
+    ESTADOS = M.dados;
+    porUF = Object.fromEntries(ESTADOS.map(e => [e.uf, e]));
+    document.getElementById("titulo").textContent = M.titulo;
+    document.getElementById("atualizado").textContent = M.atualizado;
+    document.title = M.docTitle;
+    document.querySelectorAll(".so-sen").forEach(el => { el.hidden = m !== "sen"; });
+    document.querySelectorAll(".modo button").forEach(b => b.setAttribute("aria-pressed", b.dataset.modo === m));
+    tip.style.opacity = 0;
+    pintar();
+    legenda();
+    render();
+    rotulos();
+    faixaApu();
+  }
+  document.querySelectorAll(".modo button").forEach(b => b.addEventListener("click", () => {
+    history.replaceState(null, "", b.dataset.modo === "sen" ? "#senado" : location.pathname + location.search);
+    setModo(b.dataset.modo);
+  }));
+  document.querySelectorAll("[data-colorir]").forEach(b => b.setAttribute("aria-pressed", b.dataset.colorir === colorir));
+  setModo(modo);
+})();
+</script>
+</body>
+</html>

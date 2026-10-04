@@ -1,0 +1,34 @@
+# Publica a pasta docs/ no GitHub Pages a cada push em main.
+# Requer Settings → Pages → Source: "GitHub Actions". Sem o limite de ~10 publicações/hora
+# do modo "Deploy from a branch", o que permite atualizar a apuração a cada 1–2 minutos.
+name: Publicar site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Um deploy por vez; um push novo substitui o que ainda estava na fila
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deployment
+        uses: actions/deploy-pages@v4

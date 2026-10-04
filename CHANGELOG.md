@@ -4,6 +4,8 @@ Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-04
 
+- **Nova página de apuração (`apuracao.html`):** réplica da página principal com a faixa "Apuração oficial" no topo (média de urnas apuradas, estados concluídos, horário) e o % de urnas apuradas abaixo de cada sigla no mapa. Quando um estado tem urnas apuradas, cor, pop-up e tabela passam a usar o resultado do TSE; sem apuração, segue a pesquisa. Os dados vêm de `docs/data/apuracao/<cargo>.json` (um arquivo por cargo: presidente, governador, senador, deputado federal e estadual), relidos a cada minuto. A página atual (`index.html`) não muda.
+- **Coleta da apuração:** novo script `scripts/apuracao.py`, que roda neste computador, confere o TSE a cada minuto, mostra no terminal o andamento de cada cargo e publica só os arquivos de apuração. Novo workflow `.github/workflows/pages.yml` para publicar o site pelo GitHub Actions (sem o limite de ~10 publicações por hora).
 - **Pop-up do mapa:** cada candidato listado nas pesquisas (Governador e Senado) agora mostra o partido entre parênteses ao lado do nome.
 - **Senado no modo Partido:** quando as duas vagas ficam com partidos diferentes, o estado agora aparece dividido ao meio (1º colocado à esquerda, 2º à direita) em vez de listrado.
 - **Bancada Senado:** grupos iniciais esquerda / centro / direita (o leitor muda qualquer partido de grupo pelo menu; botão para restaurar). Lista de bancadas e grupos com % (sobre 81 cadeiras). Partido atual dos suplentes conferido na imprensa; Mauro Carvalho Júnior (suplente de Wellington Fagundes) passa a constar sem partido.

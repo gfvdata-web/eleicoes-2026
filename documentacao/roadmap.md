@@ -30,7 +30,14 @@ Status: 🟢 feito · 🟡 em andamento / próximo · ⚪ futuro (ainda não det
 - O usuário fará mais alterações. Registrar cada pedido aqui antes de implementar, se for algo grande.
 - Pendências de dados já conhecidas estão em [dados.md](dados.md#pendências-conhecidas-nos-dados).
 
-## ⚪ Troca das pesquisas pela apuração
+## 🟡 Página de apuração — `apuracao.html` (04/10/2026)
+
+- 🟢 Réplica de `index.html` com faixa "Apuração oficial" e % de urnas apuradas no mapa; lê `docs/data/apuracao/<cargo>.json` a cada 60 s. Ver [apuracao.md](apuracao.md).
+- 🟢 Script de coleta `scripts/apuracao.py` (5 cargos, terminal com andamento, modo simulação) e publicação via GitHub Actions.
+- 🟡 Às 17h: preencher endereços do TSE e `converter()`; trocar Settings → Pages para "GitHub Actions".
+- ⚪ Páginas para presidente e deputados.
+
+## ⚪ Troca das pesquisas pela apuração (planejamento original)
 
 Objetivo: depois da eleição, substituir (ou complementar) as pesquisas pelos resultados oficiais, **para governador e Senado**. **Ainda não iniciado; será planejado quando a apuração começar.** Pontos a decidir na hora:
 
