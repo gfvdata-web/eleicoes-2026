@@ -2,8 +2,8 @@
 
 Mapa interativo com as últimas pesquisas de intenção de voto para **governador** e **Senado** nas eleições de 2026 (1º turno em 04/10/2026), estado por estado.
 
-- **Site:** https://gfvdata-web.github.io/governadores-2026/
-- **Repositório:** https://github.com/gfvdata-web/governadores-2026 (público)
+- **Site:** https://gfvdata-web.github.io/eleicoes-2026/
+- **Repositório:** https://github.com/gfvdata-web/eleicoes-2026 (público)
 
 ## O que a página mostra
 

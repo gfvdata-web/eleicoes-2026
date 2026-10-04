@@ -7,7 +7,7 @@ Leia este arquivo antes de qualquer mudança. Para detalhes, consulte:
 
 ## Contexto
 
-- Site estático publicado no GitHub Pages (`main` → `/docs`), conta **gfvdata-web**, repositório público `governadores-2026`.
+- Site estático publicado no GitHub Pages (`main` → `/docs`), conta **gfvdata-web**, repositório público `eleicoes-2026`.
 - O site cobre **dois cargos na mesma página**: governador e Senado, alternados por um seletor no topo (`data-modo="gov"` / `"sen"`). Mesmo repositório, mesma pasta, mesmo `index.html`, mesmo GeoJSON.
 - O trabalho pode acontecer em sessões paralelas (uma para governador, outra para Senado) **no mesmo diretório**. Antes de commitar, rode `git status` e adicione **apenas os arquivos que você alterou** (nada de `git add -A`). Não reverta nem reescreva mudanças de outra sessão em `index.html`; se houver conflito, pergunte ao usuário.
 - Público: leitores em geral, em português do Brasil. Todo texto visível na página fica em pt-BR.

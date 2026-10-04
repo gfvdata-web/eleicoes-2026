@@ -7,7 +7,7 @@ Status: 🟢 feito · 🟡 em andamento / próximo · ⚪ futuro (ainda não det
 - Mapa com os 27 estados coloridos por margem do líder.
 - Pop-up com as 3 pesquisas mais recentes de cada estado.
 - Tabela com partido e resumo dos candidatos, com filtro por estado e região.
-- Publicado em https://gfvdata-web.github.io/governadores-2026/
+- Publicado em https://gfvdata-web.github.io/eleicoes-2026/
 
 ## 🟡 Senado na mesma página
 
