@@ -15,6 +15,15 @@ Status: 🟢 feito · 🟡 em andamento / próximo · ⚪ futuro (ainda não det
 - Mapa do Senado colorido pela disputa da 2ª vaga (2º − 3º colocado).
 - `docs/data/senado.js` com 27 UFs, 2 vagas e tipos V/T/C.
 
+## 🟢 Aba "Bancada Senado" — `senado.html` (04/10/2026)
+
+- Hemiciclo de 81 cadeiras: 27 com mandato até 2031 + 54 favoritos nas pesquisas de 2026.
+- Troca básica dos eleitos por estado (menu com todos os candidatos da pesquisa).
+- Grupos de partidos criados pelo leitor, com exemplo pronto e linhas de maioria (41) e de 3/5 (49).
+- Switch "Substitutos": senadores que disputam o governo dão lugar ao 1º suplente.
+- Aba no seletor do topo (`index.html` → `senado.html`).
+- Próximos ajustes (a combinar): apuração; conferir partido atual dos suplentes.
+
 ## 🟡 Ajustes na página atual
 
 - O usuário fará mais alterações. Registrar cada pedido aqui antes de implementar, se for algo grande.

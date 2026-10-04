@@ -4,6 +4,7 @@ Leia este arquivo antes de qualquer mudança. Para detalhes, consulte:
 - [documentacao/dados.md](documentacao/dados.md): formato dos dados e como atualizar
 - [documentacao/pagina.md](documentacao/pagina.md): funcionamento da página
 - [documentacao/roadmap.md](documentacao/roadmap.md): o que está planejado
+- [documentacao/senado.md](documentacao/senado.md): página de bancadas do Senado (`senado.html`)
 
 ## Contexto
 
@@ -15,8 +16,8 @@ Leia este arquivo antes de qualquer mudança. Para detalhes, consulte:
 ## Regras do projeto
 
 1. **Sem build, sem framework, sem testes automatizados.** O site é só `docs/index.html` + `docs/data/`. Não adicione npm, bundler, CI de testes nem subagentes.
-2. **Dados só nos arquivos de dados:** governador em `docs/data/dados.js` (`window.ESTADOS`), Senado em `docs/data/senado.js` (`window.SENADO`). Não coloque números de pesquisa dentro do HTML.
-3. **Uma única página.** Governador e Senado convivem em `index.html` via seletor de cargo; não crie páginas novas sem pedido explícito.
+2. **Dados só nos arquivos de dados:** governador em `docs/data/dados.js` (`window.ESTADOS`), Senado em `docs/data/senado.js` (`window.SENADO`); senadores com mandato até 2031 e cores dos partidos em `docs/data/senado-atual.js`. Não coloque números de pesquisa dentro do HTML.
+3. **Uma única página.** Governador e Senado convivem em `index.html` via seletor de cargo; a exceção é `senado.html` (simulação das bancadas do Senado, criada a pedido do usuário; ver [documentacao/senado.md](documentacao/senado.md)). Não crie outras páginas sem pedido explícito.
 4. **Dependências externas só via CDN confiável** (cdnjs para D3; Google Fonts para a fonte Inter).
 5. **Verifique localmente antes do push**: `python -m http.server 8765 --directory docs` e confira, **nos dois modos** (Governador e Senado), que o mapa mostra 27 estados, que o pop-up abre e que o filtro funciona.
 6. **Commits** em português, descrevendo o que mudou. Atualize o [CHANGELOG.md](CHANGELOG.md) a cada mudança visível.

@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Senado 2027 — Bancadas</title>
+<meta name="description" content="Simulação da composição do Senado a partir de 2027: senadores com mandato até 2031 somados aos favoritos nas pesquisas de 2026.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f6f2; --surface: #ffffff; --text: #1d1d1b; --muted: #6b6a65; --border: #e3e1da;
+    --accent: #2f5d8a; --bar-bg: #ecebe6; --empate: #c2553d; --changed: #fdf3dc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413; --surface: #1e1e1c; --text: #eeede8; --muted: #a09f99; --border: #33322f;
+      --accent: #7fb0e0; --bar-bg: #2a2a27; --empate: #d0644b; --changed: #3a3220;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; line-height: 1.45; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+  .modo { display: inline-flex; margin-top: 14px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .modo a { font-size: .9rem; font-weight: 600; padding: 6px 16px; border-radius: 7px; color: var(--muted); text-decoration: none; }
+  .modo a:hover { color: var(--text); }
+  .modo a[aria-current="page"] { background: var(--accent); color: var(--surface); }
+  header h1 { font-size: 1.7rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); font-size: .95rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 20px; }
+  .grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
+  .muted { color: var(--muted); font-size: .85rem; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .seg button { font: inherit; font-size: .85rem; padding: 6px 12px; border: 0; background: transparent; color: var(--text); cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--border); }
+  .seg button.on { background: var(--accent); color: var(--surface); }
+  #hemi { width: 100%; height: auto; display: block; }
+  #hemi circle { cursor: pointer; transition: opacity .15s; }
+  #hemi .total { font-size: 30px; font-weight: 700; fill: var(--text); text-anchor: middle; }
+  #hemi .total-sub { font-size: 11px; fill: var(--muted); text-anchor: middle; }
+  .stack { position: relative; height: 22px; display: flex; gap: 2px; margin: 18px 0 30px; }
+  .stack i { display: block; height: 100%; }
+  .stack i:first-child { border-radius: 4px 0 0 4px; } .stack i:last-child { border-radius: 0 4px 4px 0; }
+  .mark { position: absolute; top: -4px; bottom: -4px; border-left: 2px solid var(--text); }
+  .mark span { position: absolute; top: 28px; white-space: nowrap; font-size: .72rem; color: var(--muted); }
+  .mark.l span { right: 4px; } .mark.r span { left: 4px; }
+  .switch { display: inline-flex; align-items: center; gap: 8px; font-size: .85rem; cursor: pointer; user-select: none; }
+  .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .switch .trk { width: 34px; height: 20px; border-radius: 999px; background: var(--border); position: relative; transition: background .15s; flex: none; }
+  .switch .trk::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+  .switch input:checked + .trk { background: var(--accent); }
+  .switch input:checked + .trk::after { transform: translateX(14px); }
+  .switch input:focus-visible + .trk { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .subinfo { font-size: .8rem; color: var(--muted); }
+  .est label.gov { display: flex; align-items: center; gap: 6px; font-size: .78rem; margin-top: 4px; cursor: pointer; }
+  .est .sup { display: block; font-size: .8rem; margin-top: 2px; }
+  .key { display: flex; flex-wrap: wrap; gap: 14px; font-size: .8rem; color: var(--muted); }
+  .key svg { vertical-align: -3px; margin-right: 4px; }
+  .plist { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  .plist td { padding: 5px 4px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .plist td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .plist .det { color: var(--muted); font-size: .75rem; }
+  .plist select { max-width: 120px; padding: 3px 6px; font-size: .8rem; }
+  .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .groups { margin: 14px 0; }
+  .gform { display: flex; gap: 6px; margin-bottom: 8px; }
+  .gform input { flex: 1; min-width: 0; font: inherit; font-size: .85rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; padding: 3px 4px 3px 10px; border-radius: 999px; border: 1px solid var(--border); }
+  .chip b { font-variant-numeric: tabular-nums; }
+  .chip button { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: .9rem; padding: 0 4px; }
+  select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+  button.btn { font: inherit; font-size: .85rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--accent); cursor: pointer; }
+  .tbl-wrap { overflow-x: auto; }
+  table.est { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  .est th { text-align: left; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border-bottom: 1px solid var(--border); padding: 8px; }
+  .est td { border-bottom: 1px solid var(--border); padding: 8px; vertical-align: top; }
+  .est td.uf { font-weight: 700; }
+  .est tr.alt td { background: var(--changed); }
+  .est select { width: 100%; min-width: 190px; font-size: .85rem; }
+  .est .nota { display: block; color: var(--muted); font-size: .75rem; max-width: 240px; }
+  .tag { display: inline-block; font-size: .7rem; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); margin: 2px 4px 0 0; white-space: nowrap; }
+  .tag.warn { border-color: var(--empate); color: var(--empate); }
+  #tip { position: fixed; z-index: 10; pointer-events: none; opacity: 0; transition: opacity .1s; width: 260px; max-width: calc(100vw - 24px);
+         background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; box-shadow: 0 8px 24px rgba(0,0,0,.18); font-size: .82rem; }
+  #tip h4 { margin: 0 0 2px; font-size: .95rem; }
+  footer { margin-top: 24px; font-size: .8rem; color: var(--muted); }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Como pode ficar o Senado a partir de 2027</h1>
+    <p>Em 2026 são eleitos 54 dos 81 senadores (2 por estado). Os outros 27, eleitos em 2022, têm mandato até 2031.
+      A simulação começa com os 2 primeiros colocados na pesquisa mais recente de cada estado. Você pode trocar os eleitos e agrupar partidos.</p>
+    <nav class="modo" aria-label="Abas">
+      <a href="./">Governador</a><a href="./#senado">Senado</a><a href="senado.html" aria-current="page">Bancada Senado</a>
+    </nav>
+  </header>
+
+  <div class="card grid">
+    <div>
+      <div class="toolbar">
+        <div class="seg" id="modo">
+          <button data-v="partido" class="on">Por partido</button><button data-v="grupo">Por grupo</button>
+        </div>
+        <div class="seg" id="destaque">
+          <button data-v="todos" class="on">Todos</button><button data-v="atual">Mandato até 2031</button><button data-v="novo">Eleitos em 2026</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <label class="switch"><input type="checkbox" id="subs"><span class="trk"></span><strong>Substitutos</strong></label>
+        <span class="subinfo" id="subinfo"></span>
+      </div>
+      <svg id="hemi" viewBox="0 0 420 225" role="img" aria-label="Hemiciclo do Senado com 81 cadeiras"></svg>
+      <div class="stack" id="stack"></div>
+      <div class="key">
+        <span><svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="var(--muted)"/></svg>Mandato até 2031 (eleito em 2022)</span>
+        <span><svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="var(--muted)"/><circle cx="7" cy="7" r="2.4" fill="var(--surface)"/></svg>Eleito em 2026 (simulação)</span>
+        <span><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="var(--muted)" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="2 1.5"/></svg>Suplente (titular eleito governador)</span>
+      </div>
+    </div>
+    <div>
+      <h3>Grupos políticos</h3>
+      <p class="muted">Crie grupos e escolha o grupo de cada partido na lista abaixo. Use "Por grupo" para ver o resultado.</p>
+      <div class="groups">
+        <form class="gform" id="gform"><input id="gnome" placeholder="Nome do grupo (ex.: Oposição)" maxlength="30"><button class="btn" type="submit">Criar</button></form>
+        <div class="chips" id="chips"></div>
+        <div class="toolbar" style="margin-top:8px"><button class="btn" id="exemplo">Carregar exemplo</button><button class="btn" id="limparG">Apagar grupos</button></div>
+      </div>
+      <h3>Bancadas</h3>
+      <table class="plist"><tbody id="plist"></tbody></table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar" style="justify-content:space-between">
+      <h3 style="margin:0">Disputa em cada estado</h3>
+      <button class="btn" id="reset">Voltar às pesquisas</button>
+    </div>
+    <p class="muted">Com <strong>Substitutos</strong> ligado, quem lidera a pesquisa para governador começa marcado como eleito e dá lugar ao 1º suplente. Marque ou desmarque na coluna "Mandato até 2031".
+      As vagas de 2026 começam com os 2 mais votados na pesquisa mais recente. Troque pelo menu; linhas alteradas ficam destacadas. "2ª vaga apertada" = diferença de até 4 pontos entre o 2º e o 3º colocados.</p>
+    <div class="tbl-wrap">
+      <table class="est">
+        <thead><tr><th>UF</th><th>Mandato até 2031</th><th>Vaga 1 (2026)</th><th>Vaga 2 (2026)</th><th>Pesquisa usada</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    Pesquisas: Quaest, Datafolha, AtlasIntel, Paraná Pesquisas, Real Time Big Data e outros institutos, compiladas de Gazeta do Povo, CartaCapital, CNN Brasil e
+    <a href="https://pt.wikipedia.org/">Wikipédia</a>. Partidos dos senadores com mandato até 2031 conforme a filiação atual conhecida, que pode mudar.
+    Se um desses senadores for eleito governador, a vaga passa ao 1º suplente (lista da Wikipédia; o partido do suplente pode ser o da eleição de 2022). Os grupos são criados por você e não representam uma classificação deste site.
+    Esta é uma simulação, não uma previsão. Resumos e filiações podem conter imprecisões. Atualizado em <span id="atualizado"></span>.
+  </footer>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script src="data/dados.js"></script>
+<script src="data/senado.js"></script>
+<script src="data/senado-atual.js"></script>
+<script>
+(function () {
+  const SENADO = [...window.SENADO].sort((a, b) => a.nome.localeCompare(b.nome));
+  const ATUAL = window.SENADO_ATUAL;
+  const CORES = window.CORES_PARTIDOS;
+  const atualPorUF = {};
+  ATUAL.forEach(s => (atualPorUF[s.uf] = s));
+  document.getElementById("atualizado").textContent = window.ATUALIZADO_EM_SENADO;
+
+  const GRUPO_CORES = ["#2f5d8a", "#e0a43a", "#7a5ea8", "#2f6f5e", "#c2553d", "#8a6d3b"];
+  const SEM_GRUPO = { id: "", nome: "Sem grupo", cor: "#b9b7af" };
+  const fmt = v => (Number.isInteger(v) ? v : v.toFixed(1).replace(".", ",")) + "%";
+  const corPartido = p => CORES[p] || "#9a988f";
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  // ---- Candidatos por estado, ordenados pela pesquisa mais recente
+  function candidatosDe(e) {
+    const pct = Object.fromEntries(e.pesquisas[0].res);
+    const part = Object.fromEntries(e.candidatos.map(c => [c.nome, c.partido]));
+    const nomes = [...new Set([...e.pesquisas[0].res.map(r => r[0]), ...e.candidatos.map(c => c.nome)])];
+    return nomes.map((n, i) => ({ nome: n, partido: part[n] || "—", pct: pct[n], i }))
+      .sort((a, b) => (b.pct ?? -1) - (a.pct ?? -1) || a.i - b.i);
+  }
+  const CANDS = Object.fromEntries(SENADO.map(e => [e.uf, candidatosDe(e)]));
+  const padrao = uf => CANDS[uf].slice(0, 2).map(c => c.nome);
+
+  // ---- Estado (salvo no navegador, se possível)
+  const load = (k, d) => { try { const v = JSON.parse(localStorage.getItem("senado27:" + k)); return v ?? d; } catch (e) { return d; } };
+  const save = (k, v) => { try { localStorage.setItem("senado27:" + k, JSON.stringify(v)); } catch (e) {} };
+  let escolha = load("escolha", {});
+  SENADO.forEach(e => {
+    const ok = Array.isArray(escolha[e.uf]) && escolha[e.uf].length === 2 && escolha[e.uf].every(n => CANDS[e.uf].some(c => c.nome === n));
+    if (!ok) escolha[e.uf] = padrao(e.uf);
+  });
+  let grupos = load("grupos", []);
+  let partidoGrupo = load("partidoGrupo", {});
+  let modo = "partido", destaque = "todos";
+
+  // ---- Substitutos: senadores com mandato até 2031 que disputam o governo
+  const GOV = Object.fromEntries((window.ESTADOS || []).map(e => [e.uf, e]));
+  function govPesquisa(a) {
+    const e = GOV[a.uf];
+    if (!e || !a.governador) return null;
+    const p = e.pesquisas[0];
+    const ord = [...p.res].sort((x, y) => y[1] - x[1]);
+    const pos = ord.findIndex(x => x[0] === a.governador);
+    return pos < 0 ? null : { pos: pos + 1, pct: ord[pos][1], inst: p.inst, tipo: p.tipo };
+  }
+  const COM_SUPLENTE = ATUAL.filter(a => a.suplente);
+  const govPadrao = () => Object.fromEntries(COM_SUPLENTE.map(a => { const g = govPesquisa(a); return [a.uf, !!g && g.pos === 1]; }));
+  let subs = load("subs", false);
+  let eleitoGov = { ...govPadrao(), ...load("eleitoGov", {}) };
+
+  // ---- Monta as 81 cadeiras
+  function cadeiras() {
+    const lista = ATUAL.map(s => subs && s.suplente && eleitoGov[s.uf]
+      ? { uf: s.uf, nome: s.suplente.nome, partido: s.suplente.partido, origem: "atual", titular: s }
+      : { ...s, origem: "atual" });
+    SENADO.forEach(e => escolha[e.uf].forEach(n => {
+      const c = CANDS[e.uf].find(x => x.nome === n);
+      const p = e.pesquisas[0];
+      lista.push({ uf: e.uf, nome: c.nome, partido: c.partido, origem: "novo", pct: c.pct, inst: p.inst, tipo: p.tipo });
+    }));
+    return lista;
+  }
+  const grupoDe = p => grupos.find(g => g.id === partidoGrupo[p]) || SEM_GRUPO;
+
+  function contagem(lista) {
+    const m = {};
+    lista.forEach(s => {
+      const r = m[s.partido] || (m[s.partido] = { partido: s.partido, total: 0, atual: 0, novo: 0 });
+      r.total++; r[s.origem]++;
+    });
+    const ordemG = g => g.id ? grupos.indexOf(g) : grupos.length;
+    return Object.values(m).sort((a, b) =>
+      ordemG(grupoDe(a.partido)) - ordemG(grupoDe(b.partido)) || b.total - a.total || a.partido.localeCompare(b.partido));
+  }
+
+  // ---- Geometria do hemiciclo
+  const CX = 210, CY = 205, R = 195, LINHAS = 5, R0 = 0.42;
+  const POS = (() => {
+    const raios = d3range(LINHAS).map(i => R * (R0 + (1 - R0) * i / (LINHAS - 1)));
+    const soma = raios.reduce((a, b) => a + b, 0);
+    let qtd = raios.map(r => Math.round(81 * r / soma));
+    qtd[LINHAS - 1] += 81 - qtd.reduce((a, b) => a + b, 0);
+    const pts = [];
+    raios.forEach((r, i) => { for (let j = 0; j < qtd[i]; j++) { const t = Math.PI - Math.PI * j / (qtd[i] - 1); pts.push({ x: CX + r * Math.cos(t), y: CY - r * Math.sin(t), t, r }); } });
+    return pts.sort((a, b) => b.t - a.t || b.r - a.r);
+  })();
+  function d3range(n) { return Array.from({ length: n }, (_, i) => i); }
+  const RAIO = 8.2;
+
+  // ---- Render
+  const tip = document.getElementById("tip");
+  function moveTip(ev) {
+    const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+    let x = ev.clientX + pad, y = ev.clientY + pad;
+    if (x + w > innerWidth - 8) x = ev.clientX - w - pad;
+    if (x < 8) x = 8;
+    if (y + h > innerHeight - 8) y = Math.max(8, innerHeight - h - 8);
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  }
+  function showTip(ev, html) { tip.innerHTML = html; tip.style.opacity = 1; moveTip(ev); }
+  const hideTip = () => (tip.style.opacity = 0);
+
+  function seatTip(s) {
+    const g = grupoDe(s.partido);
+    const origem = s.titular
+      ? `Suplente de ${esc(s.titular.nome)} (${esc(s.titular.partido)}). Assume a vaga até 2031 se o titular for eleito governador.`
+      : s.origem === "atual"
+      ? "Mandato até 2031 (eleito em 2022)" + (s.nota ? `<br><span style="color:var(--muted)">${esc(s.nota)}</span>` : "")
+      : `Eleito em 2026 (simulação)` + (s.pct != null ? `<br><span style="color:var(--muted)">${s.inst}: ${fmt(s.pct)} (${s.tipo})</span>` : "");
+    return `<h4>${esc(s.nome)}</h4><div>${esc(s.partido)} · ${s.uf}${g.id ? " · " + esc(g.nome) : ""}</div><div style="margin-top:4px">${origem}</div>`;
+  }
+
+  function render() {
+    const lista = cadeiras();
+    const linhas = contagem(lista);
+    const ordem = linhas.map(l => l.partido);
+    const seats = [...lista].sort((a, b) => ordem.indexOf(a.partido) - ordem.indexOf(b.partido) || (a.origem === "atual" ? -1 : 1) - (b.origem === "atual" ? -1 : 1) || a.uf.localeCompare(b.uf));
+    const corDe = s => modo === "grupo" ? grupoDe(s.partido).cor : corPartido(s.partido);
+
+    // Hemiciclo
+    const svg = document.getElementById("hemi");
+    const NS = "http://www.w3.org/2000/svg";
+    svg.innerHTML = "";
+    seats.forEach((s, i) => {
+      const p = POS[i];
+      const g = document.createElementNS(NS, "g");
+      const dim = destaque !== "todos" && destaque !== s.origem;
+      g.setAttribute("opacity", dim ? 0.15 : 1);
+      g.innerHTML = `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${RAIO}" fill="${corDe(s)}" stroke="var(--surface)" stroke-width="1.5"/>` +
+        (s.titular ? `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${RAIO - 1}" fill="none" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="2.5 2" pointer-events="none"/>` : "") +
+        (s.origem === "novo" ? `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="var(--surface)" pointer-events="none"/>` : "");
+      g.addEventListener("mouseenter", ev => showTip(ev, seatTip(s)));
+      g.addEventListener("mousemove", moveTip);
+      g.addEventListener("mouseleave", hideTip);
+      g.addEventListener("click", ev => showTip(ev, seatTip(s)));
+      svg.appendChild(g);
+    });
+    const n = destaque === "todos" ? 81 : lista.filter(s => s.origem === destaque).length;
+    svg.insertAdjacentHTML("beforeend", `<text class="total" x="${CX}" y="${CY - 8}">${n}</text><text class="total-sub" x="${CX}" y="${CY + 8}">${destaque === "todos" ? "cadeiras" : destaque === "atual" ? "mandato até 2031" : "eleitos em 2026"}</text>`);
+
+    // Barra empilhada com linhas de maioria
+    const blocos = modo === "grupo"
+      ? [...grupos, SEM_GRUPO].map(g => ({ nome: g.nome, cor: g.cor, n: lista.filter(s => grupoDe(s.partido) === g).length })).filter(b => b.n)
+      : linhas.map(l => ({ nome: l.partido, cor: corPartido(l.partido), n: l.total }));
+    const stack = document.getElementById("stack");
+    stack.innerHTML = blocos.map(b => `<i style="flex:${b.n};background:${b.cor}" data-t="${esc(b.nome)}: ${b.n}"></i>`).join("") +
+      [[41, "maioria · 41", "l"], [49, "49 · 3/5 (PEC)", "r"]].map(([v, t, lado]) => `<div class="mark ${lado}" style="left:calc(${v / 81 * 100}% - 1px)"><span>${t}</span></div>`).join("");
+    stack.querySelectorAll("i").forEach(el => {
+      el.addEventListener("mouseenter", ev => showTip(ev, `<strong>${el.dataset.t}</strong> cadeiras`));
+      el.addEventListener("mousemove", moveTip);
+      el.addEventListener("mouseleave", hideTip);
+    });
+
+    // Lista de partidos com seletor de grupo
+    const opts = p => [SEM_GRUPO, ...grupos].map(g => `<option value="${g.id}" ${partidoGrupo[p] === g.id || (!g.id && !grupoDe(p).id) ? "selected" : ""}>${esc(g.nome)}</option>`).join("");
+    document.getElementById("plist").innerHTML = linhas.map(l => `<tr>
+      <td><span class="sw" style="background:${corPartido(l.partido)}"></span>${esc(l.partido)}</td>
+      <td class="n"><strong>${l.total}</strong> <span class="det">(${l.atual} + ${l.novo})</span></td>
+      <td>${grupos.length ? `<select data-p="${esc(l.partido)}" aria-label="Grupo do ${esc(l.partido)}">${opts(l.partido)}</select>` : ""}</td></tr>`).join("") +
+      `<tr><td colspan="3" class="det">Entre parênteses: mandato até 2031 + eleitos em 2026.</td></tr>`;
+    document.querySelectorAll("#plist select").forEach(sel => sel.addEventListener("change", () => {
+      if (sel.value) partidoGrupo[sel.dataset.p] = sel.value; else delete partidoGrupo[sel.dataset.p];
+      save("partidoGrupo", partidoGrupo); render();
+    }));
+
+    // Chips dos grupos
+    document.getElementById("chips").innerHTML = grupos.map(g => {
+      const c = lista.filter(s => grupoDe(s.partido) === g).length;
+      return `<span class="chip"><span class="sw" style="background:${g.cor};margin:0"></span>${esc(g.nome)} <b>${c}</b><button data-id="${g.id}" aria-label="Apagar grupo ${esc(g.nome)}">✕</button></span>`;
+    }).join("") || `<span class="muted">Nenhum grupo criado.</span>`;
+    document.querySelectorAll("#chips button").forEach(b => b.addEventListener("click", () => {
+      grupos = grupos.filter(g => g.id !== b.dataset.id);
+      Object.keys(partidoGrupo).forEach(p => { if (partidoGrupo[p] === b.dataset.id) delete partidoGrupo[p]; });
+      salvarGrupos(); render();
+    }));
+
+    renderTabela();
+  }
+
+  function celulaAtual(a) {
+    const tit = `${esc(a.nome)} <span class="tag">${esc(a.partido)}</span>`;
+    if (!a.suplente) return tit + (a.nota ? `<span class="nota">${esc(a.nota)}</span>` : "");
+    const g = govPesquisa(a);
+    const gtxt = g ? `Disputa o governo: ${g.pos}º com ${fmt(g.pct)} (${g.inst}, ${g.tipo}).` : "Disputa o governo.";
+    const sup = `Suplente: ${esc(a.suplente.nome)} <span class="tag">${esc(a.suplente.partido)}</span>`;
+    if (!subs) return tit + `<span class="nota">${gtxt} ${sup}</span>`;
+    const troca = eleitoGov[a.uf];
+    return (troca ? `<s>${esc(a.nome)}</s> → <strong>${esc(a.suplente.nome)}</strong> <span class="tag">${esc(a.suplente.partido)}</span>` : tit) +
+      `<label class="gov"><input type="checkbox" data-gov="${a.uf}" ${troca ? "checked" : ""}> ${esc(a.nome)} eleito governador</label>` +
+      `<span class="nota">${gtxt}${troca ? "" : " " + sup}</span>`;
+  }
+
+  function renderSubinfo() {
+    const n = COM_SUPLENTE.filter(a => eleitoGov[a.uf]).length;
+    document.getElementById("subinfo").textContent = subs
+      ? `${n} de ${COM_SUPLENTE.length} senadores que disputam o governo trocados pelo suplente. Ajuste na tabela abaixo.`
+      : `${COM_SUPLENTE.length} senadores com mandato até 2031 disputam o governo. Ligue para ver quem assume se forem eleitos.`;
+  }
+
+  function renderTabela() {
+    renderSubinfo();
+    document.getElementById("tbody").innerHTML = SENADO.map(e => {
+      const a = atualPorUF[e.uf];
+      const cs = CANDS[e.uf];
+      const p = e.pesquisas[0];
+      const alterado = escolha[e.uf].join("|") !== padrao(e.uf).join("|") && escolha[e.uf].slice().sort().join("|") !== padrao(e.uf).slice().sort().join("|");
+      const apertada = cs[1] && cs[2] && cs[1].pct != null && cs[2].pct != null && cs[1].pct - cs[2].pct <= 4;
+      const sel = k => `<select data-uf="${e.uf}" data-k="${k}" aria-label="${e.nome}, vaga ${k + 1}">` +
+        cs.map(c => `<option value="${esc(c.nome)}" ${escolha[e.uf][k] === c.nome ? "selected" : ""}>${esc(c.nome)} (${esc(c.partido)})${c.pct != null ? " · " + fmt(c.pct) : ""}</option>`).join("") + `</select>`;
+      return `<tr class="${alterado ? "alt" : ""}">
+        <td class="uf">${e.uf}</td>
+        <td>${celulaAtual(a)}</td>
+        <td>${sel(0)}</td><td>${sel(1)}</td>
+        <td class="muted">${p.inst} · ${p.campo} <span class="tag">${p.tipo}</span>${apertada ? `<br><span class="tag warn">2ª vaga apertada</span>` : ""}${alterado ? `<br><span class="tag">alterado</span>` : ""}</td></tr>`;
+    }).join("");
+    document.querySelectorAll("#tbody select").forEach(s => s.addEventListener("change", () => {
+      const uf = s.dataset.uf, k = +s.dataset.k, outro = 1 - k;
+      if (escolha[uf][outro] === s.value) escolha[uf][outro] = escolha[uf][k];
+      escolha[uf][k] = s.value;
+      save("escolha", escolha); render();
+    }));
+    document.querySelectorAll("#tbody input[data-gov]").forEach(c => c.addEventListener("change", () => {
+      eleitoGov[c.dataset.gov] = c.checked; save("eleitoGov", eleitoGov); render();
+    }));
+  }
+
+  // ---- Controles
+  function salvarGrupos() { save("grupos", grupos); save("partidoGrupo", partidoGrupo); }
+  function novoGrupo(nome) {
+    if (grupos.length >= GRUPO_CORES.length) { alert("Máximo de " + GRUPO_CORES.length + " grupos."); return null; }
+    const usadas = grupos.map(g => g.cor);
+    const g = { id: "g" + Date.now().toString(36) + grupos.length, nome, cor: GRUPO_CORES.find(c => !usadas.includes(c)) };
+    grupos.push(g);
+    return g;
+  }
+  document.getElementById("gform").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const inp = document.getElementById("gnome");
+    const nome = inp.value.trim();
+    if (!nome) return;
+    if (novoGrupo(nome)) { inp.value = ""; salvarGrupos(); render(); }
+  });
+  document.getElementById("exemplo").addEventListener("click", () => {
+    grupos = []; partidoGrupo = {};
+    const ex = [
+      ["Base do governo Lula", ["PT", "PSB", "PDT", "PSOL", "Rede", "PCdoB", "PV"]],
+      ["Centro", ["MDB", "PSD", "União Brasil", "PP", "Republicanos", "PSDB", "Podemos", "Solidariedade", "Avante", "PRD"]],
+      ["Oposição", ["PL", "Novo"]]
+    ];
+    ex.forEach(([nome, ps]) => { const g = novoGrupo(nome); ps.forEach(p => (partidoGrupo[p] = g.id)); });
+    salvarGrupos(); setModo("grupo");
+  });
+  document.getElementById("limparG").addEventListener("click", () => { grupos = []; partidoGrupo = {}; salvarGrupos(); setModo("partido"); });
+  document.getElementById("reset").addEventListener("click", () => {
+    SENADO.forEach(e => (escolha[e.uf] = padrao(e.uf))); eleitoGov = govPadrao();
+    save("escolha", escolha); save("eleitoGov", {}); render();
+  });
+
+  function seg(id, set) {
+    document.querySelectorAll(`#${id} button`).forEach(b => b.addEventListener("click", () => set(b.dataset.v)));
+  }
+  function marcar(id, v) { document.querySelectorAll(`#${id} button`).forEach(b => b.classList.toggle("on", b.dataset.v === v)); }
+  function setModo(v) { modo = v; marcar("modo", v); render(); }
+  seg("modo", setModo);
+  const subsEl = document.getElementById("subs");
+  subsEl.checked = subs;
+  subsEl.addEventListener("change", () => { subs = subsEl.checked; save("subs", subs); render(); });
+  seg("destaque", v => { destaque = v; marcar("destaque", v); render(); });
+  document.addEventListener("touchstart", ev => { if (!ev.target.closest("#hemi, #stack")) hideTip(); }, { passive: true });
+
+  render();
+})();
+</script>
+</body>
+</html>

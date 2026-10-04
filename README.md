@@ -22,12 +22,15 @@ Uma única página, com um seletor de cargo no topo (**Governador** | **Senado**
 ├── documentacao/
 │   ├── dados.md           ← formato dos dados, fontes e como atualizar
 │   ├── pagina.md          ← como a página funciona (mapa, pop-up, tabela, cores)
+│   ├── senado.md          ← página de bancadas do Senado
 │   └── roadmap.md         ← próximos passos (senadores, apuração, ajustes)
 └── docs/                  ← pasta publicada pelo GitHub Pages
     ├── index.html         ← página única (HTML + CSS + JS inline), com seletor Governador/Senado
+    ├── senado.html        ← simulação das bancadas do Senado a partir de 2027
     └── data/
         ├── dados.js           ← pesquisas e candidatos a governador
         ├── senado.js          ← pesquisas e candidatos ao Senado
+        ├── senado-atual.js    ← 27 senadores com mandato até 2031 + cores dos partidos
         └── brasil-estados.geojson ← malha simplificada dos 27 estados
 ```
 

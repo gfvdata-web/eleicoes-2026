@@ -69,6 +69,8 @@
   .modo { display: inline-flex; margin-top: 14px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
   .modo button { font: inherit; font-size: .9rem; font-weight: 600; padding: 6px 16px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
   .modo button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+  .modo a { font-size: .9rem; font-weight: 600; padding: 6px 16px; border-radius: 7px; color: var(--muted); text-decoration: none; }
+  .modo a:hover { color: var(--text); }
   .row.eleito .nm { font-weight: 600; }
   footer { margin-top: 24px; font-size: .8rem; color: var(--muted); }
   footer a { color: var(--accent); }
@@ -82,6 +84,7 @@
     <div class="modo" role="group" aria-label="Cargo">
       <button type="button" data-modo="gov" aria-pressed="true">Governador</button>
       <button type="button" data-modo="sen" aria-pressed="false">Senado</button>
+      <a href="senado.html">Bancada Senado</a>
     </div>
   </header>
 
