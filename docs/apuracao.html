@@ -115,6 +115,9 @@
   .apu-bar { height: 8px; background: var(--bar-bg); border-radius: 4px; overflow: hidden; margin-top: 10px; }
   .apu-bar i { display: block; height: 100%; width: 0; background: var(--ao-vivo); border-radius: 4px; transition: width .4s; }
   #mapa text.pct { font-size: 11px; font-weight: 500; }
+  .brgeral { border: 1px solid var(--border); border-left: 4px solid var(--ao-vivo); border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; font-size: .85rem; }
+  .brgeral strong.g { font-size: 1.3rem; display: block; }
+  #mapa text.cand { font-size: 9px; font-weight: 500; }
   .tag.tse { border-color: var(--ao-vivo); color: var(--ao-vivo); }
   .sim { background: #f2c94c; color: #1d1d1b; padding: 1px 6px; border-radius: 4px; }
   .atalhos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
@@ -152,6 +155,7 @@
   <div class="card map-grid">
     <svg id="mapa" viewBox="0 0 800 780" role="img" aria-label="Mapa do Brasil por estado"></svg>
     <div class="side">
+      <div class="brgeral so-pres" id="brGeral" hidden></div>
       <div class="ctrl">
         <div class="seg" role="group" aria-label="Colorir o mapa por">
           <button type="button" data-colorir="folga" aria-pressed="true">Folga</button>
@@ -182,7 +186,7 @@
       <p class="so-sen" hidden>Cada estado elege <strong>2 senadores</strong> e cada eleitor vota duas vezes. Os dois votos aparecem somados.</p>
       <p><strong>V</strong> = votos válidos, sem brancos, nulos e indecisos. <strong>T</strong> = votos totais, no cenário estimulado.</p>
       <p class="so-sen" hidden><strong>C</strong> = % de eleitores que citam o nome em um dos dois votos; a soma passa de 100%.</p>
-      <p class="so-pres" hidden>No modo Presidente, o número abaixo da sigla é o <strong>% de votos válidos do líder</strong> no estado; a cor mostra a vantagem (ou o partido) do líder. O % de urnas apuradas aparece no pop-up.</p>
+      <p class="so-pres" hidden>No modo Presidente, abaixo da sigla vêm o <strong>% de urnas apuradas</strong> e, na linha seguinte, o <strong>% de votos válidos de Flávio / Lula</strong> no estado. A cor mostra a vantagem (ou o partido) do líder.</p>
       <p class="so-nopres">O número abaixo da sigla é o <strong>% de urnas apuradas</strong> no estado. Cor, pop-up e tabela usam a apuração (votos válidos).</p>
       <p>Clique em um estado para filtrar a tabela abaixo.</p>
     </div>
@@ -228,7 +232,7 @@
     pres: {
       dados: [], atualizado: "",
       titulo: "Disputa pela Presidência — 2026",
-      legTitulo: "Vantagem do líder", legDesc: "Diferença entre o 1º e o 2º colocados na apuração do estado (votos válidos). O número no mapa é o % de votos do líder",
+      legTitulo: "Vantagem do líder", legDesc: "Diferença entre o 1º e o 2º colocados na apuração do estado (votos válidos).",
       docTitle: "Presidente 2026 — Apuração"
     },
     gov: {
@@ -399,16 +403,21 @@
       .attr("x", px).attr("y", py).text(d => d.properties.sigla);
     g.selectAll("text.pct").data(geo.features).join("text").attr("class", "pct")
       .attr("x", px).attr("y", d => py(d) + 12);
+    g.selectAll("text.cand").data(geo.features).join("text").attr("class", "cand")
+      .attr("x", px).attr("y", d => py(d) + 22);
     rotulos();
     render();
   });
   // Presidente: o número no mapa é o % de votos do líder; nos demais cargos, o % de urnas apuradas
-  const rotulos = () => svg.selectAll("text.pct").text(d => {
-    const uf = d.properties.sigla;
-    if (modo !== "pres") return pctMapa(pctUrnas(uf));
-    const e = porUF && porUF[uf], r = e ? ordenado(principal(e)) : [];
-    return r.length ? fmt(+r[0][1]) : "";
-  });
+  // Presidente: abaixo do % de urnas, o % de votos válidos de Flávio / Lula no estado
+  const votoDe = (a, re) => { const r = a && Array.isArray(a.res) && a.res.find(r => re.test(r[0])); return r ? (+r[1]).toFixed(1).replace(".", ",") : "–"; };
+  const rotulos = () => {
+    svg.selectAll("text.pct").text(d => pctMapa(pctUrnas(d.properties.sigla)));
+    svg.selectAll("text.cand").text(d => {
+      const a = apuUF(d.properties.sigla);
+      return modo === "pres" && a && a.pct > 0 ? votoDe(a, /FLAVIO/i) + " / " + votoDe(a, /LULA/i) : "";
+    });
+  };
   // Presidente não tem lista própria: os 27 estados vêm do governador e os candidatos, da apuração
   function montarPres() {
     MODOS.pres.dados = MODOS.gov.dados.map(g => {
@@ -426,6 +435,8 @@
     const media = ps.reduce((s, v) => s + v, 0) / ufs.length;
     const cargo = modo === "sen" ? "Senado" : modo === "pres" ? "Presidente" : "Governador";
     const br = modo === "pres" && (APU.pres.ufs || {}).BR;
+    const bg = document.getElementById("brGeral");
+    bg.innerHTML = br && br.pct > 0 ? `<span>Apuração geral · Brasil</span><strong class="g">${fmtPct(br.pct)} das urnas</strong>Flávio ${votoDe(br, /FLAVIO/i)}% · Lula ${votoDe(br, /LULA/i)}%` : "Apuração geral: aguardando dados";
     const brTxt = br && br.pct > 0 && Array.isArray(br.res) && br.res.length > 1
       ? ` · Brasil (${fmtPct(br.pct)} das urnas): <strong>${br.res[0][0]}</strong> ${fmt(+br.res[0][1])} × <strong>${br.res[1][0]}</strong> ${fmt(+br.res[1][1])}` : "";
     document.getElementById("apu").classList.toggle("ativa", iniciados > 0 && fechados < ufs.length);
