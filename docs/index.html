@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Governadores 2026 — Pesquisas</title>
+<meta name="description" content="Mapa das pesquisas de intenção de voto para governador nas eleições de 2026, por estado.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f6f2; --surface: #ffffff; --text: #1d1d1b; --muted: #6b6a65; --border: #e3e1da;
+    --accent: #2f5d8a;
+    --folgada: #2f6f5e; --competitiva: #9bbf8a; --apertada: #e0a43a; --empate: #c2553d;
+    --state-stroke: #ffffff; --bar: #2f5d8a; --bar-bg: #ecebe6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413; --surface: #1e1e1c; --text: #eeede8; --muted: #a09f99; --border: #33322f;
+      --accent: #7fb0e0;
+      --folgada: #4f9c86; --competitiva: #7f9f6e; --apertada: #d39a35; --empate: #d0644b;
+      --state-stroke: #141413; --bar: #7fb0e0; --bar-bg: #2a2a27;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; line-height: 1.45; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+  header h1 { font-size: 1.7rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); font-size: .95rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 20px; }
+  .map-grid { display: grid; grid-template-columns: 1fr 300px; gap: 16px; align-items: start; }
+  @media (max-width: 820px) { .map-grid { grid-template-columns: 1fr; } }
+  #mapa { width: 100%; height: auto; display: block; }
+  #mapa path { stroke: var(--state-stroke); stroke-width: .8; cursor: pointer; transition: opacity .15s; }
+  #mapa path:hover, #mapa path.sel { stroke: var(--text); stroke-width: 1.6; }
+  #mapa text { font-size: 10px; font-weight: 600; fill: #fff; pointer-events: none; text-anchor: middle; paint-order: stroke; stroke: rgba(0,0,0,.35); stroke-width: 2px; }
+  .legend h3, .side h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
+  .legend ul { list-style: none; padding: 0; margin: 0 0 16px; }
+  .legend li { display: flex; align-items: center; gap: 8px; font-size: .9rem; margin: 4px 0; }
+  .sw { width: 14px; height: 14px; border-radius: 3px; flex: none; }
+  .side p { font-size: .85rem; color: var(--muted); margin: 0 0 8px; }
+  #tip { position: fixed; z-index: 10; pointer-events: none; opacity: 0; transition: opacity .1s; width: 290px; max-width: calc(100vw - 24px);
+         background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.18); font-size: .82rem; }
+  #tip h4 { margin: 0 0 2px; font-size: 1rem; }
+  #tip .sub { color: var(--muted); margin-bottom: 8px; }
+  .poll { margin-top: 8px; }
+  .poll .ph { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 3px; }
+  .poll .ph span:last-child { color: var(--muted); font-weight: 400; }
+  .row { display: grid; grid-template-columns: 1fr 90px 36px; gap: 6px; align-items: center; margin: 2px 0; }
+  .row .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar { height: 7px; background: var(--bar-bg); border-radius: 4px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--bar); border-radius: 4px; }
+  .row .v { text-align: right; font-variant-numeric: tabular-nums; }
+  .tag { display: inline-block; font-size: .7rem; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); margin-left: 4px; font-weight: 400; }
+  .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .filters label { font-size: .85rem; color: var(--muted); }
+  select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+  button.clear { font: inherit; font-size: .85rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--accent); cursor: pointer; }
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th { text-align: left; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border-bottom: 1px solid var(--border); padding: 8px; }
+  td { border-bottom: 1px solid var(--border); padding: 10px 8px; vertical-align: top; }
+  td.uf { font-weight: 700; white-space: nowrap; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.res { color: var(--muted); min-width: 260px; }
+  tr.first td { border-top: 2px solid var(--border); }
+  .lead { font-weight: 600; }
+  .party { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--bar-bg); font-size: .8rem; white-space: nowrap; }
+  footer { margin-top: 24px; font-size: .8rem; color: var(--muted); }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Disputa pelos governos estaduais — 2026</h1>
+    <p>Últimas pesquisas de intenção de voto antes do 1º turno (04/10/2026). Passe o mouse (ou toque) sobre um estado para ver os números.</p>
+  </header>
+
+  <div class="card map-grid">
+    <svg id="mapa" viewBox="0 0 800 780" role="img" aria-label="Mapa do Brasil por estado"></svg>
+    <div class="side">
+      <div class="legend">
+        <h3>Vantagem do líder</h3>
+        <p>Pela pesquisa mais recente de cada estado</p>
+        <ul id="legenda"></ul>
+      </div>
+      <h3>Como ler</h3>
+      <p><strong>V</strong> = votos válidos, sem brancos, nulos e indecisos. <strong>T</strong> = votos totais, no cenário estimulado.</p>
+      <p>Clique em um estado para filtrar a tabela abaixo.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="filters">
+      <label for="fEstado">Estado</label>
+      <select id="fEstado"><option value="">Todos os estados</option></select>
+      <label for="fRegiao">Região</label>
+      <select id="fRegiao"><option value="">Todas</option></select>
+      <button class="clear" id="limpar">Limpar filtros</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>UF</th><th>Candidato</th><th>Partido</th><th style="text-align:right">Última pesquisa</th><th>Resumo</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    Fontes: Quaest, Datafolha, AtlasIntel, Paraná Pesquisas, Real Time Big Data e outros institutos registrados no TSE, compilados de
+    <a href="https://www.opovo.com.br/noticias/politica/eleicoes/2026/10/04/resultados-das-pesquisas-datafolha-e-quaest-para-governador.html">O Povo</a>,
+    <a href="https://www.gazetadopovo.com.br/eleicoes/2026/pesquisa-eleitoral-2026/">Gazeta do Povo</a> e das páginas "Pesquisas eleitorais para a eleição estadual de 2026" da
+    <a href="https://pt.wikipedia.org/">Wikipédia</a>. Resumos dos candidatos são sínteses editoriais e podem conter imprecisões. Atualizado em <span id="atualizado"></span>.
+  </footer>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="data/dados.js"></script>
+<script>
+(function () {
+  const ESTADOS = window.ESTADOS;
+  const porUF = Object.fromEntries(ESTADOS.map(e => [e.uf, e]));
+  document.getElementById("atualizado").textContent = window.ATUALIZADO_EM;
+
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const FAIXAS = [
+    { id: "empate", nome: "Empate técnico (até 4 pts)", max: 4 },
+    { id: "apertada", nome: "Apertada (4 a 10 pts)", max: 10 },
+    { id: "competitiva", nome: "Vantagem (10 a 20 pts)", max: 20 },
+    { id: "folgada", nome: "Folgada (mais de 20 pts)", max: Infinity }
+  ];
+  const fmt = v => (Number.isInteger(v) ? v : v.toFixed(1).replace(".", ",")) + "%";
+  const margem = e => { const r = [...e.pesquisas[0].res].sort((a, b) => b[1] - a[1]); return r[0][1] - (r[1] ? r[1][1] : 0); };
+  const faixa = e => FAIXAS.find(f => margem(e) <= f.max);
+  const cor = e => css("--" + faixa(e).id);
+
+  // Legenda
+  document.getElementById("legenda").innerHTML = FAIXAS.map(f =>
+    `<li><span class="sw" style="background:var(--${f.id})"></span>${f.nome}</li>`).join("");
+
+  // Tooltip
+  const tip = document.getElementById("tip");
+  function tipHTML(e) {
+    const lider = [...e.pesquisas[0].res].sort((a, b) => b[1] - a[1])[0][0];
+    const polls = e.pesquisas.map(p => {
+      const rows = [...p.res].sort((a, b) => b[1] - a[1]).map(([n, v]) =>
+        `<div class="row"><span class="nm">${n}</span><span class="bar"><i style="width:${Math.min(v, 100)}%"></i></span><span class="v">${fmt(v)}</span></div>`).join("");
+      return `<div class="poll"><div class="ph"><span>${p.inst}<span class="tag">${p.tipo}</span></span><span>${p.campo}</span></div>${rows}</div>`;
+    }).join("");
+    return `<h4>${e.nome}</h4><div class="sub">Lidera: <strong>${lider}</strong> · margem de ${fmt(margem(e)).replace("%", " pts")}</div>${polls}`;
+  }
+  function moveTip(ev) {
+    const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+    let x = ev.clientX + pad, y = ev.clientY + pad;
+    if (x + w > innerWidth - 8) x = ev.clientX - w - pad;
+    if (x < 8) x = 8;
+    if (y + h > innerHeight - 8) y = Math.max(8, innerHeight - h - 8);
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  }
+
+  // Mapa
+  const svg = d3.select("#mapa");
+  fetch("data/brasil-estados.geojson").then(r => r.json()).then(geo => {
+    const proj = d3.geoMercator().fitExtent([[10, 10], [790, 770]], geo);
+    const path = d3.geoPath(proj);
+    const g = svg.append("g");
+    g.selectAll("path").data(geo.features).join("path")
+      .attr("d", path)
+      .attr("data-uf", d => d.properties.sigla)
+      .attr("fill", d => porUF[d.properties.sigla] ? cor(porUF[d.properties.sigla]) : "#999")
+      .on("mouseenter", (ev, d) => { const e = porUF[d.properties.sigla]; if (!e) return; tip.innerHTML = tipHTML(e); tip.style.opacity = 1; moveTip(ev); })
+      .on("mousemove", moveTip)
+      .on("mouseleave", () => { tip.style.opacity = 0; })
+      .on("click", (ev, d) => { setEstado(d.properties.sigla); tip.innerHTML = tipHTML(porUF[d.properties.sigla]); tip.style.opacity = 1; moveTip(ev); });
+    const pequenos = { DF: [0, 0], SE: [8, 4], AL: [10, 2], PB: [16, 0], RN: [10, -4], PE: [0, 0], ES: [6, 2], RJ: [4, 6] };
+    g.selectAll("text").data(geo.features).join("text")
+      .attr("x", d => path.centroid(d)[0] + (pequenos[d.properties.sigla] || [0])[0])
+      .attr("y", d => path.centroid(d)[1] + 4 + ((pequenos[d.properties.sigla] || [0, 0])[1]))
+      .text(d => d.properties.sigla);
+  });
+  document.addEventListener("touchstart", ev => { if (!ev.target.closest("#mapa")) tip.style.opacity = 0; }, { passive: true });
+
+  // Filtros e tabela
+  const fEstado = document.getElementById("fEstado"), fRegiao = document.getElementById("fRegiao");
+  [...ESTADOS].sort((a, b) => a.nome.localeCompare(b.nome)).forEach(e => fEstado.add(new Option(`${e.nome} (${e.uf})`, e.uf)));
+  ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"].forEach(r => fRegiao.add(new Option(r, r)));
+
+  function render() {
+    const uf = fEstado.value, reg = fRegiao.value;
+    const lista = ESTADOS.filter(e => (!uf || e.uf === uf) && (!reg || e.regiao === reg))
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+    document.getElementById("tbody").innerHTML = lista.map(e => {
+      const p = e.pesquisas[0];
+      const pct = Object.fromEntries(p.res);
+      const cands = [...e.candidatos].sort((a, b) => (pct[b.nome] ?? -1) - (pct[a.nome] ?? -1));
+      return cands.map((c, i) => `<tr class="${i === 0 ? "first" : ""}">
+        <td class="uf">${i === 0 ? `${e.uf}` : ""}</td>
+        <td class="${i === 0 ? "lead" : ""}">${c.nome}</td>
+        <td><span class="party">${c.partido}</span></td>
+        <td class="num">${pct[c.nome] != null ? fmt(pct[c.nome]) : "—"}${i === 0 ? `<br><span class="tag">${p.inst} ${p.tipo} · ${p.campo}</span>` : ""}</td>
+        <td class="res">${c.resumo}</td></tr>`).join("");
+    }).join("");
+    d3.selectAll("#mapa path").classed("sel", d => d && d.properties.sigla === uf);
+  }
+  function setEstado(uf) { fEstado.value = uf; fRegiao.value = ""; render(); }
+  fEstado.addEventListener("change", () => { if (fEstado.value) fRegiao.value = ""; render(); });
+  fRegiao.addEventListener("change", () => { fEstado.value = ""; render(); });
+  document.getElementById("limpar").addEventListener("click", () => { fEstado.value = ""; fRegiao.value = ""; render(); });
+  render();
+})();
+</script>
+</body>
+</html>
