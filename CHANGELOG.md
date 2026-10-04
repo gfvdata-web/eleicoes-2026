@@ -3,6 +3,7 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-04
+- **Apuração, pop-up:** selo "Eleito" ou "Confirmado 2º turno" (governador e presidente), pela marcação do TSE ou, na falta dela, por cálculo matemático com folga de 20% sobre os votos que faltam.
 - **Apuração, tabela:** corrigido o percentual de candidatos homônimos de partidos diferentes (ex.: duas Carol de Toni em SC, PL e PCO); a tabela agora casa por nome e partido, como o pop-up.
 
 - **Apuração por estado:** corrigido o mapa em branco nos estados diferentes do ES (`es.html?uf=…`): as malhas em `docs/data/uf/` estavam com o sentido dos polígonos invertido para o D3; `gerar_ufs.py` agora grava no sentido certo.

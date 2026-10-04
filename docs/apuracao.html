@@ -55,6 +55,8 @@
          background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.18); font-size: .82rem; }
   #tip h4 { margin: 0 0 2px; font-size: 1rem; }
   #tip .sub { color: var(--muted); margin-bottom: 8px; }
+  #tip .selo { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; font-size: .68rem; font-weight: 600; vertical-align: middle; color: #fff; background: #1a7f4b; }
+  #tip .selo.t2 { background: #b26a00; }
   .poll { margin-top: 8px; }
   .poll .ph { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 3px; }
   .poll .ph span:last-child { color: var(--muted); font-weight: 400; }
@@ -386,6 +388,17 @@
 
   // Tooltip
   const tip = document.getElementById("tip");
+  // Situação matemática (quando o TSE ainda não marcou): estima os votos que faltam pela proporção
+  // das urnas apuradas, com folga de 20%, e vê se o 1º já passou de 50% ou se ninguém mais chega lá.
+  function situacaoMat(a) {
+    if (!a || !(a.pct >= 50) || !Array.isArray(a.res) || a.res.length < 2) return null;
+    const v = a.res.map(r => +r[3] || 0).sort((x, y) => y - x), cont = v.reduce((t, x) => t + x, 0);
+    if (!cont) return null;
+    const falta = a.pct >= 100 ? 0 : cont * (100 - a.pct) / a.pct * 1.2;
+    if (v[0] > (cont + falta) / 2) return "eleito";
+    if (v[0] + falta < (cont + falta) / 2) return "2turno";
+    return null;
+  }
   function tipHTML(e) {
     const r = ordenado(principal(e));
     const pp = principal(e);
@@ -395,13 +408,14 @@
       return `<div class="row${i < vagas() ? " eleito" : ""}"><span class="nm">${n}${pt && pt !== "—" ? ` <span class="pt">(${pt})</span>` : ""}</span><span class="vt">${r[3] != null ? vt(+r[3]) : ""}</span><span class="v">${fmt(+r[1])}</span></div>`;
     }).join("");
     const polls = `<div class="poll">${rows}</div>`;
-    const a = pp.apu, sit = a && a.situacao;
+    const a = pp.apu, sit = a && (a.situacao || (modo === "sen" ? null : situacaoMat(a)));
+    const selo = modo === "sen" ? "" : sit === "eleito" ? ` <span class="selo">Eleito</span>` : sit === "2turno" ? ` <span class="selo t2">Confirmado 2º turno</span>` : "";
     const situ = !sit ? ""
       : modo === "sen" ? `<strong>Eleitos:</strong> ${r[0][0]} e ${r[1][0]}<br>`
       : sit === "eleito" ? `<strong>Eleito:</strong> ${r[0][0]}<br>`
       : sit === "2turno" ? `<strong>2º turno:</strong> ${r[0][0]} × ${r[1][0]}<br>` : "";
     const urnas = `<span class="tag tse" style="margin:0">${a ? fmtPct(a.pct) + " das urnas apuradas" : "0% das urnas apuradas"}</span>`;
-    return `<h4>${e.nome}</h4><div class="sub">${situ}${urnas}</div>${polls}`;
+    return `<h4>${e.nome}${selo}</h4><div class="sub">${situ}${urnas}</div>${polls}`;
   }
   function moveTip(ev) {
     const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
