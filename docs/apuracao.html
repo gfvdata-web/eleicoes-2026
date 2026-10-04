@@ -432,7 +432,8 @@
   function faixaApu() {
     const ufs = MODOS.gov.dados.map(e => e.uf), ps = ufs.map(pctUrnas);
     const iniciados = ps.filter(v => v > 0).length, fechados = ps.filter(v => v >= 100).length;
-    const media = ps.reduce((s, v) => s + v, 0) / ufs.length;
+    const brOf = modo === "pres" && (APU.pres.ufs || {}).BR, usaBR = !!(brOf && brOf.pct > 0);
+    const media = usaBR ? +brOf.pct : ps.reduce((s, v) => s + v, 0) / ufs.length;
     const cargo = modo === "sen" ? "Senado" : modo === "pres" ? "Presidente" : "Governador";
     const br = modo === "pres" && (APU.pres.ufs || {}).BR;
     const bg = document.getElementById("brGeral");
@@ -441,7 +442,7 @@
       ? ` · Brasil (${fmtPct(br.pct)} das urnas): <strong>${br.res[0][0]}</strong> ${fmt(+br.res[0][1])} × <strong>${br.res[1][0]}</strong> ${fmt(+br.res[1][1])}` : "";
     document.getElementById("apu").classList.toggle("ativa", iniciados > 0 && fechados < ufs.length);
     document.getElementById("apuStatus").innerHTML = (APU[modo].simulacao ? "<b class=\"sim\">Dados simulados, não oficiais</b> · " : "") + (iniciados
-      ? `${cargo}: <strong>${fmtPct(media)}</strong> das urnas apuradas (média dos 27 estados) · ${iniciados} ${iniciados > 1 ? "estados" : "estado"} com apuração · ${fechados} ${fechados === 1 ? "concluído" : "concluídos"}${brTxt}`
+      ? `${cargo}: <strong>${fmtPct(media)}</strong> das urnas apuradas ${usaBR ? "no Brasil (total do TSE)" : "(média dos 27 estados)"} · ${iniciados} ${iniciados > 1 ? "estados" : "estado"} com apuração · ${fechados} ${fechados === 1 ? "concluído" : "concluídos"}${brTxt.replace(/ · Brasil \([^)]*\)/, " · Brasil")}`
       : "Aguardando o início da apuração. O TSE começa a divulgar os resultados às 17h (horário de Brasília).");
     document.getElementById("apuHora").textContent = APU[modo].atualizado ? "Dados do TSE de " + APU[modo].atualizado : "";
     document.getElementById("apuBar").style.width = media + "%";
