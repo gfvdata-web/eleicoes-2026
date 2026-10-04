@@ -4,6 +4,7 @@ Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-04
 
+- **Pop-up do mapa:** cada candidato listado nas pesquisas (Governador e Senado) agora mostra o partido entre parênteses ao lado do nome.
 - **Senado no modo Partido:** quando as duas vagas ficam com partidos diferentes, o estado agora aparece dividido ao meio (1º colocado à esquerda, 2º à direita) em vez de listrado.
 - **Bancada Senado:** grupos iniciais esquerda / centro / direita (o leitor muda qualquer partido de grupo pelo menu; botão para restaurar). Lista de bancadas e grupos com % (sobre 81 cadeiras). Partido atual dos suplentes conferido na imprensa; Mauro Carvalho Júnior (suplente de Wellington Fagundes) passa a constar sem partido.
 - **Governador: AtlasIntel como pesquisa principal.** Nos estados com pesquisa AtlasIntel (BA, CE, PA, PI, RN, SP), ela passa a definir a cor do mapa, o líder e os percentuais da tabela, e aparece primeiro no pop-up. Nos demais estados e no Senado, segue valendo a pesquisa mais recente.

@@ -39,15 +39,16 @@
   .legend li { display: flex; align-items: center; gap: 8px; font-size: .9rem; margin: 4px 0; }
   .sw { width: 14px; height: 14px; border-radius: 3px; flex: none; }
   .side p { font-size: .85rem; color: var(--muted); margin: 0 0 8px; }
-  #tip { position: fixed; z-index: 10; pointer-events: none; opacity: 0; transition: opacity .1s; width: 290px; max-width: calc(100vw - 24px);
+  #tip { position: fixed; z-index: 10; pointer-events: none; opacity: 0; transition: opacity .1s; width: 330px; max-width: calc(100vw - 24px);
          background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.18); font-size: .82rem; }
   #tip h4 { margin: 0 0 2px; font-size: 1rem; }
   #tip .sub { color: var(--muted); margin-bottom: 8px; }
   .poll { margin-top: 8px; }
   .poll .ph { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 3px; }
   .poll .ph span:last-child { color: var(--muted); font-weight: 400; }
-  .row { display: grid; grid-template-columns: 1fr 90px 36px; gap: 6px; align-items: center; margin: 2px 0; }
-  .row .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row { display: grid; grid-template-columns: 1fr 70px 36px; gap: 6px; align-items: center; margin: 2px 0; }
+  .row .nm { line-height: 1.25; }
+  .row .nm .pt { color: var(--muted); font-weight: 400; }
   .bar { height: 7px; background: var(--bar-bg); border-radius: 4px; overflow: hidden; }
   .bar i { display: block; height: 100%; background: var(--bar); border-radius: 4px; }
   .row .v { text-align: right; font-variant-numeric: tabular-nums; }
@@ -289,7 +290,7 @@
     const pp = principal(e);
     const polls = [pp, ...e.pesquisas.filter(p => p !== pp)].map(p => {
       const rows = ordenado(p).map(([n, v], i) =>
-        `<div class="row${i < vagas() ? " eleito" : ""}"><span class="nm">${n}</span><span class="bar"><i style="width:${Math.min(v, 100)}%"></i></span><span class="v">${fmt(v)}</span></div>`).join("");
+        `<div class="row${i < vagas() ? " eleito" : ""}"><span class="nm">${n}${e.candidatos.some(c => c.nome === n) ? ` <span class="pt">(${partidoDe(e, n)})</span>` : ""}</span><span class="bar"><i style="width:${Math.min(v, 100)}%"></i></span><span class="v">${fmt(v)}</span></div>`).join("");
       return `<div class="poll"><div class="ph"><span>${p.inst}<span class="tag">${p.tipo}</span></span><span>${p.campo}</span></div>${rows}</div>`;
     }).join("");
     const sub = modo === "sen"
