@@ -62,6 +62,8 @@
   .plist { width: 100%; border-collapse: collapse; font-size: .88rem; }
   .plist td { padding: 5px 4px; border-bottom: 1px solid var(--border); vertical-align: middle; }
   .plist td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .plist th { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; text-align: right; padding: 0 4px 6px; border-bottom: 1px solid var(--border); }
+  .plist th:first-child { text-align: left; }
   .plist .det { color: var(--muted); font-size: .75rem; }
   .plist select { max-width: 120px; padding: 3px 6px; font-size: .8rem; }
   .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
@@ -155,7 +157,7 @@
   <footer>
     Pesquisas: Quaest, Datafolha, AtlasIntel, Paraná Pesquisas, Real Time Big Data e outros institutos, compiladas de Gazeta do Povo, CartaCapital, CNN Brasil e
     <a href="https://pt.wikipedia.org/">Wikipédia</a>. Partidos dos senadores com mandato até 2031 conforme a filiação atual conhecida, que pode mudar.
-    Se um desses senadores for eleito governador, a vaga passa ao 1º suplente (lista da Wikipédia; o partido do suplente pode ser o da eleição de 2022). Os grupos são criados por você e não representam uma classificação deste site.
+    Se um desses senadores for eleito governador, a vaga passa ao 1º suplente (nomes da Wikipédia; partidos conferidos na imprensa em 04/10/2026). Os grupos são criados por você e não representam uma classificação deste site.
     Esta é uma simulação, não uma previsão. Resumos e filiações podem conter imprecisões. Atualizado em <span id="atualizado"></span>.
   </footer>
 </div>
@@ -176,6 +178,7 @@
   const GRUPO_CORES = ["#2f5d8a", "#e0a43a", "#7a5ea8", "#2f6f5e", "#c2553d", "#8a6d3b"];
   const SEM_GRUPO = { id: "", nome: "Sem grupo", cor: "#b9b7af" };
   const fmt = v => (Number.isInteger(v) ? v : v.toFixed(1).replace(".", ",")) + "%";
+  const pct = n => (n / 81 * 100).toFixed(1).replace(".", ",") + "%";
   const corPartido = p => CORES[p] || "#9a988f";
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -312,7 +315,7 @@
       ? [...grupos, SEM_GRUPO].map(g => ({ nome: g.nome, cor: g.cor, n: lista.filter(s => grupoDe(s.partido) === g).length })).filter(b => b.n)
       : linhas.map(l => ({ nome: l.partido, cor: corPartido(l.partido), n: l.total }));
     const stack = document.getElementById("stack");
-    stack.innerHTML = blocos.map(b => `<i style="flex:${b.n};background:${b.cor}" data-t="${esc(b.nome)}: ${b.n}"></i>`).join("") +
+    stack.innerHTML = blocos.map(b => `<i style="flex:${b.n};background:${b.cor}" data-t="${esc(b.nome)}: ${b.n} (${pct(b.n)})"></i>`).join("") +
       [[41, "maioria · 41", "l"], [49, "49 · 3/5 (PEC)", "r"]].map(([v, t, lado]) => `<div class="mark ${lado}" style="left:calc(${v / 81 * 100}% - 1px)"><span>${t}</span></div>`).join("");
     stack.querySelectorAll("i").forEach(el => {
       el.addEventListener("mouseenter", ev => showTip(ev, `<strong>${el.dataset.t}</strong> cadeiras`));
@@ -322,11 +325,12 @@
 
     // Lista de partidos com seletor de grupo
     const opts = p => [SEM_GRUPO, ...grupos].map(g => `<option value="${g.id}" ${partidoGrupo[p] === g.id || (!g.id && !grupoDe(p).id) ? "selected" : ""}>${esc(g.nome)}</option>`).join("");
-    document.getElementById("plist").innerHTML = linhas.map(l => `<tr>
+    document.getElementById("plist").innerHTML = `<tr><th>Partido</th><th>Cadeiras</th><th>%</th><th></th></tr>` + linhas.map(l => `<tr>
       <td><span class="sw" style="background:${corPartido(l.partido)}"></span>${esc(l.partido)}</td>
       <td class="n"><strong>${l.total}</strong> <span class="det">(${l.atual} + ${l.novo})</span></td>
+      <td class="n">${pct(l.total)}</td>
       <td>${grupos.length ? `<select data-p="${esc(l.partido)}" aria-label="Grupo do ${esc(l.partido)}">${opts(l.partido)}</select>` : ""}</td></tr>`).join("") +
-      `<tr><td colspan="3" class="det">Entre parênteses: mandato até 2031 + eleitos em 2026.</td></tr>`;
+      `<tr><td colspan="4" class="det">Entre parênteses: mandato até 2031 + eleitos em 2026. % sobre as 81 cadeiras.</td></tr>`;
     document.querySelectorAll("#plist select").forEach(sel => sel.addEventListener("change", () => {
       if (sel.value) partidoGrupo[sel.dataset.p] = sel.value; else delete partidoGrupo[sel.dataset.p];
       save("partidoGrupo", partidoGrupo); render();

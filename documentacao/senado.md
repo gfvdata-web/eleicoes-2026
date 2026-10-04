@@ -11,7 +11,7 @@ Simula a composição do Senado a partir de 01/02/2027. É uma página separada,
 
 - O partido de um senador atual é a filiação atual conhecida. Se mudar, edite `senado-atual.js`.
 - Partido sem cor em `CORES_PARTIDOS` aparece em cinza. Adicione a cor lá.
-- Nove senadores com mandato até 2031 concorrem a governador. Eles têm `governador` (nome igual ao de `dados.js`) e `suplente: { nome, partido }` (1º suplente, segundo a Wikipédia; o partido pode ser o da eleição de 2022).
+- Nove senadores com mandato até 2031 concorrem a governador. Eles têm `governador` (nome igual ao de `dados.js`) e `suplente: { nome, partido }` (1º suplente; nomes da Wikipédia, partidos conferidos na imprensa em 04/10/2026; fontes no comentário do arquivo).
 
 ## Como a simulação funciona
 
@@ -25,4 +25,5 @@ Simula a composição do Senado a partir de 01/02/2027. É uma página separada,
 
 - Hemiciclo: 5 fileiras e 81 círculos, preenchidos da esquerda para a direita na ordem dos grupos e, dentro de cada grupo, pelo tamanho da bancada. Círculo com miolo vazado = eleito em 2026.
 - Barra empilhada com marcas em 41 (maioria absoluta) e 49 (3/5, quórum de PEC).
+- A lista de bancadas mostra cadeiras e % sobre 81.
 - Os botões "Todos / Mandato até 2031 / Eleitos em 2026" esmaecem as outras cadeiras.

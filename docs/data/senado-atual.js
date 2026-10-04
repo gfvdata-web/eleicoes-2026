@@ -3,8 +3,9 @@
 // `nota` = observação mostrada na tabela (ex.: concorre a governador; se vencer, assume o suplente).
 // `governador` = nome do senador em dados.js (concorre a governador em 2026).
 // `suplente` = 1º suplente, que assume a vaga se o titular for eleito governador.
-//   Fonte: Wikipédia, "Lista de senadores do Brasil da 57.ª legislatura" (consulta em 04/10/2026).
-//   O partido do suplente é o informado lá e pode ser o da eleição de 2022.
+//   Nomes: Wikipédia, "Lista de senadores do Brasil da 57.ª legislatura" (consulta em 04/10/2026).
+//   Partidos conferidos em 04/10/2026 com Gazeta do Povo (29/07/2026), ND Mais (10/08/2026) e imprensa local.
+//   Mauro Carvalho Júnior: saiu do PRD em 2026 (RDNews, 20/07/2026); sem nova filiação encontrada.
 // As outras 54 cadeiras (2 por UF) vêm das pesquisas em senado.js.
 window.SENADO_ATUAL = [
   { uf: "AC", nome: "Alan Rick", partido: "Republicanos", nota: "Concorre a governador do Acre. Se eleito, a vaga passa ao suplente.",
@@ -22,7 +23,7 @@ window.SENADO_ATUAL = [
     governador: "Wilder Morais", suplente: { nome: "Izaura Cardoso", partido: "PSD" } },
   { uf: "MA", nome: "Ana Paula Lobato", partido: "PSB", nota: "Suplente de Flávio Dino; assumiu em 2024, quando ele foi para o STF." },
   { uf: "MT", nome: "Wellington Fagundes", partido: "PL", nota: "Concorre a governador de Mato Grosso. Se eleito, a vaga passa ao suplente.",
-    governador: "Wellington Fagundes", suplente: { nome: "Mauro Carvalho Júnior", partido: "PRD" } },
+    governador: "Wellington Fagundes", suplente: { nome: "Mauro Carvalho Júnior", partido: "Sem partido" } },
   { uf: "MS", nome: "Tereza Cristina", partido: "PP", nota: "" },
   { uf: "MG", nome: "Cleitinho", partido: "Republicanos", nota: "Concorre a governador de Minas Gerais. Se eleito, a vaga passa ao suplente.",
     governador: "Cleitinho", suplente: { nome: "Alexandre Diniz", partido: "PL" } },
@@ -51,5 +52,5 @@ window.CORES_PARTIDOS = {
   "PDT": "#a0522d", "PV": "#4c9a2a", "MDB": "#2e7d4f", "PSD": "#ef8a17", "União Brasil": "#2f8fce",
   "PP": "#6b3fa0", "Republicanos": "#0b5d6b", "PSDB": "#8db6e0", "Podemos": "#8bc34a",
   "PL": "#1b2f6e", "Novo": "#f4692b", "Solidariedade": "#d88aa6", "Avante": "#b58ad6",
-  "PRD": "#8a8a7f", "—": "#b9b7af"
+  "PRD": "#8a8a7f", "Sem partido": "#cfcdc6", "—": "#b9b7af"
 };
