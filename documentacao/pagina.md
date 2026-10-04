@@ -25,7 +25,7 @@ No cabeçalho, um grupo de botões (`.modo`, `data-modo="gov"` | `"sen"`) altern
 
 - Projeção `d3.geoMercator().fitExtent(...)` num `viewBox` de 800×780. O SVG é responsivo pela largura.
 - As siglas são desenhadas no centróide de cada estado. Estados pequenos do litoral têm deslocamento manual no objeto `pequenos` (DF, SE, AL, PB, RN, PE, ES, RJ).
-- **Cor = margem** em `pesquisas[0]`, em pontos. Governador: 1º − 2º colocado. Senado: 2º − 3º (disputa pela 2ª vaga); se `pesquisas[0]` for do tipo `C`, a margem é dividida por 2. As mesmas faixas valem para os dois cargos.
+- **Cor = margem** na pesquisa principal, em pontos (governador: AtlasIntel quando houver, senão `pesquisas[0]`; Senado: `pesquisas[0]`). O pop-up lista a pesquisa principal primeiro. Governador: 1º − 2º colocado. Senado: 2º − 3º (disputa pela 2ª vaga); se `pesquisas[0]` for do tipo `C`, a margem é dividida por 2. As mesmas faixas valem para os dois cargos.
 
 | Faixa | Margem | Variável CSS |
 |---|---|---|
@@ -35,6 +35,8 @@ No cabeçalho, um grupo de botões (`.modo`, `data-modo="gov"` | `"sen"`) altern
 | Folgada | mais de 20 pts | `--folgada` |
 
   As faixas ficam no array `FAIXAS`. A cor é neutra quanto a partido de propósito: mostra competitividade, não ideologia.
+- **Colorir por partido** (seletor `.seg`, `data-colorir="folga"` | `"partido"`): no modo Partido a cor vem de `CORES_PARTIDOS` (em `data/senado-atual.js`) para o partido do 1º colocado (governador) ou dos dois primeiros (Senado). Se as duas vagas do Senado têm cores diferentes, o estado recebe um `<pattern>` de listras diagonais criado em `listras()`. A legenda (`legenda()`) conta estados ou vagas por partido/grupo.
+- **Grupos políticos** (`#grupos`): o leitor cria grupos com nome, cor e partidos; um partido pertence a um só grupo. Os grupos substituem a cor e o nome do partido no modo Partido. Ficam em `localStorage` (`grupos`, `colorir`), só naquele navegador; a página funciona sem isso.
 
 ### 2. Pop-up (`#tip`)
 
@@ -43,7 +45,7 @@ No cabeçalho, um grupo de botões (`.modo`, `data-modo="gov"` | `"sen"`) altern
 
 ### 3. Tabela (`#tbody`)
 
-- Uma linha por candidato, agrupada por estado (ordem alfabética do nome do estado). Dentro do estado, a ordem segue o percentual em `pesquisas[0]`.
+- Uma linha por candidato, agrupada por estado (ordem alfabética do nome do estado). Dentro do estado, a ordem segue o percentual na pesquisa principal.
 - Colunas: UF, Candidato, Partido, Última pesquisa (com instituto, tipo e data na primeira linha), Resumo.
 - Filtros: **Estado** e **Região**, que são mutuamente exclusivos (escolher um limpa o outro), e o botão "Limpar filtros". Clicar no mapa seleciona o estado e destaca o contorno (`path.sel`).
 

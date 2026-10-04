@@ -72,6 +72,33 @@
   .modo a { font-size: .9rem; font-weight: 600; padding: 6px 16px; border-radius: 7px; color: var(--muted); text-decoration: none; }
   .modo a:hover { color: var(--text); }
   .row.eleito .nm { font-weight: 600; }
+  .ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+  .seg { display: inline-flex; padding: 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+  .seg button { font: inherit; font-size: .8rem; font-weight: 600; padding: 4px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+  button.lnk { font: inherit; font-size: .8rem; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--accent); cursor: pointer; }
+  button.lnk[aria-expanded="true"] { border-color: var(--accent); }
+  .grupos { border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 16px; font-size: .85rem; }
+  .grupos ul { list-style: none; padding: 0; margin: 0 0 8px; }
+  .grupos li { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .grupos li .gi { flex: 1; min-width: 0; }
+  .grupos li .gp { color: var(--muted); font-size: .78rem; }
+  .grupos li button { font: inherit; font-size: .75rem; border: 0; background: transparent; color: var(--accent); cursor: pointer; padding: 0 2px; }
+  .grupos .vazio { color: var(--muted); margin: 0 0 8px; }
+  .grupos form { display: grid; gap: 8px; }
+  .grupos .linha { display: flex; gap: 6px; }
+  .grupos input[type=text] { flex: 1; min-width: 0; font: inherit; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+  .grupos input[type=color] { width: 38px; height: 32px; padding: 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); cursor: pointer; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chips label { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; padding: 2px 8px 2px 4px; border: 1px solid var(--border); border-radius: 999px; cursor: pointer; user-select: none; }
+  .chips label:has(input:checked) { border-color: var(--text); background: var(--bar-bg); }
+  .chips input { margin: 0; accent-color: var(--accent); }
+  .chips .sw { width: 10px; height: 10px; border-radius: 2px; }
+  .chips em { font-style: normal; color: var(--muted); }
+  .grupos .acoes { display: flex; gap: 6px; }
+  .grupos .acoes button { font: inherit; font-size: .8rem; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--surface); cursor: pointer; }
+  .grupos .acoes button.sec { background: transparent; color: var(--accent); }
+  .legend li small { color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
   footer { margin-top: 24px; font-size: .8rem; color: var(--muted); }
   footer a { color: var(--accent); }
 </style>
@@ -91,9 +118,30 @@
   <div class="card map-grid">
     <svg id="mapa" viewBox="0 0 800 780" role="img" aria-label="Mapa do Brasil por estado"></svg>
     <div class="side">
+      <div class="ctrl">
+        <div class="seg" role="group" aria-label="Colorir o mapa por">
+          <button type="button" data-colorir="folga" aria-pressed="true">Folga</button>
+          <button type="button" data-colorir="partido" aria-pressed="false">Partido</button>
+        </div>
+        <button type="button" class="lnk" id="gAbrir" aria-expanded="false" aria-controls="grupos">Grupos políticos</button>
+      </div>
+      <div class="grupos" id="grupos" hidden>
+        <ul id="gLista"></ul>
+        <form id="gForm" autocomplete="off">
+          <div class="linha">
+            <input type="text" id="gNome" placeholder="Nome do grupo" maxlength="30" required aria-label="Nome do grupo">
+            <input type="color" id="gCor" aria-label="Cor do grupo">
+          </div>
+          <div class="chips" id="gPartidos" aria-label="Partidos do grupo"></div>
+          <div class="acoes">
+            <button type="submit" id="gSalvar">Criar grupo</button>
+            <button type="button" class="sec" id="gCancelar" hidden>Cancelar</button>
+          </div>
+        </form>
+      </div>
       <div class="legend">
         <h3 id="legTitulo">Vantagem do líder</h3>
-        <p id="legDesc">Pela pesquisa mais recente de cada estado</p>
+        <p id="legDesc">Pela AtlasIntel quando disponível; senão, pela pesquisa mais recente</p>
         <ul id="legenda"></ul>
       </div>
       <h3>Como ler</h3>
@@ -137,13 +185,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script src="data/dados.js"></script>
 <script src="data/senado.js"></script>
+<script src="data/senado-atual.js"></script>
 <script>
 (function () {
   const MODOS = {
     gov: {
       dados: window.ESTADOS, atualizado: window.ATUALIZADO_EM,
       titulo: "Disputa pelos governos estaduais — 2026",
-      legTitulo: "Vantagem do líder", legDesc: "Pela pesquisa mais recente de cada estado",
+      legTitulo: "Vantagem do líder", legDesc: "Pela AtlasIntel quando disponível; senão, pela pesquisa mais recente",
       docTitle: "Governadores 2026 — Pesquisas"
     },
     sen: {
@@ -167,31 +216,85 @@
   const pts = v => fmt(v).replace("%", " pts");
   const ordenado = p => [...p.res].sort((a, b) => b[1] - a[1]);
   const vagas = () => (modo === "sen" ? 2 : 1);
+  // Pesquisa que colore o mapa e alimenta a tabela: no governador, a AtlasIntel quando houver; senão, a mais recente.
+  const principal = e => (modo === "gov" && e.pesquisas.find(p => /atlas/i.test(p.inst))) || e.pesquisas[0];
   // Governador: 1º − 2º. Senado (2 vagas): 2º − 3º. Pesquisas tipo "C" somam até 200%, então a margem é dividida por 2.
   const margem = e => {
-    const p = e.pesquisas[0], r = ordenado(p), i = vagas() - 1;
+    const p = principal(e), r = ordenado(p), i = vagas() - 1;
     const m = r[i][1] - (r[i + 1] ? r[i + 1][1] : 0);
     return p.tipo === "C" ? m / 2 : m;
   };
   const faixa = e => FAIXAS.find(f => margem(e) <= f.max);
-  const cor = e => css("--" + faixa(e).id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // Preferências do leitor (só neste navegador)
+  const ler = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (_) { return null; } };
+  const gravar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
+  let colorir = ler("colorir") === "partido" ? "partido" : "folga";
+  let grupos = Array.isArray(ler("grupos")) ? ler("grupos") : []; // [{ nome, cor, partidos: [] }]
+
+  // Partidos: cor própria (CORES_PARTIDOS) ou a cor do grupo político que o contém
+  const CORES = window.CORES_PARTIDOS || {};
+  const partidoDe = (e, nome) => (e.candidatos.find(c => c.nome === nome) || {}).partido || "—";
+  const lideres = e => ordenado(principal(e)).slice(0, vagas()).map(([n]) => partidoDe(e, n));
+  const grupoDe = p => grupos.find(g => g.partidos.includes(p));
+  const corPartido = p => { const g = grupoDe(p); return g ? g.cor : (CORES[p] || CORES["—"] || "#b9b7af"); };
+  const rotulo = p => { const g = grupoDe(p); return g ? g.nome : p; };
+
+  function cor(e) {
+    if (colorir === "folga") return css("--" + faixa(e).id);
+    const cs = [...new Set(lideres(e).map(corPartido))];
+    return cs.length === 1 ? cs[0] : listras(cs);
+  }
+  // Senado com as duas vagas em partidos/grupos diferentes: listras diagonais com as duas cores
+  function listras(cs) {
+    const id = "lst" + cs.join("").replace(/#/g, "-");
+    if (svg.select("#" + id).empty()) {
+      const p = svg.select("defs").append("pattern").attr("id", id).attr("patternUnits", "userSpaceOnUse")
+        .attr("width", 12).attr("height", 12).attr("patternTransform", "rotate(45)");
+      p.append("rect").attr("width", 6).attr("height", 12).attr("fill", cs[0]);
+      p.append("rect").attr("x", 6).attr("width", 6).attr("height", 12).attr("fill", cs[1]);
+    }
+    return `url(#${id})`;
+  }
 
   // Legenda
-  document.getElementById("legenda").innerHTML = FAIXAS.map(f =>
-    `<li><span class="sw" style="background:var(--${f.id})"></span>${f.nome}</li>`).join("");
+  function legenda() {
+    const M = MODOS[modo], ul = document.getElementById("legenda");
+    const sen = modo === "sen";
+    if (colorir === "folga") {
+      document.getElementById("legTitulo").textContent = M.legTitulo;
+      document.getElementById("legDesc").textContent = M.legDesc;
+      ul.innerHTML = FAIXAS.map(f => `<li><span class="sw" style="background:var(--${f.id})"></span>${f.nome}</li>`).join("");
+      return;
+    }
+    document.getElementById("legTitulo").textContent = sen ? "Partidos à frente" : "Partido do líder";
+    document.getElementById("legDesc").textContent = sen
+      ? "Partidos dos dois primeiros colocados na pesquisa mais recente. Listras = vagas divididas."
+      : "Partido do 1º colocado (AtlasIntel quando disponível; senão, a pesquisa mais recente)";
+    const cont = {};
+    ESTADOS.forEach(e => lideres(e).forEach(p => {
+      const k = rotulo(p);
+      cont[k] = cont[k] || { cor: corPartido(p), n: 0 };
+      cont[k].n++;
+    }));
+    ul.innerHTML = Object.entries(cont).sort((a, b) => b[1].n - a[1].n || a[0].localeCompare(b[0]))
+      .map(([k, v]) => `<li><span class="sw" style="background:${v.cor}"></span>${esc(k)}<small>${v.n} ${sen ? (v.n > 1 ? "vagas" : "vaga") : (v.n > 1 ? "estados" : "estado")}</small></li>`).join("");
+  }
 
   // Tooltip
   const tip = document.getElementById("tip");
   function tipHTML(e) {
-    const r = ordenado(e.pesquisas[0]);
-    const polls = e.pesquisas.map(p => {
+    const r = ordenado(principal(e));
+    const pp = principal(e);
+    const polls = [pp, ...e.pesquisas.filter(p => p !== pp)].map(p => {
       const rows = ordenado(p).map(([n, v], i) =>
         `<div class="row${i < vagas() ? " eleito" : ""}"><span class="nm">${n}</span><span class="bar"><i style="width:${Math.min(v, 100)}%"></i></span><span class="v">${fmt(v)}</span></div>`).join("");
       return `<div class="poll"><div class="ph"><span>${p.inst}<span class="tag">${p.tipo}</span></span><span>${p.campo}</span></div>${rows}</div>`;
     }).join("");
     const sub = modo === "sen"
-      ? `À frente: <strong>${r[0][0]}</strong> e <strong>${r[1][0]}</strong> · 2ª vaga: ${r[1][0]} × ${r[2] ? r[2][0] : "—"}, margem de ${pts(margem(e))}`
-      : `Lidera: <strong>${r[0][0]}</strong> · margem de ${pts(margem(e))}`;
+      ? `À frente: <strong>${r[0][0]}</strong> (${partidoDe(e, r[0][0])}) e <strong>${r[1][0]}</strong> (${partidoDe(e, r[1][0])}) · 2ª vaga: ${r[1][0]} × ${r[2] ? r[2][0] : "—"}, margem de ${pts(margem(e))}`
+      : `Lidera: <strong>${r[0][0]}</strong> (${partidoDe(e, r[0][0])}) · margem de ${pts(margem(e))}`;
     return `<h4>${e.nome}</h4><div class="sub">${sub}</div>${polls}`;
   }
   function moveTip(ev) {
@@ -205,6 +308,7 @@
 
   // Mapa
   const svg = d3.select("#mapa");
+  svg.append("defs");
   const pintar = () => svg.selectAll("path").attr("fill", d => porUF[d.properties.sigla] ? cor(porUF[d.properties.sigla]) : "#999");
   fetch("data/brasil-estados.geojson").then(r => r.json()).then(geo => {
     const proj = d3.geoMercator().fitExtent([[10, 10], [790, 770]], geo);
@@ -237,7 +341,7 @@
     const lista = ESTADOS.filter(e => (!uf || e.uf === uf) && (!reg || e.regiao === reg))
       .sort((a, b) => a.nome.localeCompare(b.nome));
     document.getElementById("tbody").innerHTML = lista.map(e => {
-      const p = e.pesquisas[0];
+      const p = principal(e);
       const pct = Object.fromEntries(p.res);
       const cands = [...e.candidatos].sort((a, b) => (pct[b.nome] ?? -1) - (pct[a.nome] ?? -1));
       return cands.map((c, i) => `<tr class="${i === 0 ? "first" : ""}">
@@ -254,6 +358,79 @@
   fRegiao.addEventListener("change", () => { fEstado.value = ""; render(); });
   document.getElementById("limpar").addEventListener("click", () => { fEstado.value = ""; fRegiao.value = ""; render(); });
 
+  // Colorir por folga ou por partido
+  function setColorir(c) {
+    colorir = c;
+    gravar("colorir", c);
+    document.querySelectorAll("[data-colorir]").forEach(b => b.setAttribute("aria-pressed", b.dataset.colorir === c));
+    pintar();
+    legenda();
+  }
+  document.querySelectorAll("[data-colorir]").forEach(b => b.addEventListener("click", () => setColorir(b.dataset.colorir)));
+
+  // Grupos políticos: o leitor junta partidos sob um nome e uma cor
+  const gPainel = document.getElementById("grupos"), gAbrir = document.getElementById("gAbrir");
+  const gForm = document.getElementById("gForm"), gNome = document.getElementById("gNome"), gCor = document.getElementById("gCor");
+  const gSalvar = document.getElementById("gSalvar"), gCancelar = document.getElementById("gCancelar");
+  const CORES_GRUPO = ["#c8102e", "#1b2f6e", "#e3b505", "#2e7d4f", "#7a1f4b", "#ef8a17", "#14a79d", "#6b3fa0"];
+  const presentes = new Set([...MODOS.gov.dados, ...MODOS.sen.dados].flatMap(e => e.candidatos.map(c => c.partido)));
+  const PARTIDOS = [...presentes].filter(p => p !== "—").sort((a, b) => a.localeCompare(b));
+  let editando = -1;
+
+  function desenharGrupos() {
+    document.getElementById("gLista").innerHTML = grupos.length
+      ? grupos.map((g, i) => `<li><span class="sw" style="background:${esc(g.cor)}"></span><span class="gi"><strong>${esc(g.nome)}</strong><br><span class="gp">${g.partidos.map(esc).join(", ") || "sem partidos"}</span></span><button type="button" data-ed="${i}">Editar</button><button type="button" data-rm="${i}" aria-label="Remover ${esc(g.nome)}">Remover</button></li>`).join("")
+      : "";
+    if (!grupos.length) document.getElementById("gLista").innerHTML = `<p class="vazio">Junte partidos em um grupo (ex.: uma federação ou coligação) para pintá-los com a mesma cor no modo Partido.</p>`;
+    const atual = editando >= 0 ? grupos[editando].partidos : [];
+    document.getElementById("gPartidos").innerHTML = PARTIDOS.map(p => {
+      const g = grupoDe(p), outro = g && g !== grupos[editando];
+      return `<label title="${outro ? "Hoje em " + esc(g.nome) + "; marcar move para este grupo" : ""}"><input type="checkbox" value="${esc(p)}"${atual.includes(p) ? " checked" : ""}><span class="sw" style="background:${CORES[p] || "#b9b7af"}"></span>${esc(p)}${outro ? ` <em>· ${esc(g.nome)}</em>` : ""}</label>`;
+    }).join("");
+    gSalvar.textContent = editando >= 0 ? "Salvar grupo" : "Criar grupo";
+    gCancelar.hidden = editando < 0;
+  }
+  function limparForm() {
+    editando = -1;
+    gNome.value = "";
+    gCor.value = CORES_GRUPO[grupos.length % CORES_GRUPO.length];
+    desenharGrupos();
+  }
+  function aplicarGrupos() {
+    gravar("grupos", grupos);
+    if (colorir !== "partido") setColorir("partido"); else { pintar(); legenda(); }
+  }
+  gAbrir.addEventListener("click", () => {
+    gPainel.hidden = !gPainel.hidden;
+    gAbrir.setAttribute("aria-expanded", !gPainel.hidden);
+    if (!gPainel.hidden) limparForm();
+  });
+  gForm.addEventListener("submit", ev => {
+    ev.preventDefault();
+    const nome = gNome.value.trim();
+    const partidos = [...gForm.querySelectorAll("#gPartidos input:checked")].map(i => i.value);
+    if (!nome) return;
+    if (!partidos.length) { alert("Escolha ao menos um partido para o grupo."); return; }
+    const novo = { nome, cor: gCor.value, partidos };
+    // Um partido pertence a um só grupo: sai dos outros
+    grupos.forEach((g, i) => { if (i !== editando) g.partidos = g.partidos.filter(p => !partidos.includes(p)); });
+    if (editando >= 0) grupos[editando] = novo; else grupos.push(novo);
+    grupos = grupos.filter(g => g.partidos.length);
+    limparForm();
+    aplicarGrupos();
+  });
+  gCancelar.addEventListener("click", limparForm);
+  document.getElementById("gLista").addEventListener("click", ev => {
+    const b = ev.target.closest("button");
+    if (!b) return;
+    if (b.dataset.rm != null) { grupos.splice(+b.dataset.rm, 1); limparForm(); aplicarGrupos(); return; }
+    editando = +b.dataset.ed;
+    gNome.value = grupos[editando].nome;
+    gCor.value = grupos[editando].cor;
+    desenharGrupos();
+    gNome.focus();
+  });
+
   // Alternância Governador / Senado
   function setModo(m) {
     modo = m;
@@ -261,20 +438,20 @@
     ESTADOS = M.dados;
     porUF = Object.fromEntries(ESTADOS.map(e => [e.uf, e]));
     document.getElementById("titulo").textContent = M.titulo;
-    document.getElementById("legTitulo").textContent = M.legTitulo;
-    document.getElementById("legDesc").textContent = M.legDesc;
     document.getElementById("atualizado").textContent = M.atualizado;
     document.title = M.docTitle;
     document.querySelectorAll(".so-sen").forEach(el => { el.hidden = m !== "sen"; });
     document.querySelectorAll(".modo button").forEach(b => b.setAttribute("aria-pressed", b.dataset.modo === m));
     tip.style.opacity = 0;
     pintar();
+    legenda();
     render();
   }
   document.querySelectorAll(".modo button").forEach(b => b.addEventListener("click", () => {
     history.replaceState(null, "", b.dataset.modo === "sen" ? "#senado" : location.pathname + location.search);
     setModo(b.dataset.modo);
   }));
+  document.querySelectorAll("[data-colorir]").forEach(b => b.setAttribute("aria-pressed", b.dataset.colorir === colorir));
   setModo(modo);
 })();
 </script>

@@ -41,7 +41,7 @@ Os dois seguem o mesmo formato por estado; as diferenças do Senado estão na se
 
 ### Regras de consistência
 
-- `pesquisas[0]` é a referência: define a **cor do estado** (margem entre 1º e 2º) e a coluna **"Última pesquisa"** da tabela.
+- A pesquisa de referência (governador: a AtlasIntel, se houver; senão `pesquisas[0]`; Senado: sempre `pesquisas[0]`) define a **cor do estado** (margem entre 1º e 2º) e a coluna **"Última pesquisa"** da tabela.
 - Os nomes em `res` devem ser idênticos aos de `candidatos[].nome`.
 - Um candidato pode aparecer em `candidatos` sem estar em `pesquisas[0]` (aparece com "—" na tabela).
 - Percentuais com decimal usam ponto no JS (`45.6`); a página formata com vírgula.
