@@ -4,6 +4,7 @@ Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-04
 
+- **Tema claro/escuro:** seletor ☀️ Claro / 🌙 Escuro no canto superior direito de `index.html`, `apuracao.html`, `es.html` e `senado.html`. Sem escolha, segue o tema do sistema; a escolha fica salva no navegador.
 - **Apuração, aba Presidente:** quadro com o % geral de urnas apuradas no Brasil (e Flávio × Lula) acima dos botões do mapa; no mapa, cada estado mostra o % de urnas apuradas e, abaixo, o % de votos válidos de Flávio / Lula.
 - **Apuração, aba Presidente:** a `apuracao.html` ganhou a aba "Presidente" (link `#presidente`) com o mapa dos 27 estados colorido pela apuração de `presidente.json`. O número abaixo da sigla é o % de votos válidos do líder no estado; o pop-up traz todos os candidatos com votos e %, e a faixa do topo mostra o total do Brasil.
 - **Apuração, pop-up e mapa:** o pop-up da `apuracao.html` mostra só o % apurado e, por candidato, votos e % (sem informações de pesquisa); rótulos de sigla e % apurado do mapa maiores. `scripts/apuracao.py` passa a guardar os votos de cada candidato.
