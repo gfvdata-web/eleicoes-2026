@@ -58,11 +58,12 @@ CARGOS = [
 
 # Endereços do TSE: preencher quando a divulgação abrir. Use {uf} (minúsculo) ou {UF}.
 # Enquanto for None, o cargo aparece como "sem endereço" e é pulado.
+_BASE = "https://resultados.tse.jus.br/oficial/ele2026"
 URLS = {
-    "presidente": None,
-    "governador": None,
-    "senador": None,
-    "deputado-federal": None,
+    "presidente": _BASE + "/6257/dados/{uf}/{uf}-c0001-e006257-u.json",
+    "governador": _BASE + "/6259/dados/{uf}/{uf}-c0003-e006259-u.json",
+    "senador": _BASE + "/6259/dados/{uf}/{uf}-c0005-e006259-u.json",
+    "deputado-federal": None,    # decidir o que mostrar (eleitos, quociente)
     "deputado-estadual": None,
 }
 
@@ -76,15 +77,24 @@ LISTAS = {"governador": RAIZ / "docs" / "data" / "dados.js", "senador": RAIZ / "
 
 
 def converter(cargo, uf, bruto):
-    """Converte o JSON do TSE para o formato do site:
-        {"pct": 45.31, "hora": "19:41:30", "res": [[nome, % válidos, partido], ...], "situacao": "eleito" | "2turno" | None}
-    - pct: % de seções/urnas totalizadas no local
-    - hora: hora em que o TSE gerou o dado
-    - res: ordenado do mais votado para o menos votado
-    Retorna None se o local ainda não tem dado.
-    A preencher quando a divulgação de 2026 abrir e o formato for conferido.
-    """
-    raise NotImplementedError("converter() ainda não foi escrito: falta conferir o formato do TSE de 2026")
+    """Converte o JSON "-u.json" do TSE (2026) para o formato do site (ver apuracao.md).
+    Retorna None se o local ainda não tem dado."""
+    carg = bruto["carg"][0]
+    pct = float(str(bruto.get("s", {}).get("pst", "0")).replace(",", "."))
+    res, eleito, turno2 = [], False, False
+    for agr in carg.get("agr", []):
+        for par in agr.get("par", []):
+            for cd in par.get("cand", []):
+                vap = int(cd.get("vap") or 0)
+                res.append((vap, [cd.get("nmu") or cd["nm"], float(str(cd.get("pvapn") or cd.get("pvap") or 0).replace(",", ".")), par["sg"]]))
+                eleito |= cd.get("e") == "s"
+                turno2 |= "2" in (cd.get("st") or "")
+    if not res or pct <= 0:
+        return None
+    res.sort(key=lambda r: -r[0])
+    return {"pct": pct, "hora": bruto.get("ht") or bruto.get("hg") or "",
+            "res": [[n, round(v, 2), p] for _, (n, v, p) in res],
+            "situacao": "eleito" if eleito else "2turno" if turno2 else None}
 
 
 # ----------------------------------------------------------------------------
