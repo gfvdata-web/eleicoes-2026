@@ -126,6 +126,9 @@
   .tema-switch__btn + .tema-switch__btn { border-left: 1px solid var(--border); }
   .tema-switch__btn--ativo { background: var(--accent); color: var(--surface); }
   @media (max-width: 480px) { .tema-switch__label { display: none; } .tema-switch__btn { padding: .32rem .6rem; font-size: .85rem; } }
+  /* Tema escuro: cores do mapa/hemiciclo mais suaves (menos saturação e brilho) */
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) :is(#mapa path, #hemi circle, .sw) { filter: saturate(.62) brightness(.82); } }
+  :root[data-theme="dark"] :is(#mapa path, #hemi circle, .sw) { filter: saturate(.62) brightness(.82); }
 </style>
 </head>
 <body>

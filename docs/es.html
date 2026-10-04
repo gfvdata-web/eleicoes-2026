@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Apuração Espírito Santo 2026</title>
-<meta name="description" content="Apuração oficial das eleições de 2026 no Espírito Santo por município e região: presidente, governador, Senado, deputados federais e estaduais.">
+<title>Apuração por município 2026</title>
+<meta name="description" content="Apuração oficial das eleições de 2026 em cada estado, por município e região: presidente, governador, Senado, deputados federais e estaduais.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
@@ -144,6 +144,9 @@
   .tema-switch__btn + .tema-switch__btn { border-left: 1px solid var(--border); }
   .tema-switch__btn--ativo { background: var(--accent); color: var(--surface); }
   @media (max-width: 480px) { .tema-switch__label { display: none; } .tema-switch__btn { padding: .32rem .6rem; font-size: .85rem; } }
+  /* Tema escuro: cores do mapa/hemiciclo mais suaves (menos saturação e brilho) */
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) :is(#mapa path, #hemi circle, .sw) { filter: saturate(.62) brightness(.82); } }
+  :root[data-theme="dark"] :is(#mapa path, #hemi circle, .sw) { filter: saturate(.62) brightness(.82); }
 </style>
 </head>
 <body>
@@ -154,16 +157,20 @@
   </div>
   <section class="apu" id="apu" aria-live="polite">
     <div class="apu-top">
-      <strong>Apuração oficial · ES</strong>
+      <strong id="apuUF">Apuração oficial · ES</strong>
       <span id="apuStatus">Carregando…</span>
       <span id="apuHora"></span>
     </div>
-    <div class="apu-bar" role="progressbar" aria-label="Urnas apuradas no Espírito Santo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="apuBar"></i></div>
+    <div class="apu-bar" role="progressbar" aria-label="Urnas apuradas no estado" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="apuBar"></i></div>
   </section>
 
   <header>
-    <h1>Espírito Santo — Apuração 2026</h1>
+    <h1 id="titulo">Espírito Santo — Apuração 2026</h1>
     <p>Resultados oficiais do TSE no 1º turno (04/10/2026), por município e região do estado. Escolha o cargo, a área e fixe (★) os candidatos que quer acompanhar.</p>
+    <div class="area" style="margin-bottom:10px">
+      <label for="fUF">Estado</label>
+      <select id="fUF"></select>
+    </div>
     <div class="nav">
       <div class="abas" role="tablist" aria-label="Cargo" id="abas"></div>
       <a href="apuracao.html">Apuração nacional</a>
@@ -182,7 +189,7 @@
   </div>
 
   <div class="card map-grid">
-    <svg id="mapa" viewBox="0 0 560 640" role="img" aria-label="Mapa dos municípios do Espírito Santo"></svg>
+    <svg id="mapa" viewBox="0 0 560 640" role="img" aria-label="Mapa dos municípios do estado"></svg>
     <div class="side">
       <h3>Colorir o mapa por</h3>
       <div class="seg" role="group" aria-label="Colorir o mapa por">
@@ -250,8 +257,8 @@
 
   <footer>
     Apuração: Tribunal Superior Eleitoral (TSE), divulgação oficial de resultados, relida a cada minuto. Percentuais sobre os votos válidos
-    (nos cargos de deputado, votos nominais + de legenda). Regiões: microrregiões e macrorregiões de planejamento do Espírito Santo
-    (Lei estadual 9.768/2011, com a alteração da Lei 11.174/2020). Malha municipal: IBGE.
+    (nos cargos de deputado, votos nominais + de legenda). Regiões: no Espírito Santo, microrregiões e macrorregiões de planejamento
+    (Lei estadual 9.768/2011, com a alteração da Lei 11.174/2020); nos demais estados, microrregiões e mesorregiões do IBGE. Malha municipal: IBGE.
     A projeção de "quem está passando" aplica as regras do Código Eleitoral (quociente eleitoral, cláusulas de 80%/20% e sobras) aos votos já apurados;
     é uma estimativa e pode mudar até o fim da apuração. O resultado que vale é o divulgado pelo TSE.
   </footer>
@@ -270,11 +277,22 @@
     { id: "deputado-federal", rot: "Dep. federal" },
     { id: "deputado-estadual", rot: "Dep. estadual" }
   ];
-  const MUN = window.ES_MUNICIPIOS || [];
-  const porTSE = Object.fromEntries(MUN.map(m => [m.tse, m]));
-  const porIBGE = Object.fromEntries(MUN.map(m => [m.ibge, m]));
-  const MICROS = [...new Set(MUN.map(m => m.micro))].sort((a, b) => a.localeCompare(b));
-  const MACROS = ["Metropolitana", "Central", "Norte", "Sul"];
+  const UFS = { AC: "Acre", AL: "Alagoas", AP: "Amapá", AM: "Amazonas", BA: "Bahia", CE: "Ceará", DF: "Distrito Federal", ES: "Espírito Santo",
+    GO: "Goiás", MA: "Maranhão", MT: "Mato Grosso", MS: "Mato Grosso do Sul", MG: "Minas Gerais", PA: "Pará", PB: "Paraíba", PR: "Paraná",
+    PE: "Pernambuco", PI: "Piauí", RJ: "Rio de Janeiro", RN: "Rio Grande do Norte", RS: "Rio Grande do Sul", RO: "Rondônia", RR: "Roraima",
+    SC: "Santa Catarina", SP: "São Paulo", SE: "Sergipe", TO: "Tocantins" };
+  const qUF = (new URLSearchParams(location.search).get("uf") || "ES").toUpperCase();
+  let uf = UFS[qUF] ? qUF : "ES";
+  const nomeUF = () => UFS[uf];
+  let MUN = [], porTSE = {}, porIBGE = {}, MICROS = [], MACROS = [];
+  function definirMun(lista) {
+    MUN = lista;
+    porTSE = Object.fromEntries(MUN.map(m => [m.tse, m]));
+    porIBGE = Object.fromEntries(MUN.map(m => [m.ibge, m]));
+    MICROS = [...new Set(MUN.map(m => m.micro))].sort((a, b) => a.localeCompare(b));
+    MACROS = [...new Set(MUN.map(m => m.macro))].sort((a, b) => a.localeCompare(b));
+  }
+  const pastaUF = () => (uf === "ES" ? "data/es/" : "data/uf/" + uf.toLowerCase() + "/");
 
   // Preferências do leitor (só neste navegador)
   const ler = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (_) { return null; } };
@@ -321,10 +339,11 @@
     return { ...j, cand, porNum: Object.fromEntries(cand.map(c => [c.num, c])) };
   }
   function carregar(id, forcar) {
-    return fetch(`data/es/apuracao/${id}.json?t=${Date.now()}`, { cache: "no-store" })
+    const u = uf;
+    return fetch(`data/es/apuracao/${u === "ES" ? "" : u + "/"}${id}.json?t=${Date.now()}`, { cache: "no-store" })
       .then(r => (r.ok ? r.text() : null))
       .then(t => {
-        if (!t || (t === VERSAO[id] && !forcar)) return false;
+        if (!t || u !== uf || (t === VERSAO[id] && !forcar)) return false;
         VERSAO[id] = t;
         DADOS[id] = preparar(JSON.parse(t));
         return true;
@@ -428,7 +447,7 @@
     const muns = d && d.mun ? Object.values(d.mun) : [];
     const com = muns.filter(m => m.pct > 0).length, concl = muns.filter(m => m.pct >= 100).length;
     document.getElementById("apuStatus").innerHTML = (d && d.simulacao ? `<b class="sim">Dados simulados, não oficiais</b> · ` : "") + (ativo
-      ? `${rot}: <strong>${pct(e.pct)}</strong> das urnas apuradas no estado · ${com} de 78 municípios com apuração · ${concl} ${concl === 1 ? "concluído" : "concluídos"}`
+      ? `${rot}: <strong>${pct(e.pct)}</strong> das urnas apuradas no estado · ${com} de ${MUN.length} municípios com apuração · ${concl} ${concl === 1 ? "concluído" : "concluídos"}`
       : d ? "Aguardando o início da apuração. O TSE começa a divulgar os resultados às 17h (horário de Brasília)." : "Os dados da apuração ainda não estão disponíveis.");
     document.getElementById("apuHora").textContent = ativo && d.atualizado ? "Dados do TSE de " + d.atualizado : "";
     document.getElementById("apuBar").style.width = (ativo ? e.pct : 0) + "%";
@@ -439,13 +458,13 @@
   const fArea = document.getElementById("fArea");
   function montarArea() {
     const og = (rot, itens) => `<optgroup label="${rot}">${itens.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join("")}</optgroup>`;
-    fArea.innerHTML = `<option value="">Espírito Santo (estado inteiro)</option>`
+    fArea.innerHTML = `<option value="">${esc(nomeUF())} (estado inteiro)</option>`
       + og("Macrorregiões", MACROS.map(m => ["macro:" + m, m]))
       + og("Microrregiões", MICROS.map(m => ["micro:" + m, m]))
       + og("Municípios", [...MUN].sort((a, b) => a.nome.localeCompare(b.nome)).map(m => ["mun:" + m.tse, m.nome]));
   }
-  const nomeArea = (a = area) => !a ? "Espírito Santo" : a.startsWith("mun:") ? porTSE[a.slice(4)].nome
-    : (a.startsWith("macro:") ? "Macrorregião " : "Microrregião ") + a.slice(a.indexOf(":") + 1);
+  const nomeArea = (a = area) => !a ? nomeUF() : a.startsWith("mun:") ? porTSE[a.slice(4)].nome
+    : (a.startsWith("macro:") ? (uf === "ES" ? "Macrorregião " : "Mesorregião ") : "Microrregião ") + a.slice(a.indexOf(":") + 1);
   function setArea(a) {
     area = a;
     fArea.value = a;
@@ -482,7 +501,7 @@
     } else if (cargo === "senador") {
       txt = `No estado, os dois mais votados até agora: ${nome(r[0])} e ${nome(r[1])}. Diferença entre o 2º e o 3º: ${pct(100 * (r[1].v - (r[2] ? r[2].v : 0)) / vv).replace("%", " pts")}.`;
     } else if (cargo === "presidente") {
-      txt = `No ES, os mais votados até agora são ${nome(r[0])}, com ${pct(100 * r[0].v / vv)}, e ${nome(r[1])}, com ${pct(100 * r[1].v / vv)}. O resultado nacional está na <a href="apuracao.html">apuração nacional</a>.`;
+      txt = `Em ${esc(nomeUF())}, os mais votados até agora são ${nome(r[0])}, com ${pct(100 * r[0].v / vv)}, e ${nome(r[1])}, com ${pct(100 * r[1].v / vv)}. O resultado nacional está na <a href="apuracao.html">apuração nacional</a>.`;
     } else {
       const p1 = 100 * r[0].v / vv;
       txt = p1 > 50
@@ -495,7 +514,8 @@
   // ---------- mapa ----------
   const svg = d3.select("#mapa"), tip = document.getElementById("tip");
   let caminhos = null;
-  fetch("data/es/municipios.geojson").then(r => r.json()).then(geo => {
+  const desenhar = geo => {
+    svg.selectAll("*").remove();
     const proj = d3.geoMercator().fitExtent([[8, 8], [552, 632]], geo);
     const path = d3.geoPath(proj);
     caminhos = svg.append("g").selectAll("path").data(geo.features).join("path")
@@ -510,7 +530,7 @@
         tip.innerHTML = tipHTML(m); tip.style.opacity = 1; moveTip(ev);
       });
     pintar();
-  });
+  };
   document.addEventListener("touchstart", ev => { if (!ev.target.closest("#mapa")) tip.style.opacity = 0; }, { passive: true });
   function moveTip(ev) {
     const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
@@ -578,7 +598,7 @@
     const r = d.cand.map(c => ({ c, v: x.v[c.k] })).sort((a, b) => b.v - a.v);
     const top = r.slice(0, 5), fc = focoCand();
     if (fc && !top.some(y => y.c === fc)) top.push({ c: fc, v: x.v[fc.k], pos: r.findIndex(y => y.c === fc) + 1 });
-    const fx = (fixados[cargo] || []).map(n => d.porNum[n]).filter(c => c && !top.some(y => y.c === c));
+    const fx = (fixados[uf + ":" + cargo] || []).map(n => d.porNum[n]).filter(c => c && !top.some(y => y.c === c));
     fx.forEach(c => top.push({ c, v: x.v[c.k], pos: r.findIndex(y => y.c === c) + 1 }));
     return cab + top.map(({ c, v, pos }) => `<div class="row"><span>${pos ? pos + "º " : ""}${esc(c.nome)} <span class="pt">(${esc(sigla(c.partido))})</span></span><span class="bar"><i style="width:${100 * v / x.vv}%;background:${corPartido(c.partido)}"></i></span><span class="v">${pct(100 * v / x.vv, 1)}</span></div>`).join("")
       + `<div class="sub" style="margin:6px 0 0">${int(x.vv)} votos válidos apurados</div>`;
@@ -600,7 +620,7 @@
     const casa = cargo === "deputado-federal" ? "Câmara dos Deputados" : "Assembleia Legislativa";
     const oficial = d && d.cand.some(c => /eleito/i.test(c.st)) && d.es && d.es.pct >= 100;
     document.getElementById("projDesc").textContent = !p ? "A projeção aparece quando houver votos apurados."
-      : `O ES tem ${d.vagas} vagas na ${casa}. Projeção com os votos já apurados no estado inteiro (não muda com o filtro de área): quem seria eleito se a apuração terminasse agora.`
+      : `${esc(nomeUF())} tem ${d.vagas} vagas na ${casa}. Projeção com os votos já apurados no estado inteiro (não muda com o filtro de área): quem seria eleito se a apuração terminasse agora.`
         + (oficial ? " A apuração terminou: a coluna Situação mostra o resultado oficial do TSE." : "");
     if (!p) {
       ["projTop", "projEleitos", "projFila", "projListas"].forEach(id => { document.getElementById(id).innerHTML = ""; });
@@ -636,7 +656,7 @@
     if (!d || !t) { tb.innerHTML = `<tr><td colspan="8" class="vazio">Sem dados ainda.</td></tr>`; return; }
     const prop = proporcional(), p = prop ? projetar() : null;
     const r = ordenados(t), base = t.vv || 0;
-    const fx = new Set(fixados[cargo] || []);
+    const fx = new Set(fixados[uf + ":" + cargo] || []);
     const passando = c => {
       if (c.st && /eleito|turno/i.test(c.st)) return `<span class="tag tse">${esc(c.st)}</span>`;
       if (prop) return p && p.set.has(c.k) ? `<span class="tag ok">passando</span>` : "";
@@ -674,14 +694,14 @@
   document.addEventListener("click", ev => {
     const f = ev.target.closest("[data-fixar]");
     if (f) {
-      const n = f.dataset.fixar, l = new Set(fixados[cargo] || []);
+      const n = f.dataset.fixar, l = new Set(fixados[uf + ":" + cargo] || []);
       l.has(n) ? l.delete(n) : l.add(n);
-      fixados[cargo] = [...l];
+      fixados[uf + ":" + cargo] = [...l];
       gravar("es-fixados", fixados);
       ranking(); regioes(); return;
     }
     if (ev.target.closest("[data-limpar-fixados]")) {
-      fixados[cargo] = []; gravar("es-fixados", fixados); ranking(); regioes(); return;
+      fixados[uf + ":" + cargo] = []; gravar("es-fixados", fixados); ranking(); regioes(); return;
     }
     const fc = ev.target.closest("[data-foco]");
     if (fc) {
@@ -704,7 +724,7 @@
   function regioes() {
     const d = D(), head = document.getElementById("regHead"), body = document.getElementById("regBody");
     if (!d || !d.cand.length) { head.innerHTML = ""; body.innerHTML = `<tr><td class="vazio">Sem dados ainda.</td></tr>`; return; }
-    const fx = (fixados[cargo] || []).map(n => d.porNum[n]).filter(Boolean);
+    const fx = (fixados[uf + ":" + cargo] || []).map(n => d.porNum[n]).filter(Boolean);
     const dentro = new Set(munsDaArea());
     const grupos = recorte === "macro" ? MACROS.map(m => ({ nome: m, a: "macro:" + m, muns: munsDaArea("macro:" + m) }))
       : recorte === "micro" ? MICROS.map(m => ({ nome: m, a: "micro:" + m, muns: munsDaArea("micro:" + m), sub: MUN.find(x => x.micro === m).macro }))
@@ -752,10 +772,10 @@
   });
   function setCargo(id) {
     cargo = id;
-    history.replaceState(null, "", "#" + id);
+    history.replaceState(null, "", location.pathname + location.search + "#" + id);
     abas.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", b.dataset.cargo === id));
     foco = null; mostrarTodos = false; busca.value = "";
-    document.title = `Apuração ES 2026 — ${CARGOS.find(c => c.id === id).rot}`;
+    document.title = `Apuração ${uf} 2026 — ${CARGOS.find(c => c.id === id).rot}`;
     if (!DADOS[id]) carregar(id).then(() => { if (cargo === id) { montarPartidos(); tudo(); } });
     montarPartidos();
     tudo();
@@ -764,10 +784,37 @@
     faixaApu(); kpis(); pintar(); cardProj(); ranking(); regioes();
   }
 
-  montarArea();
+  // ---------- estado ----------
+  const fUF = document.getElementById("fUF");
+  fUF.innerHTML = Object.entries(UFS).sort((x, y) => x[1].localeCompare(y[1])).map(([k, n]) => `<option value="${k}">${n}</option>`).join("");
+  function trocarUF(novo, inicial) {
+    uf = novo;
+    fUF.value = uf;
+    const url = new URL(location.href);
+    uf === "ES" ? url.searchParams.delete("uf") : url.searchParams.set("uf", uf);
+    if (!inicial) history.replaceState(null, "", url);
+    document.getElementById("titulo").textContent = `${nomeUF()} — Apuração 2026`;
+    document.getElementById("apuUF").textContent = `Apuração oficial · ${uf}`;
+    document.getElementById("mapa").setAttribute("aria-label", `Mapa dos municípios de ${nomeUF()}`);
+    document.querySelector('[data-rec="macro"]').textContent = uf === "ES" ? "Macrorregiões" : "Mesorregiões";
+    const base = pastaUF(), alvo = uf;
+    Object.keys(DADOS).forEach(k => { delete DADOS[k]; delete VERSAO[k]; });
+    area = ""; foco = null; caminhos = null;
+    svg.selectAll("*").remove();
+    const mun = alvo === "ES" ? Promise.resolve(window.ES_MUNICIPIOS || []) : fetch(base + "municipios.json").then(r => r.json());
+    return Promise.all([mun, fetch(base + "municipios.geojson").then(r => r.json())]).then(([lista, geo]) => {
+      if (alvo !== uf) return;
+      definirMun(lista);
+      montarArea();
+      desenhar(geo);
+      setCargo(cargo);
+    });
+  }
+  fUF.addEventListener("change", () => trocarUF(fUF.value));
+
   document.querySelectorAll("[data-cor]").forEach(b => b.setAttribute("aria-pressed", b.dataset.cor === colorir));
   document.querySelectorAll("[data-rec]").forEach(b => b.setAttribute("aria-pressed", b.dataset.rec === recorte));
-  setCargo(cargo);
+  trocarUF(uf, true);
   addEventListener("hashchange", () => { const id = location.hash.slice(1); if (id !== cargo && CARGOS.some(c => c.id === id)) setCargo(id); });
   // Relê o cargo aberto a cada 60 s (o parâmetro ?t= evita o cache do GitHub Pages) e só redesenha se mudou
   setInterval(() => { const id = cargo; carregar(id).then(m => { if (m && cargo === id) { montarPartidos(); tudo(); } }); }, 60000);

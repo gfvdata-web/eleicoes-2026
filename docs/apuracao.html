@@ -126,7 +126,6 @@
   .apu-bar i { display: block; height: 100%; width: 0; background: var(--ao-vivo); border-radius: 4px; transition: width .4s; }
   #mapa text.pct { font-size: 11px; font-weight: 500; }
   .brgeral { border: 1px solid var(--border); border-left: 4px solid var(--ao-vivo); border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; font-size: .85rem; }
-  small.geral { color: var(--muted); font-weight: 400; white-space: nowrap; }
   .brgeral strong.g { font-size: 1.3rem; display: block; }
   #mapa text.cand { font-size: 9px; font-weight: 500; }
   .tag.tse { border-color: var(--ao-vivo); color: var(--ao-vivo); }
@@ -142,6 +141,9 @@
   .tema-switch__btn + .tema-switch__btn { border-left: 1px solid var(--border); }
   .tema-switch__btn--ativo { background: var(--accent); color: var(--surface); }
   @media (max-width: 480px) { .tema-switch__label { display: none; } .tema-switch__btn { padding: .32rem .6rem; font-size: .85rem; } }
+  /* Tema escuro: cores do mapa/hemiciclo mais suaves (menos saturação e brilho) */
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) :is(#mapa path, #hemi circle, .sw) { filter: saturate(.62) brightness(.82); } }
+  :root[data-theme="dark"] :is(#mapa path, #hemi circle, .sw) { filter: saturate(.62) brightness(.82); }
 </style>
 </head>
 <body>
@@ -223,7 +225,7 @@
     </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>UF</th><th>Candidato</th><th>Partido</th><th style="text-align:right">Apuração</th><th>Resumo</th></tr></thead>
+        <thead><tr><th>UF</th><th>Candidato</th><th>Partido</th><th style="text-align:right">Apuração</th><th class="so-pres" style="text-align:right" hidden>Brasil (geral)</th><th>Resumo</th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
@@ -502,8 +504,11 @@
   [...MODOS.gov.dados].sort((a, b) => a.nome.localeCompare(b.nome)).forEach(e => fEstado.add(new Option(`${e.nome} (${e.uf})`, e.uf)));
   ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"].forEach(r => fRegiao.add(new Option(r, r)));
 
-  // Presidente: % geral (Brasil) do candidato, ao lado do nome na tabela por estado
-  const geralDe = nome => { const br = (APU.pres.ufs || {}).BR, r = br && br.pct > 0 && Array.isArray(br.res) && br.res.find(x => x[0] === nome); return r ? ` <small class="geral">· Brasil ${(+r[1]).toFixed(1).replace(".", ",")}%</small>` : ""; };
+  // Presidente: % geral (Brasil) do candidato, com barra, depois da apuração do estado
+  const geralTd = c => {
+    const br = (APU.pres.ufs || {}).BR, r = br && br.pct > 0 && Array.isArray(br.res) && br.res.find(x => x[0] === c.nome);
+    return r ? `<td class="num" style="min-width:110px"><strong>${(+r[1]).toFixed(1).replace(".", ",")}%</strong><span class="bar" style="display:block;margin-top:4px"><i style="width:${Math.min(100, +r[1])}%"></i></span></td>` : `<td class="num">—</td>`;
+  };
   function render() {
     const uf = fEstado.value, reg = fRegiao.value;
     const lista = ESTADOS.filter(e => (!uf || e.uf === uf) && (!reg || e.regiao === reg))
@@ -514,9 +519,10 @@
       const cands = [...e.candidatos].sort((a, b) => (pct[b.nome] ?? -1) - (pct[a.nome] ?? -1));
       return cands.map((c, i) => `<tr class="${i === 0 ? "first" : ""}">
         <td class="uf">${i === 0 ? `${e.uf}` : ""}</td>
-        <td class="${i < vagas() ? "lead" : ""}">${c.nome}${modo === "pres" ? geralDe(c.nome) : ""}</td>
+        <td class="${i < vagas() ? "lead" : ""}">${c.nome}</td>
         <td><span class="party">${c.partido}</span></td>
         <td class="num">${pct[c.nome] != null ? fmt(pct[c.nome]) : "—"}${i === 0 ? (p.apu ? `<br><span class="tag tse">TSE · ${p.campo}</span>` : `<br><span class="tag">${p.inst} ${p.tipo} · ${p.campo}</span>`) : ""}</td>
+        ${modo === "pres" ? geralTd(c) : ""}
         <td class="res">${c.resumo}</td></tr>`).join("");
     }).join("");
     d3.selectAll("#mapa path").classed("sel", d => d && d.properties.sigla === uf);
