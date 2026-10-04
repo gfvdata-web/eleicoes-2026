@@ -4,6 +4,7 @@ Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-04
 
+- **Senado no modo Partido:** quando as duas vagas ficam com partidos diferentes, o estado agora aparece dividido ao meio (1º colocado à esquerda, 2º à direita) em vez de listrado.
 - **Bancada Senado:** lista de bancadas com coluna de % (sobre 81 cadeiras). Partido atual dos suplentes conferido na imprensa; Mauro Carvalho Júnior (suplente de Wellington Fagundes) passa a constar sem partido.
 - **Governador: AtlasIntel como pesquisa principal.** Nos estados com pesquisa AtlasIntel (BA, CE, PA, PI, RN, SP), ela passa a definir a cor do mapa, o líder e os percentuais da tabela, e aparece primeiro no pop-up. Nos demais estados e no Senado, segue valendo a pesquisa mais recente.
 - **Mapa colorido por partido:** novo seletor "Folga | Partido" ao lado da legenda, nos modos Governador e Senado. No modo Partido, o estado recebe a cor do partido do líder (Senado: listras quando as duas vagas ficam com partidos diferentes), e a legenda conta estados/vagas por partido. O botão "Grupos políticos" permite juntar partidos sob um nome e uma cor; os grupos ficam salvos só no navegador do leitor. O pop-up passa a mostrar o partido dos líderes.

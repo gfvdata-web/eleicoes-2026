@@ -35,7 +35,7 @@ No cabeçalho, um grupo de botões (`.modo`, `data-modo="gov"` | `"sen"`) altern
 | Folgada | mais de 20 pts | `--folgada` |
 
   As faixas ficam no array `FAIXAS`. A cor é neutra quanto a partido de propósito: mostra competitividade, não ideologia.
-- **Colorir por partido** (seletor `.seg`, `data-colorir="folga"` | `"partido"`): no modo Partido a cor vem de `CORES_PARTIDOS` (em `data/senado-atual.js`) para o partido do 1º colocado (governador) ou dos dois primeiros (Senado). Se as duas vagas do Senado têm cores diferentes, o estado recebe um `<pattern>` de listras diagonais criado em `listras()`. A legenda (`legenda()`) conta estados ou vagas por partido/grupo.
+- **Colorir por partido** (seletor `.seg`, `data-colorir="folga"` | `"partido"`): no modo Partido a cor vem de `CORES_PARTIDOS` (em `data/senado-atual.js`) para o partido do 1º colocado (governador) ou dos dois primeiros (Senado). Se as duas vagas do Senado têm cores diferentes, o estado é dividido ao meio (1º colocado à esquerda, 2º à direita) por um `<linearGradient>` com corte seco, criado em `metades()`. A legenda (`legenda()`) conta estados ou vagas por partido/grupo.
 - **Grupos políticos** (`#grupos`): o leitor cria grupos com nome, cor e partidos; um partido pertence a um só grupo. Os grupos substituem a cor e o nome do partido no modo Partido. Ficam em `localStorage` (`grupos`, `colorir`), só naquele navegador; a página funciona sem isso.
 
 ### 2. Pop-up (`#tip`)

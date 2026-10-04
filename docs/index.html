@@ -244,16 +244,16 @@
   function cor(e) {
     if (colorir === "folga") return css("--" + faixa(e).id);
     const cs = [...new Set(lideres(e).map(corPartido))];
-    return cs.length === 1 ? cs[0] : listras(cs);
+    return cs.length === 1 ? cs[0] : metades(cs);
   }
-  // Senado com as duas vagas em partidos/grupos diferentes: listras diagonais com as duas cores
-  function listras(cs) {
-    const id = "lst" + cs.join("").replace(/#/g, "-");
+  // Senado com as duas vagas em partidos/grupos diferentes: estado dividido ao meio,
+  // 1º colocado à esquerda e 2º à direita (gradiente com corte seco no meio da caixa do estado)
+  function metades(cs) {
+    const id = "met" + cs.join("").replace(/#/g, "-");
     if (svg.select("#" + id).empty()) {
-      const p = svg.select("defs").append("pattern").attr("id", id).attr("patternUnits", "userSpaceOnUse")
-        .attr("width", 12).attr("height", 12).attr("patternTransform", "rotate(45)");
-      p.append("rect").attr("width", 6).attr("height", 12).attr("fill", cs[0]);
-      p.append("rect").attr("x", 6).attr("width", 6).attr("height", 12).attr("fill", cs[1]);
+      const g = svg.select("defs").append("linearGradient").attr("id", id);
+      [[0, cs[0]], [50, cs[0]], [50, cs[1]], [100, cs[1]]].forEach(([o, c]) =>
+        g.append("stop").attr("offset", o + "%").attr("stop-color", c));
     }
     return `url(#${id})`;
   }
@@ -270,7 +270,7 @@
     }
     document.getElementById("legTitulo").textContent = sen ? "Partidos à frente" : "Partido do líder";
     document.getElementById("legDesc").textContent = sen
-      ? "Partidos dos dois primeiros colocados na pesquisa mais recente. Listras = vagas divididas."
+      ? "Partidos dos dois primeiros colocados na pesquisa mais recente. Estado dividido ao meio = vagas em partidos diferentes (1º à esquerda, 2º à direita)."
       : "Partido do 1º colocado (AtlasIntel quando disponível; senão, a pesquisa mais recente)";
     const cont = {};
     ESTADOS.forEach(e => lideres(e).forEach(p => {
