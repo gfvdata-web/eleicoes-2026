@@ -28,15 +28,16 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from apuracao import RAIZ, TIMEOUT, Local, agora, baixar, c, git, log, pct_br  # noqa: E402
+from apuracao import RAIZ, UFS, Local, agora, baixar, c, git, log, pct_br, variacao, ANTERIOR  # noqa: E402
 
 SAIDA = RAIZ / "docs" / "data" / "es" / "apuracao"   # o que es.html lê
 BRUTO = RAIZ / "apuracao-bruto" / "es"               # cópia do TSE (ignorada pelo git)
 MUNICIPIOS = RAIZ / "docs" / "data" / "es" / "municipios.js"
+CONFIG_MUN = "https://resultados.tse.jus.br/oficial/ele2026/6259/config/mun-e006259-cm.json"
 
 INTERVALO_COLETA = 60
 INTERVALO_PUBLICACAO = 120
-PARALELO = 8
+PARALELO = 64   # são ~28 mil arquivos por ciclo (5 cargos × ~5.570 municípios + estados)
 
 # Divulgação do TSE de 2026. Eleição 6257 = federal (presidente); 6259 = estadual.
 BASE = "https://resultados.tse.jus.br/oficial/ele2026"
@@ -50,14 +51,42 @@ CARGOS = [
 ]
 
 
-def url(ele, cargo, local):
+def url(ele, cargo, local, uf="ES"):
     """local = "" para o estado ou o código TSE do município."""
-    return f"{BASE}/{ele}/dados/es/es{local}-c{cargo:04d}-e{ele:06d}-u.json"
+    u = uf.lower()
+    if cargo == 7 and uf == "DF":
+        cargo = 8   # deputado distrital
+    return f"{BASE}/{ele}/dados/{u}/{u}{local}-c{cargo:04d}-e{ele:06d}-u.json"
 
 
-def carregar_municipios():
-    texto = MUNICIPIOS.read_text(encoding="utf-8")
-    return re.findall(r'"tse":\s*"(\d+)"', texto)
+def pasta_bruta(uf, cargo):
+    return BRUTO / cargo if uf == "ES" else BRUTO / "outros" / uf / cargo
+
+
+def arq_saida(uf, cargo):
+    """ES continua em <cargo>.json (es.html lê daí); os demais estados em <UF>/<cargo>.json."""
+    return SAIDA / f"{cargo}.json" if uf == "ES" else SAIDA / uf / f"{cargo}.json"
+
+
+def carregar_municipios(todos):
+    """{UF: [códigos TSE dos municípios]}. Com todos=False, só o ES (arquivo local)."""
+    if not todos:
+        return {"ES": re.findall(r'"tse":\s*"(\d+)"', MUNICIPIOS.read_text(encoding="utf-8"))}
+    cache = BRUTO / "municipios-todos.json"
+    try:
+        cod, corpo, _ = baixar(CONFIG_MUN, Local())
+        if cod != 200:
+            raise RuntimeError(f"HTTP {cod}")
+        cfg = json.loads(corpo.decode("utf-8-sig"))
+        res = {a["cd"].upper(): [m["cd"] for m in a["mu"]] for a in cfg["abr"]}
+        BRUTO.mkdir(parents=True, exist_ok=True)
+        cache.write_text(json.dumps(res), encoding="utf-8")
+    except Exception as ex:
+        if not cache.exists():
+            sys.exit(f"Não consegui a lista de municípios do TSE ({ex}) e não há cópia local.")
+        log(c(f"Lista de municípios do TSE indisponível ({ex}); usando a cópia local", "amarelo"))
+        res = json.loads(cache.read_text(encoding="utf-8"))
+    return {uf: res[uf] for uf in UFS if uf in res}
 
 
 def num(v):
@@ -109,9 +138,9 @@ def converter(bruto):
 # Coleta
 # ----------------------------------------------------------------------------
 
-def coletar_real(cargo, ele, cd, local, loc, avisos):
-    cod, corpo, cab = baixar(url(ele, cd, local), loc)
-    nome = f"{cargo} {local or 'ES'}"
+def coletar_real(uf, cargo, ele, cd, local, loc, avisos):
+    cod, corpo, cab = baixar(url(ele, cd, local, uf), loc)
+    nome = f"{cargo} {uf} {local}".strip()
     if cod == 304:
         loc.status = "igual"
         return False
@@ -133,8 +162,9 @@ def coletar_real(cargo, ele, cd, local, loc, avisos):
         loc.status = "erro"
         avisos.append(f"{nome}: arquivo inválido ({ex})")
         return False
-    (BRUTO / cargo).mkdir(parents=True, exist_ok=True)
-    (BRUTO / cargo / f"{local or 'ES'}.json").write_bytes(corpo)
+    pasta = pasta_bruta(uf, cargo)
+    pasta.mkdir(parents=True, exist_ok=True)
+    (pasta / f"{local or uf}.json").write_bytes(corpo)
     if loc.dado and dado["pct"] < loc.dado["pct"]:
         avisos.append(f"{nome}: % apurado diminuiu ({pct_br(loc.dado['pct'])} → {pct_br(dado['pct'])})")
     if dado["vl"] and sum(x[1] for x in dado["leg"].values()) != dado["vl"]:
@@ -143,11 +173,11 @@ def coletar_real(cargo, ele, cd, local, loc, avisos):
     return True
 
 
-def retomar(cargo, locais):
+def retomar(uf, cargo, locais):
     """Ao reiniciar, relê a última cópia do TSE guardada em apuracao-bruto/es/."""
     n = 0
     for local, loc in locais.items():
-        arq = BRUTO / cargo / f"{local or 'ES'}.json"
+        arq = pasta_bruta(uf, cargo) / f"{local or uf}.json"
         if arq.exists():
             try:
                 corpo = arq.read_bytes()
@@ -234,7 +264,7 @@ def somar_estado(cargo_locais, base):
 # Saída
 # ----------------------------------------------------------------------------
 
-def gravar(cargo, locais, simulacao):
+def gravar(cargo, locais, simulacao, uf="ES"):
     """Grava docs/data/es/apuracao/<cargo>.json no formato descrito em documentacao/es.md.
     Retorna True se o arquivo mudou."""
     est = locais[""].dado
@@ -276,10 +306,10 @@ def gravar(cargo, locais, simulacao):
     if simulacao:
         doc["simulacao"] = True
     texto = json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + "\n"
-    arq = SAIDA / f"{cargo}.json"
+    arq = arq_saida(uf, cargo)
     if arq.exists() and arq.read_text(encoding="utf-8") == texto:
         return False
-    SAIDA.mkdir(parents=True, exist_ok=True)
+    arq.parent.mkdir(parents=True, exist_ok=True)
     arq.write_text(texto, encoding="utf-8", newline="\n")
     return True
 
@@ -302,24 +332,44 @@ def publicar():
 
 def limpar():
     for cargo, _, _, _ in CARGOS:
-        gravar(cargo, {"": Local()}, False)
+        for uf in UFS:
+            if uf == "ES" or arq_saida(uf, cargo).exists():
+                gravar(cargo, {"": Local()}, False, uf)
     print("Arquivos zerados em", SAIDA)
 
 
-def resumo(rotulo, locais):
-    st = [l.status for l in locais.values()]
-    est = locais[""].dado
-    muns = [l.dado for k, l in locais.items() if k and l.dado]
+def pct_estados(por_uf):
+    """% apurado do cargo no país: média dos estados (arquivo do estado de cada UF)."""
+    return sum((l[""].dado["pct"] if l[""].dado else 0.0) for l in por_uf.values()) / len(por_uf)
+
+
+def resumo(rotulo, por_uf):
+    """Uma linha por cargo: arquivos de todos os estados, % apurado e variação; ES detalhado."""
+    todos = [l for locais in por_uf.values() for l in locais.values()]
+    st = [l.status for l in todos]
     partes = [f"{c(st.count('novo'), 'verde')} novos", f"{st.count('igual')} iguais"]
     if st.count("pendente"):
         partes.append(c(f"{st.count('pendente')} pendentes", "cinza"))
     if st.count("erro"):
         partes.append(c(f"{st.count('erro')} erros", "vermelho"))
-    andamento = f"ES {pct_br(est['pct'])}" if est else "—"
-    concl = sum(1 for d in muns if d["pct"] >= 100)
-    ultimo = max((d["hora"] for d in muns + ([est] if est else [])), default="—")
-    return (f"  {rotulo:<14}{len(locais):>3} arquivos | " + "  ".join(partes)
-            + f" | {andamento} · {concl}/{len(locais) - 1} municípios concluídos | último dado {c(ultimo, 'ciano')}")
+    pct = pct_estados(por_uf)
+    linhas = [f"  {rotulo:<14}{len(todos):>5} arquivos | " + "  ".join(partes)
+              + f" | apurado {c(pct_br(pct), 'negrito')}{variacao(rotulo, pct)}"]
+    if "ES" in por_uf and len(por_uf) > 1:
+        locais = por_uf["ES"]
+        est = locais[""].dado
+        muns = [l.dado for k, l in locais.items() if k and l.dado]
+        concl = sum(1 for d in muns if d["pct"] >= 100)
+        ultimo = max((d["hora"] for d in muns + ([est] if est else [])), default="—")
+        pe = est["pct"] if est else 0.0
+        linhas.append(f"  {'':<14}  ES {pct_br(pe)}{variacao(rotulo + '/ES', pe)} · {concl}/{len(locais) - 1} municípios concluídos"
+                      f" | último dado {c(ultimo, 'ciano')}")
+    elif "ES" in por_uf:
+        locais = por_uf["ES"]
+        muns = [l.dado for k, l in locais.items() if k and l.dado]
+        concl = sum(1 for d in muns if d["pct"] >= 100)
+        linhas[0] += f" · {concl}/{len(locais) - 1} municípios concluídos"
+    return "\n".join(linhas)
 
 
 def main():
@@ -337,17 +387,23 @@ def main():
     if a.simular and a.publicar:
         sys.exit("--simular nunca publica. Rode sem --publicar.")
 
-    muns = carregar_municipios()
+    muns = carregar_municipios(todos=not a.simular)   # a simulação é só do ES
     cargos = [x for x in CARGOS if not a.cargos or x[0] in a.cargos.split(",")]
-    estado = {cargo: {loc: Local() for loc in [""] + muns} for cargo, _, _, _ in cargos}
+    # estado[cargo][UF] = {"" (estado) ou código do município: Local}
+    estado = {cargo: {uf: {loc: Local() for loc in [""] + lista} for uf, lista in muns.items()}
+              for cargo, _, _, _ in cargos}
     avisos = []
     sims = {}
     if a.simular:
-        sims = {cargo: Simulador(cargo, ele, cd, muns, avisos) for cargo, _, ele, cd in cargos}
+        sims = {cargo: Simulador(cargo, ele, cd, muns["ES"], avisos) for cargo, _, ele, cd in cargos}
     else:
-        n = sum(retomar(cargo, estado[cargo]) for cargo, _, _, _ in cargos)
+        n = sum(retomar(uf, cargo, estado[cargo][uf]) for cargo, _, _, _ in cargos for uf in muns)
         if n:
             log(c(f"Retomando {n} arquivos já baixados em {BRUTO.relative_to(RAIZ)}", "cinza"))
+    for cargo, rotulo, _, _ in cargos:
+        ANTERIOR[rotulo] = pct_estados(estado[cargo])   # base da primeira variação
+        if "ES" in estado[cargo] and len(muns) > 1:
+            ANTERIOR[rotulo + "/ES"] = estado[cargo]["ES"][""].dado["pct"] if estado[cargo]["ES"][""].dado else 0.0
     modo = c("SIMULAÇÃO (só local)", "amarelo", "negrito") if a.simular else (
         c("PUBLICANDO no GitHub", "vermelho", "negrito") if a.publicar else c("coleta sem publicar", "ciano"))
     log(c("Apuração ES 2026 — por município", "negrito") + f" · {modo} · coleta a cada {a.intervalo}s")
@@ -357,21 +413,24 @@ def main():
         ciclo += 1
         inicio = time.time()
         log()
-        log(c(f"════ {agora()} · ES · ciclo {ciclo} ", "negrito") + "═" * 36)
+        log(c(f"════ {agora()} · {'ES' if a.simular else 'Brasil'} · ciclo {ciclo} ", "negrito") + "═" * 36)
         mudou_algo = False
         if a.simular:
             for cargo, _, _, _ in cargos:
-                for loc_id, loc in estado[cargo].items():
+                locais = estado[cargo]["ES"]
+                for loc_id, loc in locais.items():
                     sims[cargo].passo(loc_id, loc)
-                estado[cargo][""].dado = somar_estado(estado[cargo], sims[cargo].base)
-                estado[cargo][""].status = "novo"
+                locais[""].dado = somar_estado(locais, sims[cargo].base)
+                locais[""].status = "novo"
         else:
-            tarefas = [(cargo, ele, cd, loc_id) for cargo, _, ele, cd in cargos for loc_id in estado[cargo]]
+            tarefas = [(uf, cargo, ele, cd, loc_id) for cargo, _, ele, cd in cargos
+                       for uf in estado[cargo] for loc_id in estado[cargo][uf]]
             with cf.ThreadPoolExecutor(PARALELO) as ex:
-                list(ex.map(lambda t: coletar_real(t[0], t[1], t[2], t[3], estado[t[0]][t[3]], avisos), tarefas))
+                list(ex.map(lambda t: coletar_real(t[0], t[1], t[2], t[3], t[4], estado[t[1]][t[0]][t[4]], avisos), tarefas))
         for cargo, rotulo, _, _ in cargos:
-            if gravar(cargo, estado[cargo], a.simular):
-                mudou_algo = True
+            for uf, locais in estado[cargo].items():
+                if gravar(cargo, locais, a.simular, uf):
+                    mudou_algo = True
             log(resumo(rotulo, estado[cargo]))
         for av in sorted(set(avisos))[:15]:
             log(c("  ⚠ " + av, "amarelo"))

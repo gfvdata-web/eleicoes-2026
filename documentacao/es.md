@@ -70,3 +70,16 @@ Arquivos estáticos (gerados uma vez, não mudam durante a apuração):
 - **Quem está passando** (só deputados): projeção das vagas com os votos já apurados no estado inteiro, pelas regras do Código Eleitoral (QE com fração até 0,5 desprezada; QP com mínimo de 10% do QE; sobras pela maior média entre listas com 80% do QE e candidatos com 20%; depois, maior média entre todas, conforme o STF nas ADIs 7228/7263/7325). Mostra eleitos, o 1º fora de cada lista e os votos por lista. A situação oficial do TSE (`st`) aparece ao lado quando divulgada.
 - **Candidatos**: ranking da área, com busca e filtro de partido nos deputados (40 primeiros, botão para todos). ★ fixa o candidato: ele vai para o topo e ganha coluna na tabela "Por região". Fixados, cor do mapa e recorte ficam salvos só no navegador do leitor (`localStorage`).
 - **Por região**: macrorregiões, microrregiões ou municípios da área, com eleitores, % apurado, mais votado, vantagem sobre o 2º e o % de cada fixado; colunas ordenáveis.
+
+## Todos os estados e variação do % apurado (04/10/2026)
+
+- `apuracao_es.py` agora baixa **todos os estados** (estado + municípios, lista de municípios lida de `mun-e006259-cm.json` do TSE, com cópia em `apuracao-bruto/es/municipios-todos.json`). ES continua em `docs/data/es/apuracao/<cargo>.json`; os demais em `docs/data/es/apuracao/<UF>/<cargo>.json`. `--simular` continua só ES. `PARALELO` = 64 (cerca de 28 mil arquivos por ciclo; um ciclo sem cache leva alguns minutos, depois só os 304 do ETag).
+- Os dois scripts imprimem, ao fim de cada ciclo, o % apurado do cargo e a variação em pontos percentuais desde o ciclo anterior (`variacao()` em `apuracao.py`). No `apuracao_es.py` há uma linha extra com o ES.
+
+## Seletor de estado (todos os estados)
+
+- `es.html` tem o seletor **Estado** no topo; `es.html?uf=SP` abre direto. Cada UF usa a mesma visualização do ES.
+- Dados de apuração: ES em `docs/data/es/apuracao/<cargo>.json`; os demais em `docs/data/es/apuracao/<UF>/<cargo>.json` (mesmo formato; a chave `es` guarda o total do estado). Gerados por `scripts/apuracao_es.py` (coleta o Brasil todo, ~28 mil arquivos por ciclo; `--simular` é só do ES).
+- Municípios e malha de cada UF (menos ES): `docs/data/uf/<uf>/municipios.json` e `municipios.geojson`, gerados uma vez por `python scripts/gerar_ufs.py [UF ...]` (nomes, microrregião e mesorregião do IBGE; malha de qualidade mínima). O ES mantém as regiões de planejamento estaduais.
+- Candidatos fixados (★) ficam salvos por estado e cargo.
+

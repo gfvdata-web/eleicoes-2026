@@ -125,6 +125,21 @@ def pct_br(v):
     return f"{v:.2f}".replace(".", ",") + "%"
 
 
+ANTERIOR = {}   # chave -> % apurado no ciclo anterior
+
+
+def variacao(chave, pct):
+    """Texto com o aumento do % apurado desde o ciclo anterior (e guarda o valor atual)."""
+    ant = ANTERIOR.get(chave)
+    ANTERIOR[chave] = pct
+    if ant is None:
+        return ""
+    d = pct - ant
+    if abs(d) < 0.005:
+        return c(" (sem mudança)", "cinza")
+    return c(f" ({'+' if d > 0 else '−'}{abs(d):.2f}".replace(".", ",") + " p.p.)", "verde" if d > 0 else "vermelho")
+
+
 def log(msg=""):
     print("\r\033[K" + msg, flush=True)
 
@@ -353,22 +368,26 @@ def retomar(cargo, locais):
 # Ciclo
 # ----------------------------------------------------------------------------
 
+def pct_total(locais):
+    """% apurado do cargo: o do Brasil (presidente) ou a média dos estados."""
+    if "BR" in locais and locais["BR"].dado:
+        return locais["BR"].dado["pct"]
+    return sum(l.dado["pct"] for l in locais.values() if l.dado) / len(locais)
+
+
 def resumo(cargo, rotulo, locais):
     st = [l.status for l in locais.values()]
     dados = [l.dado for l in locais.values() if l.dado]
     if st.count("sem endereço") == len(st):
         return f"  {rotulo.lower()}: " + c("sem endereço configurado", "cinza")
     if dados:
-        if "BR" in locais and locais["BR"].dado:
-            pct = locais["BR"].dado["pct"]
-        else:
-            pct = sum(d["pct"] for d in dados) / len(locais)
+        pct = pct_total(locais)
         concl = sum(1 for d in dados if d["pct"] >= 100)
         ultimo = max(d.get("hora", "") for d in dados)
     else:
         pct, concl, ultimo = 0.0, 0, "—"
     texto = (f"  {rotulo.lower()}: {c(st.count('novo'), 'verde')} novos, {st.count('igual')} já lidos, "
-             f"{c(pct_br(pct), 'negrito')}, {concl}/{len(locais)} concluídos, dado das {c(ultimo, 'ciano')}")
+             f"{c(pct_br(pct), 'negrito')}{variacao(cargo, pct)}, {concl}/{len(locais)} concluídos, dado das {c(ultimo, 'ciano')}")
     if st.count("pendente"):
         texto += c(f", {st.count('pendente')} sem dado", "cinza")
     if st.count("erro"):
@@ -397,6 +416,8 @@ def main():
         retomados = sum(retomar(cargo, estado[cargo]) for cargo, _, _ in cargos)
         if retomados:
             log(c(f"Retomando {retomados} locais já gravados em {SAIDA.relative_to(RAIZ)}", "cinza"))
+    for cargo, _, _ in cargos:
+        ANTERIOR[cargo] = pct_total(estado[cargo])   # base da primeira variação
     conhecidos = carregar_listas()
     coletar = coletar_simulado if a.simular else coletar_real
     modo = c("SIMULAÇÃO (só local)", "amarelo", "negrito") if a.simular else (
