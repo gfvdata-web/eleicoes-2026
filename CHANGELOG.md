@@ -4,6 +4,7 @@ Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-04
 
+- **Apuração por estado:** corrigido o mapa em branco nos estados diferentes do ES (`es.html?uf=…`): as malhas em `docs/data/uf/` estavam com o sentido dos polígonos invertido para o D3; `gerar_ufs.py` agora grava no sentido certo.
 - **Apuração, aba Presidente:** novo card "Candidatos — Brasil" com o total nacional do TSE (posição, partido, votos, % válidos e barra), como na página do Espírito Santo. O quadro "Apuração geral · Brasil" mostra só o % de urnas apuradas.
 - **Apuração por estado:** `es.html` ganhou o seletor de estado (`es.html?uf=SP`), com a mesma visualização por município e região para os 27 estados. Novo `scripts/gerar_ufs.py` (municípios e malha de cada UF) e `scripts/apuracao_es.py` coletando todos os estados.
 - **Tema claro/escuro:** seletor ☀️ Claro / 🌙 Escuro no canto superior direito de `index.html`, `apuracao.html`, `es.html` e `senado.html`. Sem escolha, segue o tema do sistema; a escolha fica salva no navegador.
