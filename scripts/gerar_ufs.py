@@ -35,6 +35,12 @@ def arredondar(c, casas=3):
     return [arredondar(x, casas) for x in c] if isinstance(c[0], list) else [round(c[0], casas), round(c[1], casas)]
 
 
+def sentido_d3(poligono):
+    """D3 quer o anel externo no sentido horário e os buracos no anti-horário; senão desenha o "resto do globo"."""
+    area = lambda r: sum(r[i][0] * r[i + 1][1] - r[i + 1][0] * r[i][1] for i in range(len(r) - 1))
+    return [r if (area(r) < 0) == (i == 0) else r[::-1] for i, r in enumerate(poligono)]
+
+
 def main():
     alvo = [u.upper() for u in sys.argv[1:]] or UFS
     tse = json.loads(baixar(TSE).decode("utf-8"))
@@ -57,7 +63,9 @@ def main():
         geo = json.loads(baixar(MALHA.format(uf=uf)).decode("utf-8"))
         for f in geo["features"]:
             f["properties"] = {"ibge": f["properties"]["codarea"]}
-            f["geometry"]["coordinates"] = arredondar(f["geometry"]["coordinates"])
+            g = f["geometry"]
+            c = arredondar(g["coordinates"])
+            g["coordinates"] = [sentido_d3(p) for p in c] if g["type"] == "MultiPolygon" else sentido_d3(c)
         pasta = RAIZ / "docs" / "data" / "uf" / uf.lower()
         pasta.mkdir(parents=True, exist_ok=True)
         (pasta / "municipios.json").write_text(json.dumps(muns, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
