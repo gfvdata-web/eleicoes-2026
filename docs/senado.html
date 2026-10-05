@@ -28,7 +28,7 @@
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; line-height: 1.45; }
   .wrap { position: relative; max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
-  .modo { display: inline-flex; margin-top: 14px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .modo { display: inline-flex; flex-wrap: wrap; margin-top: 14px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
   .modo a { font-size: .9rem; font-weight: 600; padding: 6px 16px; border-radius: 7px; color: var(--muted); text-decoration: none; }
   .modo a:hover { color: var(--text); }
   .modo a[aria-current="page"] { background: var(--accent); color: var(--surface); }
@@ -125,7 +125,7 @@
     </nav>
     <script>
       if (/[?&]apuracao/.test(location.search)) {
-        document.querySelector(".modo").innerHTML = '<a href="apuracao.html#presidente">Presidente</a><a href="apuracao.html">Governador</a><a href="apuracao.html#senado">Senado</a><a href="senado.html?apuracao" aria-current="page">Bancada Senado</a>';
+        document.querySelector(".modo").innerHTML = '<a href="apuracao.html#presidente">Presidente</a><a href="apuracao.html">Governador</a><a href="apuracao.html#senado">Senado</a><a href="senado.html?apuracao" aria-current="page">Bancada Senado</a><a href="camara.html">Bancada Câmara</a>';
         document.querySelector("header h1").textContent = "Como fica o Senado a partir de 2027, pela apuração";
         document.querySelector("header p").textContent = "Em 2026 são eleitos 54 dos 81 senadores (2 por estado). Os outros 27, eleitos em 2022, têm mandato até 2031. A simulação usa os 2 mais votados no % apurado até agora em cada estado (sem apuração, a pesquisa mais recente). Você pode trocar os eleitos e agrupar partidos.";
         document.title = "Senado 2027 — Bancada pela apuração";
