@@ -52,5 +52,5 @@ window.CORES_PARTIDOS = {
   "PDT": "#a0522d", "PV": "#4c9a2a", "MDB": "#2e7d4f", "PSD": "#ef8a17", "União Brasil": "#2f8fce",
   "PP": "#6b3fa0", "Republicanos": "#0b5d6b", "PSDB": "#8db6e0", "Podemos": "#8bc34a",
   "PL": "#1b2f6e", "Novo": "#f4692b", "Solidariedade": "#d88aa6", "Avante": "#b58ad6",
-  "PRD": "#8a8a7f", "Missão": "#7d7a2f", "Cidadania": "#d4507a", "Sem partido": "#cfcdc6", "—": "#b9b7af"
+  "PRD": "#8a8a7f", "Missão": "#7d7a2f", "Cidadania": "#d4507a", "DC": "#3f7f9f", "Agir": "#9c6b30", "Mobiliza": "#5f8f6f", "Democrata": "#6e7fb3", "Sem partido": "#cfcdc6", "—": "#b9b7af"
 };

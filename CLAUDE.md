@@ -5,7 +5,7 @@ Leia este arquivo antes de qualquer mudança. Para detalhes, consulte:
 - [documentacao/pagina.md](documentacao/pagina.md): funcionamento da página
 - [documentacao/roadmap.md](documentacao/roadmap.md): o que está planejado
 - [documentacao/senado.md](documentacao/senado.md): página de bancadas do Senado (`senado.html`)
-- [documentacao/camara.md](documentacao/camara.md): página de bancadas da Câmara (`camara.html`, só apuração, lê `docs/data/apuracao/deputado-federal.json`)
+- [documentacao/camara.md](documentacao/camara.md): página de bancadas da Câmara e das Assembleias (`camara.html` e `camara.html?uf=XX`, só apuração, lê `deputado-federal.json` / `deputado-estadual.json` em `docs/data/apuracao/`)
 - [documentacao/apuracao.md](documentacao/apuracao.md): página de apuração (`apuracao.html`, dados em `docs/data/apuracao/`, coleta em `scripts/apuracao.py`)
 - [documentacao/es.md](documentacao/es.md): página do Espírito Santo (`es.html`, só apuração do TSE por município, dados em `docs/data/es/`, coleta em `scripts/apuracao_es.py`)
 

@@ -32,7 +32,8 @@
   .modo a { font-size: .9rem; font-weight: 600; padding: 6px 16px; border-radius: 7px; color: var(--muted); text-decoration: none; }
   .modo a:hover { color: var(--text); }
   .modo a[aria-current="page"] { background: var(--accent); color: var(--surface); }
-  header h1 { font-size: 1.7rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  header h1 { font-size: 1.7rem; margin: 0 0 4px; letter-spacing: -0.01em; margin-right: 180px; }
+  @media (max-width: 480px) { header h1 { margin-right: 84px; } }
   header p { margin: 0; color: var(--muted); font-size: .95rem; }
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 20px; }
   .grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
@@ -115,11 +116,11 @@
     <button type="button" class="tema-switch__btn" data-tema="dark" aria-pressed="false"><span aria-hidden="true">🌙</span><span class="tema-switch__label">Escuro</span></button>
   </div>
   <header>
-    <h1>Como fica a Câmara a partir de 2027, pela apuração</h1>
-    <p>Os 513 deputados federais são eleitos pelo sistema proporcional: cada partido ou federação recebe cadeiras conforme os votos de sua lista no estado.
+    <h1 id="titulo">Como fica a Câmara a partir de 2027, pela apuração</h1>
+    <p id="subtitulo">Os 513 deputados federais são eleitos pelo sistema proporcional: cada partido ou federação recebe cadeiras conforme os votos de sua lista no estado.
       Enquanto a apuração não termina, o TSE distribui as vagas de forma provisória com os votos já contados; elas podem mudar até o fim.</p>
     <nav class="modo" aria-label="Abas">
-      <a href="apuracao.html#presidente">Presidente</a><a href="apuracao.html">Governador</a><a href="apuracao.html#senado">Senado</a><a href="senado.html?apuracao">Bancada Senado</a><a href="camara.html" aria-current="page">Bancada Câmara</a>
+      <a href="apuracao.html#presidente">Presidente</a><a href="apuracao.html">Governador</a><a href="apuracao.html#senado">Senado</a><a href="senado.html?apuracao">Bancada Senado</a><a href="camara.html" id="abaCamara">Bancada Câmara</a><a href="camara.html?uf=" id="abaAssembleia">Assembleias</a>
     </nav>
   </header>
 
@@ -133,6 +134,7 @@
           <button data-v="todos" class="on">Todos</button><button data-v="conf">Confirmados</button><button data-v="proj">Projetados</button>
         </div>
       </div>
+      <div class="toolbar" id="ufbar" hidden><label for="ufsel" class="muted">Estado</label><select id="ufsel"></select></div>
       <div class="status" id="status">Carregando a apuração…</div>
       <svg id="hemi" viewBox="0 0 600 315" role="img" aria-label="Hemiciclo da Câmara com 513 cadeiras"></svg>
       <div class="stack" id="stack"></div>
@@ -156,11 +158,11 @@
   </div>
 
   <div class="card">
-    <h3>Bancada de cada estado</h3>
-    <p class="muted">Número de vagas de cada estado, % de urnas apuradas e cadeiras por partido. Abra "ver deputados" para a lista, do mais ao menos votado.</p>
+    <h3 id="t2">Bancada de cada estado</h3>
+    <p class="muted" id="t2sub">Número de vagas de cada estado, % de urnas apuradas e cadeiras por partido. Abra "ver deputados" para a lista, do mais ao menos votado.</p>
     <div class="tbl-wrap">
       <table class="est">
-        <thead><tr><th>UF</th><th style="text-align:right">Vagas</th><th style="text-align:right">Urnas</th><th>Cadeiras por partido</th></tr></thead>
+        <thead id="thead"><tr><th>UF</th><th style="text-align:right">Vagas</th><th style="text-align:right">Urnas</th><th>Cadeiras por partido</th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
@@ -178,15 +180,17 @@
 <script src="data/senado-atual.js"></script>
 <script>
 (function () {
-  const TOTAL = 513;
   const VAGAS = { SP: 70, MG: 53, RJ: 46, BA: 39, RS: 31, PR: 30, PE: 25, CE: 22, MA: 18, PA: 17, GO: 17, SC: 16, PB: 12, ES: 10, PI: 10, AL: 9,
     AM: 8, RN: 8, MT: 8, MS: 8, DF: 8, SE: 8, RO: 8, TO: 8, AC: 8, AP: 8, RR: 8 };
   const NOMES = { AC: "Acre", AL: "Alagoas", AM: "Amazonas", AP: "Amapá", BA: "Bahia", CE: "Ceará", DF: "Distrito Federal", ES: "Espírito Santo", GO: "Goiás",
     MA: "Maranhão", MG: "Minas Gerais", MS: "Mato Grosso do Sul", MT: "Mato Grosso", PA: "Pará", PB: "Paraíba", PE: "Pernambuco", PI: "Piauí", PR: "Paraná",
     RJ: "Rio de Janeiro", RN: "Rio Grande do Norte", RO: "Rondônia", RR: "Roraima", RS: "Rio Grande do Sul", SC: "Santa Catarina", SE: "Sergipe", SP: "São Paulo", TO: "Tocantins" };
+  // Assembleias: 3 × deputados federais até 36; acima disso, 24 + deputados federais (CF, art. 27). DF: Câmara Legislativa, 24.
+  const vagasEst = uf => uf === "DF" ? 24 : VAGAS[uf] <= 12 ? 3 * VAGAS[uf] : 24 + VAGAS[uf];
+  const casaDe = uf => uf === "DF" ? "Câmara Legislativa do DF" : "Assembleia Legislativa · " + NOMES[uf];
   const UFS = Object.keys(VAGAS).sort((a, b) => NOMES[a].localeCompare(NOMES[b]));
   // Siglas do TSE → nomes usados no site (cores em CORES_PARTIDOS, senado-atual.js)
-  const SIGLAS = { "UNIÃO": "União Brasil", "REPUBLICANOS": "Republicanos", "PODE": "Podemos", "PCDOB": "PCdoB", "NOVO": "Novo", "AVANTE": "Avante",
+  const SIGLAS = { "DEMOCRATA": "Democrata", "UNIÃO": "União Brasil", "REPUBLICANOS": "Republicanos", "PODE": "Podemos", "PCDOB": "PCdoB", "NOVO": "Novo", "AVANTE": "Avante",
     "SOLIDARIEDADE": "Solidariedade", "REDE": "Rede", "MISSÃO": "Missão", "CIDADANIA": "Cidadania", "AGIR": "Agir", "MOBILIZA": "Mobiliza" };
   const partidoDe = s => SIGLAS[s] || s || "—";
   const CORES = window.CORES_PARTIDOS || {};
@@ -203,11 +207,19 @@
   // ---- Grupos (salvos no navegador)
   const load = (k, d) => { try { const v = JSON.parse(localStorage.getItem("camara27:" + k)); return v ?? d; } catch (e) { return d; } };
   const save = (k, v) => { try { localStorage.setItem("camara27:" + k, JSON.stringify(v)); } catch (e) {} };
+
+  // ---- Casa: Câmara dos Deputados (padrão) ou Assembleia de um estado (camara.html?uf=SP)
+  const params = new URLSearchParams(location.search);
+  const EST = params.has("uf");
+  let UF = (params.get("uf") || "").toUpperCase();
+  if (EST && !VAGAS[UF]) UF = VAGAS[load("uf", "")] ? load("uf", "") : "SP";
+  const vagas = uf => EST ? vagasEst(uf) : VAGAS[uf];
+  let TOTAL = EST ? vagasEst(UF) : 513;
   // Ordem = esquerda → direita no hemiciclo
   const GRUPOS_PADRAO = [
     ["Esquerda", "#c2553d", ["PT", "PSOL", "PCdoB", "Rede", "PSB", "PDT", "PV"]],
     ["Centro", "#e0a43a", ["MDB", "PSD", "PSDB", "Podemos", "Solidariedade", "Avante", "Cidadania"]],
-    ["Direita", "#2f5d8a", ["PL", "Novo", "PP", "Republicanos", "União Brasil", "PRD", "Missão"]]
+    ["Direita", "#2f5d8a", ["PL", "Novo", "PP", "Republicanos", "União Brasil", "PRD", "Missão", "DC"]]
   ];
   let grupos = load("grupos", null);
   let partidoGrupo = load("partidoGrupo", {});
@@ -227,7 +239,7 @@
   let UFDADOS = {}, atualizado = "", assinatura = "";
   async function carregar() {
     try {
-      const r = await fetch(`data/apuracao/deputado-federal.json?t=${Date.now()}`, { cache: "no-store" });
+      const r = await fetch(`data/apuracao/${EST ? "deputado-estadual" : "deputado-federal"}.json?t=${Date.now()}`, { cache: "no-store" });
       if (!r.ok) throw new Error(r.status);
       const txt = await r.text();
       if (txt === assinatura) return;
@@ -244,11 +256,11 @@
   // 513 cadeiras: eleitos/projetados de cada UF + vagas ainda sem dado
   function cadeiras() {
     const lista = [];
-    UFS.forEach(uf => {
+    (EST ? [UF] : UFS).forEach(uf => {
       const d = UFDADOS[uf];
       const el = (d && d.eleitos) || [];
-      el.slice(0, VAGAS[uf]).forEach(x => lista.push({ uf, nome: x[0], pv: +x[1], partido: partidoDe(x[2]), votos: x[3], origem: x[4] === 0 ? "proj" : "conf", pctUrnas: d.pct }));
-      for (let i = el.length; i < VAGAS[uf]; i++) lista.push({ uf, partido: "A definir", origem: "vazio" });
+      el.slice(0, vagas(uf)).forEach(x => lista.push({ uf, nome: x[0], pv: +x[1], partido: partidoDe(x[2]), votos: x[3], origem: x[4] === 0 ? "proj" : "conf", pctUrnas: d.pct }));
+      for (let i = Math.min(el.length, vagas(uf)); i < vagas(uf); i++) lista.push({ uf, partido: "A definir", origem: "vazio" });
     });
     return lista;
   }
@@ -263,9 +275,14 @@
       ordemG(grupoDe(a.partido)) - ordemG(grupoDe(b.partido)) || b.total - a.total || a.partido.localeCompare(b.partido));
   }
 
-  // ---- Geometria do hemiciclo (513 posições, da esquerda para a direita)
-  const CX = 300, CY = 300, R = 292, LINHAS = 14, R0 = 0.36, RAIO = 5.4;
-  const POS = (() => {
+  // ---- Geometria do hemiciclo (TOTAL posições, da esquerda para a direita); fileiras e raio dependem do total
+  const CX = 300, CY = 300, R = 292, R0 = 0.36;
+  let LINHAS, RAIO, POS;
+  function geometria() {
+    LINHAS = Math.max(3, Math.min(14, Math.round(Math.sqrt(TOTAL / 2.6))));
+    const passo = R * (1 - R0) / (LINHAS - 1), arco = Math.PI * R * (1 + R0) / 2 * LINHAS / TOTAL;
+    RAIO = Math.min(22, 0.38 * Math.min(passo, arco));
+    POS = (() => {
     const raios = Array.from({ length: LINHAS }, (_, i) => R * (R0 + (1 - R0) * i / (LINHAS - 1)));
     const soma = raios.reduce((a, b) => a + b, 0);
     const qtd = raios.map(r => Math.round(TOTAL * r / soma));
@@ -273,7 +290,9 @@
     const pts = [];
     raios.forEach((r, i) => { for (let j = 0; j < qtd[i]; j++) { const t = Math.PI - Math.PI * j / (qtd[i] - 1); pts.push({ x: CX + r * Math.cos(t), y: CY - r * Math.sin(t), t, r }); } });
     return pts.sort((a, b) => b.t - a.t || b.r - a.r);
-  })();
+    })();
+  }
+  geometria();
 
   // ---- Tooltip
   const tip = document.getElementById("tip");
@@ -307,10 +326,11 @@
     const nConf = lista.filter(s => s.origem === "conf").length, nProj = lista.filter(s => s.origem === "proj").length, nVazio = TOTAL - nConf - nProj;
 
     // Status
-    const comDado = UFS.filter(uf => UFDADOS[uf] && UFDADOS[uf].pct > 0);
-    const media = UFS.reduce((a, uf) => a + ((UFDADOS[uf] && UFDADOS[uf].pct) || 0), 0) / UFS.length;
+    const ufsCasa = EST ? [UF] : UFS;
+    const comDado = ufsCasa.filter(uf => UFDADOS[uf] && UFDADOS[uf].pct > 0);
+    const media = ufsCasa.reduce((a, uf) => a + ((UFDADOS[uf] && UFDADOS[uf].pct) || 0), 0) / ufsCasa.length;
     document.getElementById("status").innerHTML = comDado.length
-      ? `Urnas apuradas (média dos estados): <b>${fmtP(media)}</b> · <b>${nConf}</b> eleitos confirmados, <b>${nProj}</b> projetados${nVazio ? `, <b>${nVazio}</b> vagas sem apuração` : ""}.`
+      ? `Urnas apuradas${EST ? ` (${UF})` : " (média dos estados)"}: <b>${fmtP(media)}</b> · <b>${nConf}</b> eleitos confirmados, <b>${nProj}</b> projetados${nVazio ? `, <b>${nVazio}</b> vagas sem apuração` : ""}.`
       : "Aguardando o início da apuração.";
     document.getElementById("atualizado").textContent = atualizado || "—";
 
@@ -326,7 +346,7 @@
       g.innerHTML = s.origem === "vazio"
         ? `<circle cx="${x}" cy="${y}" r="${RAIO - 0.8}" fill="var(--surface)" stroke="${VAZIO}" stroke-width="1.4"/>`
         : `<circle cx="${x}" cy="${y}" r="${RAIO}" fill="${corDe(s)}"/>` +
-          (s.origem === "proj" ? `<circle cx="${x}" cy="${y}" r="1.5" fill="var(--surface)" pointer-events="none"/>` : "");
+          (s.origem === "proj" ? `<circle cx="${x}" cy="${y}" r="${(RAIO * 0.28).toFixed(1)}" fill="var(--surface)" pointer-events="none"/>` : "");
       g.addEventListener("mouseenter", ev => showTip(ev, seatTip(s)));
       g.addEventListener("mousemove", moveTip);
       g.addEventListener("mouseleave", hideTip);
@@ -342,8 +362,8 @@
       : linhas.map(l => ({ nome: l.partido, cor: corPartido(l.partido), n: l.total }))).concat([{ nome: "Sem apuração", cor: VAZIO, n: nVazio }]).filter(b => b.n);
     const stack = document.getElementById("stack");
     stack.innerHTML = blocos.map(b => `<i style="flex:${b.n};background:${b.cor}" data-t="${esc(b.nome)}: ${b.n} (${pct(b.n)})"></i>`).join("") +
-      [[257, "maioria · 257", "l"], [308, "308 · 3/5 (PEC)", "r"], [342, "342 · 2/3", "r"]].map(([v, t, lado]) =>
-        `<div class="mark ${lado}" style="left:calc(${v / TOTAL * 100}% - 1px)"><span${v === 342 ? ' style="top:-18px"' : ""}>${t}</span></div>`).join("");
+      marcas().map(([v, t, lado], i) =>
+        `<div class="mark ${lado}" style="left:calc(${v / TOTAL * 100}% - 1px)"><span${i === 2 ? ' style="top:-18px"' : ""}>${t}</span></div>`).join("");
     stack.querySelectorAll("i").forEach(el => {
       el.addEventListener("mouseenter", ev => showTip(ev, `<strong>${el.dataset.t}</strong> cadeiras`));
       el.addEventListener("mousemove", moveTip);
@@ -357,7 +377,7 @@
       <td class="n"><strong>${l.total}</strong>${l.proj ? ` <span class="det">(${l.conf} + ${l.proj})</span>` : ""}</td>
       <td class="n">${pct(l.total)}</td>
       <td>${grupos.length ? `<select data-p="${esc(l.partido)}" aria-label="Grupo do ${esc(l.partido)}">${opts(l.partido)}</select>` : ""}</td></tr>`).join("") +
-      `<tr><td colspan="4" class="det">Entre parênteses: confirmados + projetados. % sobre as 513 cadeiras.</td></tr>`;
+      `<tr><td colspan="4" class="det">Entre parênteses: confirmados + projetados. % sobre as ${TOTAL} cadeiras.</td></tr>`;
     document.querySelectorAll("#plist select").forEach(sel => sel.addEventListener("change", () => {
       if (sel.value) partidoGrupo[sel.dataset.p] = sel.value; else delete partidoGrupo[sel.dataset.p];
       salvarGrupos(); render();
@@ -381,7 +401,14 @@
     renderTabela(lista);
   }
 
+  // Maioria absoluta, 3/5 (emenda constitucional) e 2/3. Câmara: 257, 308, 342.
+  function marcas() {
+    const m = Math.floor(TOTAL / 2) + 1, a = Math.ceil(TOTAL * 3 / 5), b = Math.ceil(TOTAL * 2 / 3);
+    return [[m, `maioria · ${m}`, "l"], [a, `${a} · 3/5 (PEC)`, "r"], [b, `${b} · 2/3`, "r"]];
+  }
+
   function renderTabela(lista) {
+    if (EST) return renderEleitos(lista);
     const abertos = new Set([...document.querySelectorAll("#tbody details[open]")].map(d => d.dataset.uf));
     document.getElementById("tbody").innerHTML = UFS.map(uf => {
       const d = UFDADOS[uf];
@@ -390,17 +417,60 @@
       ss.forEach(s => (porP[s.partido] = (porP[s.partido] || 0) + 1));
       const pp = Object.entries(porP).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
         .map(([p, n]) => `<span class="pp"><span class="sw" style="background:${modo === "grupo" ? grupoDe(p).cor : corPartido(p)}"></span>${esc(p)} <b>&nbsp;${n}</b></span>`).join("");
-      const todosConf = ss.length === VAGAS[uf] && ss.every(s => s.origem === "conf");
+      const todosConf = ss.length === vagas(uf) && ss.every(s => s.origem === "conf");
       const urnas = d && d.pct > 0 ? fmtP(d.pct) : "—";
       const lst = ss.length ? `<details data-uf="${uf}" ${abertos.has(uf) ? "open" : ""}><summary>ver deputados</summary><ol>` +
         [...ss].sort((a, b) => b.votos - a.votos).map(s => `<li>${esc(s.nome)} <span class="tag">${esc(s.partido)}</span><span class="v">${fmtN(s.votos)}</span>${s.origem === "proj" ? ` <span class="tag">projetado</span>` : ""}</li>`).join("") + `</ol></details>` : "";
       return `<tr>
         <td class="uf" title="${esc(NOMES[uf])}">${uf}</td>
-        <td class="n">${VAGAS[uf]}</td>
+        <td class="n">${vagas(uf)}</td>
         <td class="n">${urnas}${todosConf ? `<br><span class="tag ok">confirmado</span>` : ""}</td>
         <td>${pp || `<span class="muted">Sem apuração</span>`}${lst}</td></tr>`;
     }).join("");
   }
+
+  // Assembleia: lista dos eleitos do estado, do mais ao menos votado
+  function renderEleitos(lista) {
+    const ss = lista.filter(s => s.origem !== "vazio").sort((a, b) => b.votos - a.votos);
+    const falta = TOTAL - ss.length;
+    document.getElementById("tbody").innerHTML = ss.map((s, i) => `<tr>
+        <td class="n">${i + 1}</td>
+        <td><strong>${esc(s.nome)}</strong></td>
+        <td style="white-space:nowrap"><span class="sw" style="background:${modo === "grupo" ? grupoDe(s.partido).cor : corPartido(s.partido)}"></span>${esc(s.partido)}</td>
+        <td class="n">${fmtN(s.votos)}</td>
+        <td class="n">${fmtP(s.pv)}</td>
+        <td>${s.origem === "conf" ? `<span class="tag ok">eleito</span>` : `<span class="tag">projetado</span>`}</td></tr>`).join("") +
+      (falta ? `<tr><td colspan="6" class="muted">${ss.length ? `Mais ${falta} vagas ainda sem apuração.` : "Ainda sem apuração neste estado."}</td></tr>` : "");
+  }
+
+  // ---- Textos e seletor de estado conforme a casa
+  function textos() {
+    document.getElementById("abaCamara").toggleAttribute("aria-current", !EST);
+    document.getElementById("abaAssembleia").toggleAttribute("aria-current", EST);
+    document.querySelectorAll(".modo a[aria-current]").forEach(a => a.setAttribute("aria-current", "page"));
+    document.getElementById("hemi").setAttribute("aria-label", `Hemiciclo com ${TOTAL} cadeiras`);
+    if (!EST) return;
+    const casa = casaDe(UF);
+    document.title = `${UF === "DF" ? "Câmara Legislativa" : "Assembleia"} ${UF} 2027 — Bancadas`;
+    document.getElementById("titulo").textContent = `Como fica a ${UF === "DF" ? "Câmara Legislativa do DF" : "Assembleia Legislativa de " + NOMES[UF]} a partir de 2027`;
+    document.getElementById("subtitulo").textContent = `${casa}: ${TOTAL} deputados ${UF === "DF" ? "distritais" : "estaduais"}, eleitos pelo sistema proporcional (cada partido ou federação recebe cadeiras conforme os votos de sua lista). ` +
+      "Enquanto a apuração não termina, o TSE distribui as vagas de forma provisória com os votos já contados; elas podem mudar até o fim.";
+    document.getElementById("t2").textContent = `Deputados eleitos · ${UF}`;
+    document.getElementById("t2sub").textContent = "Do mais ao menos votado. \"Projetado\" = vaga provisória pelo % apurado; \"eleito\" = confirmado pelo TSE.";
+    document.getElementById("thead").innerHTML = `<tr><th style="text-align:right">#</th><th>Deputado</th><th>Partido</th><th style="text-align:right">Votos</th><th style="text-align:right">% válidos</th><th>Situação</th></tr>`;
+  }
+  if (EST) {
+    const sel = document.getElementById("ufsel");
+    sel.innerHTML = UFS.map(uf => `<option value="${uf}" ${uf === UF ? "selected" : ""}>${esc(NOMES[uf])} (${vagasEst(uf)} vagas)</option>`).join("");
+    document.getElementById("ufbar").hidden = false;
+    save("uf", UF);
+    sel.addEventListener("change", () => {
+      UF = sel.value; TOTAL = vagasEst(UF); save("uf", UF);
+      history.replaceState(null, "", `?uf=${UF}`);
+      geometria(); textos(); render();
+    });
+  }
+  textos();
 
   // ---- Controles
   function salvarGrupos() { save("grupos", grupos); save("partidoGrupo", partidoGrupo); }

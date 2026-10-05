@@ -16,3 +16,13 @@ Mostra como fica a Câmara dos Deputados a partir de 01/02/2027 (513 cadeiras), 
 - Barra empilhada com marcas em 257 (maioria absoluta), 308 (3/5, PEC) e 342 (2/3).
 - Grupos iguais aos da Bancada Senado (`GRUPOS_PADRAO`, esquerda / centro / direita; Missão em Direita), salvos no navegador com chaves `camara27:grupos` e `camara27:partidoGrupo`.
 - Tabela por estado: vagas, % de urnas, cadeiras por partido e lista dos deputados (mais votados primeiro).
+
+## Assembleias (`camara.html?uf=SP`)
+
+Aba **Assembleias**, a pedido do usuário. Mesma página e mesmo código, com o parâmetro `uf`:
+
+- Lê `data/apuracao/deputado-estadual.json` e mostra só a UF escolhida no seletor "Estado" (a troca atualiza a URL sem recarregar). `?uf=` vazio ou inválido usa o último estado escolhido (`camara27:uf`) ou SP.
+- Cadeiras por estado: `vagasEst(uf)` = 3 × deputados federais até 36; acima disso, 24 + deputados federais (CF, art. 27). DF = 24 (Câmara Legislativa). Bate com os eleitos do TSE em 2026.
+- O hemiciclo ajusta fileiras e tamanho dos círculos ao total (`geometria()`). As marcas da barra são calculadas para a casa: maioria absoluta, 3/5 e 2/3 (`marcas()`).
+- O card de baixo vira a lista dos deputados do estado (posição, partido, votos, % válidos, eleito/projetado).
+- Grupos são os mesmos da Câmara (mesmas chaves no navegador). DC entra em Direita; Agir, Mobiliza e Democrata ficam sem grupo.
