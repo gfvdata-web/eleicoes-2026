@@ -39,6 +39,7 @@ Locais com coordenada fora do município (22 em 05/10) vão para perto dos outro
 
 ## Página
 
+- Navegação: trilha fixa no topo com "↑ Subir um nível" (seção → local → zona, se escolhida → município → estado; também Esc e clique fora do município no mapa). Acima do mapa do município: botões de zona ("Todas" + cada zona, só se houver mais de uma), menu de local (filtrado pela zona) e menu de seção (com local escolhido). O mapa aproxima na zona/local escolhido e volta ao inteiro em "Todas".
 - Abas de cargo; trilha clicável (Espírito Santo › município › zona › local › seção); endereço com o nível (`#c=senador&m=57053&z=1&l=12&s=1-34`, `l` = índice do local no arquivo do município, `s` = zona-seção).
 - Mapa dos municípios (clique abre o município) e mapa do município: um ponto por local (tamanho = eleitores), áreas de Voronoi recortadas pelo limite do município (aproximação: o TSE não publica limites de zona) e linhas grossas onde as áreas vizinhas são de zonas diferentes. Zoom com roda do mouse, dois dedos ou botões; ao escolher um local, o mapa aproxima nele.
 - Cor: mais votado (mais forte quanto maior o % dele: 25% → 75% dos válidos; no Senado vale o dobro do %), zona eleitoral ou candidato em foco (clique no nome no ranking).

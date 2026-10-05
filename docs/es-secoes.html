@@ -47,6 +47,14 @@
   button.lnk { font: inherit; font-size: .85rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--accent); cursor: pointer; }
 
   /* Trilha (estado › município › zona › local › seção) */
+  .trilha-card { position: sticky; top: 0; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 16px; box-shadow: 0 4px 12px rgba(0,0,0,.06); }
+  .navmun { display: grid; gap: 8px; margin-bottom: 10px; }
+  .navmun .linha { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+  .navmun .rot { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); min-width: 50px; }
+  .navmun select { flex: 1 1 0; min-width: 0; width: 100%; text-overflow: ellipsis; }
+  .chave { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .8rem; color: var(--muted); margin-top: 10px; }
+  .chave span { display: inline-flex; align-items: center; gap: 6px; }
+  .mapa-box .chave svg { flex: none; width: auto; height: auto; display: inline-block; }
   .trilha { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: .92rem; }
   .trilha button { font: inherit; background: none; border: 0; padding: 2px 4px; color: var(--accent); cursor: pointer; border-radius: 4px; }
   .trilha button:hover { text-decoration: underline; }
@@ -160,8 +168,9 @@
     <div class="nav"><div class="abas" role="tablist" aria-label="Cargo" id="abas"></div></div>
   </header>
 
-  <div class="card">
+  <div class="card trilha-card">
     <nav class="trilha" id="trilha" aria-label="Nível escolhido"></nav>
+    <button type="button" class="lnk" id="subir" hidden>↑ Subir um nível</button>
   </div>
 
   <div class="card mapas">
@@ -178,11 +187,20 @@
           <button type="button" data-cor="zona" aria-pressed="false">Zona eleitoral</button>
         </div>
       </div>
+      <div class="navmun" id="navMun" hidden></div>
       <div id="munBox"><div class="vazio-mapa">Clique em um município no mapa ao lado para ver seus locais de votação e zonas eleitorais.</div></div>
       <div id="legMun"></div>
-      <p class="nota" id="notaMun" hidden>Cada ponto é um local de votação (tamanho = eleitores). O TSE não publica os limites das zonas eleitorais:
-        as áreas em volta dos pontos são aproximadas (cada pedaço do município fica com o local de votação mais próximo) e as linhas grossas separam zonas
-        diferentes. Os eleitores não votam necessariamente no local mais próximo de casa.</p>
+      <div id="notaMun" hidden>
+        <div class="chave">
+          <span><svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="currentColor" fill-opacity=".55" stroke="var(--surface)"/></svg>Local de votação (escola etc.; tamanho = eleitores)</span>
+          <span><svg width="22" height="14"><rect x="1" y="2" width="20" height="10" fill="var(--bar-bg)" stroke="var(--muted)" stroke-width=".8"/></svg>Área do local (aproximada)</span>
+          <span><svg width="22" height="14"><line x1="1" y1="7" x2="21" y2="7" stroke="var(--zona)" stroke-width="2.5"/></svg>Divisa entre zonas eleitorais (aproximada)</span>
+        </div>
+        <p class="nota">O TSE só publica o endereço de cada local de votação, não os limites das zonas. Por isso o município é repartido entre os locais:
+          cada pedaço fica com o local mais próximo, e a cor da área é o resultado das urnas daquele local. As linhas finas separam locais; as grossas, zonas.
+          Os eleitores não votam necessariamente no local mais próximo de casa. Clique numa área ou ponto para abrir o local; clique fora do município ou use
+          "Subir um nível" para voltar.</p>
+      </div>
     </div>
   </div>
 
@@ -380,6 +398,45 @@
     el.innerHTML = it.map(([r, n], i) => (i ? `<span class="sep">›</span>` : "") +
       (i < it.length - 1 ? `<button type="button" data-i="${i}"><small>${r}</small>${esc(n)}</button>` : `<b><small>${r}</small>${esc(n)}</b>`)).join("");
     el.querySelectorAll("button").forEach(b => b.onclick = () => ir(it[+b.dataset.i][2]));
+    const sb = document.getElementById("subir");
+    sb.hidden = it.length < 2;
+    sb.onclick = subir;
+  }
+  // um nível acima: seção → local → zona (se escolhida) → município → estado
+  function subir() {
+    if (sel.s) return ir({ m: sel.m, z: sel.z, l: sel.l });
+    if (sel.l != null) return ir({ m: sel.m, z: sel.z });
+    if (sel.z != null) return ir({ m: sel.m });
+    if (sel.m) return ir({});
+  }
+  addEventListener("keydown", ev => { if (ev.key === "Escape" && !ev.target.closest("input, select")) subir(); });
+
+  // ---------- seletores de zona, local e seção (acima do mapa do município) ----------
+  function navMun() {
+    const el = document.getElementById("navMun");
+    el.hidden = !sel.m;
+    if (!sel.m) { el.innerHTML = ""; return; }
+    const d = D(sel.m), m = sel.m;
+    let h = "";
+    if (d.zonas.length > 1) {
+      h += `<div class="linha"><span class="rot">Zona</span><div class="seg" role="group" aria-label="Zona eleitoral">
+        <button type="button" data-z="" aria-pressed="${sel.z == null}">Todas</button>${d.zonas.map(z => `<button type="button" data-z="${z}" aria-pressed="${sel.z === z}">Zona ${z}</button>`).join("")}</div></div>`;
+    }
+    const ls = d.locais.map((l, i) => [i, bonito(l[2]), l[0]]).filter(x => sel.z == null || x[2] === sel.z).sort((a, b) => a[1].localeCompare(b[1], "pt"));
+    h += `<div class="linha"><span class="rot">Local</span><select id="selLocal" aria-label="Local de votação">
+      <option value="">Todos os locais${sel.z != null ? " da zona " + sel.z : ""} (${ls.length})</option>
+      ${ls.map(([i, n, z]) => `<option value="${i}"${sel.l === i ? " selected" : ""}>${esc(n)}${sel.z == null && d.zonas.length > 1 ? " · zona " + z : ""}</option>`).join("")}</select></div>`;
+    if (sel.l != null) {
+      const ss = d.porLocal[sel.l];
+      h += `<div class="linha"><span class="rot">Seção</span><select id="selSecao" aria-label="Seção (urna)">
+        <option value="">Todas as seções do local (${ss.length})</option>
+        ${ss.map(s => { const k = s[0] + "-" + s[1]; return `<option value="${k}"${sel.s === k ? " selected" : ""}>Seção ${s[1]} · ${int(s[3])} eleitores</option>`; }).join("")}</select></div>`;
+    }
+    el.innerHTML = h;
+    el.querySelectorAll("[data-z]").forEach(b => b.onclick = () => ir({ m, z: b.dataset.z === "" ? null : +b.dataset.z }));
+    el.querySelector("#selLocal").onchange = ev => ir(ev.target.value === "" ? { m, z: sel.z } : { m, z: sel.z, l: +ev.target.value });
+    const ss = el.querySelector("#selSecao");
+    if (ss) ss.onchange = ev => ir({ m, z: sel.z, l: sel.l, s: ev.target.value || null });
   }
 
   async function ir(novo) {
@@ -464,11 +521,25 @@
   const munBox = document.getElementById("munBox");
   let munDesenhado = null, celulas = null, pontos = null, zoomMun = null, pontosXY = null, svgMun = null, tamMun = null, ultimoLocal = null;
   // aproxima o mapa no local escolhido (só quando ele muda)
+  // aproxima o mapa no nível escolhido (só quando ele muda): local → no ponto; zona → nos locais dela; município → inteiro
   function focarLocal() {
-    if (!sel.m || sel.l == null || sel.l === ultimoLocal) { ultimoLocal = sel.m ? sel.l : null; return; }
-    ultimoLocal = sel.l;
-    const [x, y] = pontosXY[sel.l], k = Math.max(5, d3.zoomTransform(svgMun.node()).k);
-    svgMun.transition().duration(500).call(zoomMun.transform, d3.zoomIdentity.translate(tamMun[0] / 2, tamMun[1] / 2).scale(k).translate(-x, -y));
+    if (!sel.m || !svgMun) return;
+    const chave = sel.l != null ? "l" + sel.l : sel.z != null ? "z" + sel.z : "m";
+    if (chave === ultimoLocal) return;
+    const antes = ultimoLocal;
+    ultimoLocal = chave;
+    const [W, H] = tamMun, d = D(sel.m);
+    let t = d3.zoomIdentity;
+    if (sel.l != null) {
+      const [x, y] = pontosXY[sel.l], k = Math.max(5, d3.zoomTransform(svgMun.node()).k);
+      t = d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-x, -y);
+    } else if (sel.z != null) {
+      const ps = pontosXY.filter((p, i) => d.locais[i][0] === sel.z);
+      const [x0, x1] = d3.extent(ps, p => p[0]), [y0, y1] = d3.extent(ps, p => p[1]);
+      const k = Math.max(1, Math.min(12, 0.8 / Math.max((x1 - x0 + 1) / W, (y1 - y0 + 1) / H)));
+      t = d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
+    } else if (antes == null) return;
+    svgMun.transition().duration(500).call(zoomMun.transform, t);
   }
   function desenharMun() {
     const m = sel.m;
@@ -519,6 +590,8 @@
       .filter(ev => (ev.type === "wheel" || !ev.button) && (!ev.touches || ev.touches.length > 1))
       .on("zoom", ev => { svg.attr("transform", ev.transform); pontos.attr("r", i => r(el[i]) / Math.pow(ev.transform.k, 0.75)); });
     svg0.call(zoomMun).on("dblclick.zoom", null);
+    // clique fora das áreas (fora do município) sobe um nível
+    svg0.on("click", ev => { if (ev.target === svg0.node()) subir(); });
     munBox.querySelector(".zoom").onclick = ev => {
       const b = ev.target.closest("button"); if (!b) return;
       const z = +b.dataset.z;
@@ -718,6 +791,7 @@
     abas.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", b.dataset.c === cargo));
     gravarHash();
     trilha();
+    navMun();
     desenharMun();
     pintar();
     focarLocal();
