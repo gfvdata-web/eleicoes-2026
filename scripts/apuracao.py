@@ -234,7 +234,23 @@ def baixar(url, loc):
             return 0, str(e).encode(), {}
 
 
+PULAR_CONCLUIDOS = True   # local com resultado final não é mais consultado (--tudo desliga)
+
+
+def concluido(cargo, d):
+    """Resultado final: 100% das urnas e, onde o TSE marca, eleitos/2º turno já definidos."""
+    if not d or d.get("pct", 0) < 100:
+        return False
+    if cargo.startswith("deputado"):
+        el = d.get("eleitos")
+        return bool(el) and all(len(e) < 5 or e[4] == 1 for e in el)   # só com `eleitos` gravado e todos confirmados
+    return d.get("situacao") in ("eleito", "2turno")
+
+
 def coletar_real(cargo, uf, loc, conhecidos, avisos):
+    if PULAR_CONCLUIDOS and concluido(cargo, loc.dado):
+        loc.status = "igual"
+        return False
     modelo = URLS.get(cargo)
     if not modelo:
         loc.status = "sem endereço"
@@ -426,8 +442,11 @@ def main():
     ap.add_argument("--uma-vez", action="store_true", help="roda um ciclo e sai")
     ap.add_argument("--limpar", action="store_true", help="zera os arquivos do site e sai")
     ap.add_argument("--intervalo", type=int, default=INTERVALO_COLETA, help="segundos entre ciclos (padrão 60)")
+    ap.add_argument("--tudo", action="store_true", help="consulta também os locais já concluídos")
     ap.add_argument("--cargos", help="só estes cargos, separados por vírgula (ex.: governador,senador)")
     a = ap.parse_args()
+    global PULAR_CONCLUIDOS
+    PULAR_CONCLUIDOS = not a.tudo
 
     if a.limpar:
         return limpar()

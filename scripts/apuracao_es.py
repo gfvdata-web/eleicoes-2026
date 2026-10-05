@@ -37,7 +37,7 @@ CONFIG_MUN = "https://resultados.tse.jus.br/oficial/ele2026/6259/config/mun-e006
 
 INTERVALO_COLETA = 60
 INTERVALO_PUBLICACAO = 120
-PARALELO = 64   # são ~28 mil arquivos por ciclo (5 cargos × ~5.570 municípios + estados)
+PARALELO = 24   # são ~28 mil arquivos por ciclo (5 cargos × ~5.570 municípios + estados)
 
 # Divulgação do TSE de 2026. Eleição 6257 = federal (presidente); 6259 = estadual.
 BASE = "https://resultados.tse.jus.br/oficial/ele2026"
@@ -138,7 +138,13 @@ def converter(bruto):
 # Coleta
 # ----------------------------------------------------------------------------
 
+PULAR_CONCLUIDOS = True   # município com 100% apurado não é mais consultado (--tudo desliga)
+
+
 def coletar_real(uf, cargo, ele, cd, local, loc, avisos):
+    if PULAR_CONCLUIDOS and loc.dado and loc.dado["pct"] >= 100:
+        loc.status = "igual"
+        return False
     cod, corpo, cab = baixar(url(ele, cd, local, uf), loc)
     nome = f"{cargo} {uf} {local}".strip()
     if cod == 304:
@@ -146,6 +152,9 @@ def coletar_real(uf, cargo, ele, cd, local, loc, avisos):
         return False
     if cod in (403, 404):
         loc.status = "pendente"
+        return False
+    if cod in (429, 503):   # limite do TSE: mantém o dado anterior e tenta no próximo ciclo
+        loc.status = "limitado"
         return False
     if cod != 200:
         loc.status = "erro"
@@ -314,10 +323,10 @@ def gravar(cargo, locais, simulacao, uf="ES"):
     return True
 
 
-def publicar():
-    caminho = "docs/data/es/apuracao"
-    git("add", caminho)
-    cod, saida = git("commit", "-m", f"Apuração ES: atualização {agora()[:5]}", "--", caminho)
+def publicar(caminhos, rotulo):
+    """Commit e push só dos caminhos deste processo (assim dois processos não se atropelam)."""
+    git("add", *caminhos)
+    cod, saida = git("commit", "-m", f"Apuração {rotulo}: atualização {agora()[:5]}", "--", *caminhos)
     if cod != 0:
         return ("nothing to commit" in saida or "nada a submeter" in saida), "nada novo para commitar"
     _, sha = git("rev-parse", "--short", "HEAD")
@@ -350,6 +359,8 @@ def resumo(rotulo, por_uf):
     partes = [f"{c(st.count('novo'), 'verde')} novos", f"{st.count('igual')} iguais"]
     if st.count("pendente"):
         partes.append(c(f"{st.count('pendente')} pendentes", "cinza"))
+    if st.count("limitado"):
+        partes.append(c(f"{st.count('limitado')} limitados pelo TSE", "cinza"))
     if st.count("erro"):
         partes.append(c(f"{st.count('erro')} erros", "vermelho"))
     pct = pct_estados(por_uf)
@@ -379,15 +390,28 @@ def main():
     ap.add_argument("--uma-vez", action="store_true", help="roda um ciclo e sai")
     ap.add_argument("--limpar", action="store_true", help="zera os arquivos do site e sai")
     ap.add_argument("--intervalo", type=int, default=INTERVALO_COLETA, help="segundos entre ciclos (padrão 60)")
+    ap.add_argument("--tudo", action="store_true", help="consulta também os municípios já com 100% apurado")
+    ap.add_argument("--ufs", help="só estes estados, separados por vírgula (ex.: ES ou SP,RJ)")
+    ap.add_argument("--exceto", help="todos os estados menos estes (ex.: ES)")
     ap.add_argument("--cargos", help="só estes cargos, separados por vírgula (ex.: deputado-federal,deputado-estadual)")
     a = ap.parse_args()
+    global PULAR_CONCLUIDOS
+    PULAR_CONCLUIDOS = not a.tudo
 
     if a.limpar:
         return limpar()
     if a.simular and a.publicar:
         sys.exit("--simular nunca publica. Rode sem --publicar.")
 
+    log(c("Iniciando: buscando a lista de municípios no TSE...", "cinza"))
     muns = carregar_municipios(todos=not a.simular)   # a simulação é só do ES
+    if a.ufs:
+        muns = {uf: m for uf, m in muns.items() if uf in a.ufs.upper().split(",")}
+    if a.exceto and not a.simular:
+        muns = {uf: m for uf, m in muns.items() if uf not in a.exceto.upper().split(",")}
+    if not muns:
+        sys.exit("Nenhum estado selecionado (confira --ufs / --exceto).")
+    rotulo_pub = "ES" if list(muns) == ["ES"] else "demais estados" if "ES" not in muns else "estados"
     cargos = [x for x in CARGOS if not a.cargos or x[0] in a.cargos.split(",")]
     # estado[cargo][UF] = {"" (estado) ou código do município: Local}
     estado = {cargo: {uf: {loc: Local() for loc in [""] + lista} for uf, lista in muns.items()}
@@ -397,6 +421,7 @@ def main():
     if a.simular:
         sims = {cargo: Simulador(cargo, ele, cd, muns["ES"], avisos) for cargo, _, ele, cd in cargos}
     else:
+        log(c("Relendo os arquivos já baixados (pode levar 1 a 2 minutos)...", "cinza"))
         n = sum(retomar(uf, cargo, estado[cargo][uf]) for cargo, _, _, _ in cargos for uf in muns)
         if n:
             log(c(f"Retomando {n} arquivos já baixados em {BRUTO.relative_to(RAIZ)}", "cinza"))
@@ -413,7 +438,7 @@ def main():
         ciclo += 1
         inicio = time.time()
         log()
-        log(c(f"════ {agora()} · {'ES' if a.simular else 'Brasil'} · ciclo {ciclo} ", "negrito") + "═" * 36)
+        log(c(f"════ {agora()} · {rotulo_pub} · ciclo {ciclo} ", "negrito") + "═" * 36)
         mudou_algo = False
         if a.simular:
             for cargo, _, _, _ in cargos:
@@ -425,8 +450,12 @@ def main():
         else:
             tarefas = [(uf, cargo, ele, cd, loc_id) for cargo, _, ele, cd in cargos
                        for uf in estado[cargo] for loc_id in estado[cargo][uf]]
+            feitos = 0
             with cf.ThreadPoolExecutor(PARALELO) as ex:
-                list(ex.map(lambda t: coletar_real(t[0], t[1], t[2], t[3], t[4], estado[t[1]][t[0]][t[4]], avisos), tarefas))
+                for _ in ex.map(lambda t: coletar_real(t[0], t[1], t[2], t[3], t[4], estado[t[1]][t[0]][t[4]], avisos), tarefas):
+                    feitos += 1
+                    if feitos % 100 == 0 or feitos == len(tarefas):
+                        print(f"\r\033[K  Baixando do TSE... {feitos}/{len(tarefas)} arquivos", end="", flush=True)
         for cargo, rotulo, _, _ in cargos:
             for uf, locais in estado[cargo].items():
                 if gravar(cargo, locais, a.simular, uf):
@@ -441,7 +470,10 @@ def main():
         pendente_pub = pendente_pub or mudou_algo
         if a.publicar and pendente_pub:
             if time.time() - ultima_pub >= INTERVALO_PUBLICACAO:
-                ok, msg = publicar()
+                caminhos = [f"docs/data/es/apuracao/{uf}" for uf in muns if uf != "ES"]
+                if "ES" in muns:
+                    caminhos += [f"docs/data/es/apuracao/{cargo}.json" for cargo, _, _, _ in cargos]
+                ok, msg = publicar(caminhos, rotulo_pub)
                 if ok:
                     ultima_pub, pendente_pub = time.time(), False
                     log(c(f"  → publicado {agora()} ({msg})", "verde"))

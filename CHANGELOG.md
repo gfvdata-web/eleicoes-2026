@@ -3,6 +3,7 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-04
+- **Coleta:** novo `scripts/ciclo.py` (geral, depois ES, e os outros estados a cada 10 min, uma etapa por vez, para evitar o limite 429 do TSE). `apuracao.py` e `apuracao_es.py` deixam de consultar o que já está concluído (100% apurado; em deputados, só com todos os eleitos confirmados); `--tudo` reconsulta tudo.
 - **Apuração, aba Partidos:** deputados passam a aparecer como "projetados" (cadeiras provisórias que o TSE distribui a cada lista, aos mais votados dela) até o TSE confirmar; corrigido o mapa que aparecia na aba. O coletor grava `eleitos` com 5º campo `0` = projetado.
 - **Apuração, aba Partidos:** nova aba (`apuracao.html#partidos`) para filtrar um partido e ver, por cargo (presidente, governador, senador, deputado federal e estadual), quantos foram eleitos, com estado, % de votos válidos, votos e % de urnas. Em presidente, governador e Senado também mostra quem lidera. `scripts/apuracao.py` passou a gravar `eleitos` (candidatos marcados pelo TSE) nos JSONs; reinicie o coletor para valer.
 - **Apuração, pop-up:** selo "Eleito" ou "Confirmado 2º turno" (governador e presidente), pela marcação do TSE ou, na falta dela, por cálculo matemático com folga de 20% sobre os votos que faltam.
