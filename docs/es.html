@@ -216,7 +216,7 @@
       </div>
       <div>
         <div class="sub-h"><h3>Partidos e federações</h3></div>
-        <div class="tbl-wrap"><table><thead><tr><th>Lista</th><th class="num">Votos</th><th class="num">% QE</th><th class="num">Cadeiras</th></tr></thead><tbody id="projListas"></tbody></table></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Lista</th><th class="num">Votos</th><th class="num">% válidos</th><th class="num">% QE</th><th class="num">Cadeiras</th></tr></thead><tbody id="projListas"></tbody></table></div>
       </div>
     </div>
   </div>
@@ -634,7 +634,7 @@
     document.getElementById("projFila").innerHTML = p.fila.map(f => `<tr>${linha(f.k, `<td><span class="mini">1º fora de ${esc(f.l.tipo === "f" ? f.l.nome : sigla(f.l.nome))}</span> ${stTSE(d.cand[f.k])}</td>`)}</tr>`).join("")
       || `<tr><td colspan="4" class="vazio">—</td></tr>`;
     document.getElementById("projListas").innerHTML = [...p.L].sort((a, b) => b.votos - a.votos).filter(l => l.votos > 0)
-      .map(l => `<tr><td>${esc(l.tipo === "f" ? l.nome : sigla(l.nome))}</td><td class="num">${int(l.votos)}</td><td class="num">${pct(100 * l.votos / p.qe, 0)}</td><td class="num"><strong>${l.cad.length}</strong></td></tr>`).join("");
+      .map(l => `<tr><td>${esc(l.tipo === "f" ? l.nome : sigla(l.nome))}</td><td class="num">${int(l.votos)}</td><td class="num">${pct(100 * l.votos / p.validos, 1)}</td><td class="num">${pct(100 * l.votos / p.qe, 0)}</td><td class="num"><strong>${l.cad.length}</strong></td></tr>`).join("");
   }
   const partido = p => `<span class="party"><i style="background:${corPartido(p)}"></i>${esc(sigla(p))}</span>`;
 
