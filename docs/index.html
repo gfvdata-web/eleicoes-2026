@@ -39,10 +39,11 @@
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 20px; }
   .map-grid { display: grid; grid-template-columns: 1fr 300px; gap: 16px; align-items: start; }
   @media (max-width: 820px) { .map-grid { grid-template-columns: 1fr; } }
-  #mapa { width: 100%; height: auto; display: block; }
-  #mapa path { stroke: var(--state-stroke); stroke-width: .8; cursor: pointer; transition: opacity .15s; }
-  #mapa path:hover, #mapa path.sel { stroke: var(--text); stroke-width: 1.6; }
-  #mapa text { font-size: 10px; font-weight: 600; fill: #fff; pointer-events: none; text-anchor: middle; paint-order: stroke; stroke: rgba(0,0,0,.35); stroke-width: 2px; }
+  #mapa, #mapaC { width: 100%; height: auto; display: block; }
+  #mapa path, #mapaC path { stroke: var(--state-stroke); stroke-width: .8; cursor: pointer; transition: opacity .15s; }
+  #mapa path:hover, #mapa path.sel, #mapaC path:hover, #mapaC path.sel { stroke: var(--text); stroke-width: 1.6; }
+  #mapaC text.err { font-size: 9.5px; font-weight: 500; }
+  #mapa text, #mapaC text { font-size: 10px; font-weight: 600; fill: #fff; pointer-events: none; text-anchor: middle; paint-order: stroke; stroke: rgba(0,0,0,.35); stroke-width: 2px; }
   .legend h3, .side h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
   .legend ul { list-style: none; padding: 0; margin: 0 0 16px; }
   .legend li { display: flex; align-items: center; gap: 8px; font-size: .9rem; margin: 4px 0; }
@@ -76,7 +77,7 @@
   tr.first td { border-top: 2px solid var(--border); }
   .lead { font-weight: 600; }
   .party { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--bar-bg); font-size: .8rem; white-space: nowrap; }
-  .modo { display: inline-flex; margin-top: 14px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .modo { display: inline-flex; flex-wrap: wrap; margin-top: 14px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
   .modo button { font: inherit; font-size: .9rem; font-weight: 600; padding: 6px 16px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
   .modo button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
   .modo a { font-size: .9rem; font-weight: 600; padding: 6px 16px; border-radius: 7px; color: var(--muted); text-decoration: none; }
@@ -109,15 +110,30 @@
   .grupos .acoes button { font: inherit; font-size: .8rem; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--surface); cursor: pointer; }
   .grupos .acoes button.sec { background: transparent; color: var(--accent); }
   .legend li small { color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
-  .badge-apu { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-bottom: 14px; padding: 6px 14px; border: 1px solid #b3261e; border-radius: 999px; font-size: .85rem; font-weight: 600; background: var(--surface); }
-  .badge-apu strong { color: #b3261e; text-transform: uppercase; letter-spacing: .06em; font-size: .75rem; display: inline-flex; align-items: center; gap: 6px; }
-  .badge-apu strong::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulsa 1.6s ease-in-out infinite; }
-  @keyframes pulsa { 50% { opacity: .25; } }
-  @media (prefers-reduced-motion: reduce) { .badge-apu strong::before { animation: none; } }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .badge-apu { border-color: #ef6b5f; } :root:not([data-theme="light"]) .badge-apu strong { color: #ef6b5f; } }
-  :root[data-theme="dark"] .badge-apu { border-color: #ef6b5f; } :root[data-theme="dark"] .badge-apu strong { color: #ef6b5f; }
-  .badge-apu a { color: var(--accent); text-decoration: none; }
-  .badge-apu a:hover { text-decoration: underline; }
+  /* Comparativo: pesquisa × resultado */
+  #secComp [hidden] { display: none !important; }
+  .cctrl { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .cctrl label { font-size: .85rem; color: var(--muted); }
+  .cstatus { font-size: .85rem; color: var(--muted); margin: 10px 0 0; }
+  .resumo { list-style: none; padding: 0; margin: 0 0 16px; font-size: .88rem; }
+  .resumo li { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+  .resumo li strong { font-variant-numeric: tabular-nums; }
+  .cmp { width: 100%; border-collapse: collapse; font-size: .8rem; margin-top: 6px; }
+  .cmp th, .cmp td { padding: 3px 4px; border-bottom: 1px solid var(--border); font-size: .78rem; letter-spacing: 0; text-transform: none; }
+  .cmp th { color: var(--muted); font-weight: 500; text-align: right; }
+  .cmp th:first-child, .cmp td:first-child { text-align: left; }
+  .cmp td { text-align: right; font-variant-numeric: tabular-nums; vertical-align: middle; }
+  .cmp tr.eleito td:first-child { font-weight: 600; }
+  .ok { color: #2f6f5e; font-weight: 600; } .nok { color: #b3261e; font-weight: 600; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ok { color: #6fbfa5; } :root:not([data-theme="light"]) .nok { color: #ef6b5f; } }
+  :root[data-theme="dark"] .ok { color: #6fbfa5; } :root[data-theme="dark"] .nok { color: #ef6b5f; }
+  .cmp .pt { color: var(--muted); }
+  #tip .nota { margin-top: 8px; color: var(--muted); }
+  .card h2 { font-size: 1rem; margin: 0 0 4px; }
+  .card > p.desc { font-size: .85rem; color: var(--muted); margin: 0 0 12px; }
+  tr.clic { cursor: pointer; }
+  tr.clic:hover td { background: var(--bar-bg); }
+  tr.atual td { background: var(--bar-bg); font-weight: 600; }
   footer { margin-top: 24px; font-size: .8rem; color: var(--muted); }
   footer a { color: var(--accent); }
 
@@ -129,6 +145,12 @@
   /* Tema escuro: cores do mapa/hemiciclo mais suaves (menos saturação e brilho) */
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) :is(#mapa path, #hemi circle, .sw) { filter: saturate(.62) brightness(.82); } }
   :root[data-theme="dark"] :is(#mapa path, #hemi circle, .sw) { filter: saturate(.62) brightness(.82); }
+  /* Switch de seções do site (igual em todas as páginas) */
+  .secoes { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; margin: 0 0 16px; padding: 3px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); }
+  .secoes a { display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.15; font-size: .85rem; font-weight: 600; padding: 6px 16px; border-radius: 999px; color: var(--muted); text-decoration: none; }
+  .secoes a:hover { color: var(--text); }
+  .secoes a[aria-current="page"] { background: var(--accent); color: var(--surface); }
+  @media (max-width: 560px) { .secoes { display: grid; margin-right: 84px; border-radius: 14px; } .secoes a { font-size: .75rem; padding: 5px 8px; border-radius: 11px; } }
 </style>
 </head>
 <body>
@@ -137,7 +159,7 @@
     <button type="button" class="tema-switch__btn" data-tema="light" aria-pressed="false"><span aria-hidden="true">☀️</span><span class="tema-switch__label">Claro</span></button>
     <button type="button" class="tema-switch__btn" data-tema="dark" aria-pressed="false"><span aria-hidden="true">🌙</span><span class="tema-switch__label">Escuro</span></button>
   </div>
-  <div class="badge-apu"><strong>Apuração</strong><a href="apuracao.html">Resultados oficiais do TSE →</a><a href="es.html">Espírito Santo →</a></div>
+  <nav class="secoes" id="secoes" aria-label="Seção do site"><a href="index.html" data-secao="pesq" aria-current="page">Pesquisas e análises</a><a href="apuracao.html" data-secao="nac">Nacional e bancadas</a><a href="es.html" data-secao="est">Estados</a></nav>
   <header>
     <h1 id="titulo">Disputa pelos governos estaduais — 2026</h1>
     <p id="subtitulo">Últimas pesquisas de intenção de voto antes do 1º turno (04/10/2026). Passe o mouse (ou toque) sobre um estado para ver os números.</p>
@@ -145,9 +167,13 @@
       <button type="button" data-modo="gov" aria-pressed="true">Governador</button>
       <button type="button" data-modo="sen" aria-pressed="false">Senado</button>
       <a href="senado.html">Bancada Senado</a>
+      <button type="button" data-modo="cpres" aria-pressed="false">Comparativo presidente</button>
+      <button type="button" data-modo="cgov" aria-pressed="false">Comparativo governo</button>
+      <button type="button" data-modo="csen" aria-pressed="false">Comparativo Senado</button>
     </div>
   </header>
 
+  <div id="secPesq">
   <div class="card map-grid">
     <svg id="mapa" viewBox="0 0 800 780" role="img" aria-label="Mapa do Brasil por estado"></svg>
     <div class="side">
@@ -200,6 +226,63 @@
       </table>
     </div>
   </div>
+  </div>
+
+  <div id="secComp" hidden>
+    <div class="card">
+      <div class="cctrl">
+        <label for="cPesq">Pesquisa comparada</label>
+        <select id="cPesq"></select>
+        <div class="seg" id="cColorir" role="group" aria-label="Colorir o mapa por">
+          <button type="button" data-ccolorir="erro" aria-pressed="true">Erro médio</button>
+          <button type="button" data-ccolorir="acerto" aria-pressed="false">Acerto do vencedor</button>
+        </div>
+      </div>
+      <p class="cstatus" id="cStatus">Carregando o resultado oficial…</p>
+    </div>
+
+    <div class="card map-grid" id="cMapaCard">
+      <svg id="mapaC" viewBox="0 0 800 780" role="img" aria-label="Mapa do Brasil: erro das pesquisas por estado"></svg>
+      <div class="side">
+        <div class="legend">
+          <h3 id="cLegTitulo">Erro médio da pesquisa</h3>
+          <p id="cLegDesc"></p>
+          <ul id="cLegenda"></ul>
+        </div>
+        <h3>Neste recorte</h3>
+        <ul class="resumo" id="cResumo"></ul>
+        <h3>Como ler</h3>
+        <p>Tudo em <strong>% de votos válidos</strong>. Pesquisas em votos totais (<strong>T</strong>) e de citações (<strong>C</strong>) são convertidas: os candidatos listados são reescalados para somar 100%.</p>
+        <p><strong>Erro médio</strong> = média da diferença, em pontos, entre pesquisa e urna para cada candidato da pesquisa. <strong>Diferença</strong> positiva = a pesquisa deu mais do que a urna.</p>
+        <p class="so-csen" hidden>No Senado, acertar = pôr os 2 eleitos nas 2 primeiras posições; a margem é a da 2ª vaga (2º − 3º).</p>
+        <p>O número abaixo da sigla é o erro médio. Cinza = sem pesquisa desse instituto no estado.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="cTabTitulo">Pesquisa × urna, por estado</h2>
+      <p class="desc" id="cTabDesc"></p>
+      <div class="filters" id="cFiltros">
+        <label for="cEstado">Estado</label>
+        <select id="cEstado"><option value="">Todos os estados</option></select>
+        <label for="cRegiao">Região</label>
+        <select id="cRegiao"><option value="">Todas</option></select>
+        <button class="clear" id="cLimpar">Limpar filtros</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>UF</th><th>Candidato</th><th>Partido</th><th style="text-align:right">Pesquisa</th><th style="text-align:right">Urna</th><th style="text-align:right">Diferença</th></tr></thead>
+          <tbody id="cTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" id="cInstCard">
+      <h2>Institutos</h2>
+      <p class="desc" id="cInstDesc">Desempenho de cada instituto nos estados em que pesquisou (a última pesquisa dele em cada estado), dos que mais pesquisaram para os que menos. Clique em uma linha para ver no mapa.</p>
+      <div class="tbl-wrap"><table id="cInstTab"></table></div>
+    </div>
+  </div>
 
   <footer>
     <span class="so-sen" hidden>Senado: pesquisas compiladas da
@@ -219,6 +302,345 @@
 <script src="data/dados.js"></script>
 <script src="data/senado.js"></script>
 <script src="data/senado-atual.js"></script>
+<script src="data/presidente.js"></script>
+<script>
+// Abas "Comparativo": a pesquisa escolhida × o resultado oficial do 1º turno (TSE), por estado.
+// Pesquisas: dados.js (governador), senado.js (Senado), presidente.js (presidente). Resultado: data/apuracao/<cargo>.json.
+(function () {
+  const CARGOS = {
+    cpres: { arq: "presidente", dados: window.PRESIDENTE || [], vagas: 1, nome: "presidente", docTitle: "Presidente 2026 — Pesquisas × resultado" },
+    cgov: { arq: "governador", dados: window.ESTADOS || [], vagas: 1, nome: "governador", docTitle: "Governadores 2026 — Pesquisas × resultado" },
+    csen: { arq: "senador", dados: window.SENADO || [], vagas: 2, nome: "Senado", docTitle: "Senado 2026 — Pesquisas × resultado" }
+  };
+  const ESTADOS = window.ESTADOS || [];
+  const INFO = Object.fromEntries(ESTADOS.map(e => [e.uf, e]));
+  const APELIDOS = window.APELIDOS_TSE || {};
+  const FAIXAS = [
+    { id: "folgada", nome: "Até 2 pts", max: 2 },
+    { id: "competitiva", nome: "2 a 4 pts", max: 4 },
+    { id: "apertada", nome: "4 a 7 pts", max: 7 },
+    { id: "empate", nome: "Mais de 7 pts", max: Infinity }
+  ];
+  const CINZA = "#b9b7af";
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const num = v => v.toFixed(1).replace(".", ",");
+  const sinal = v => (v > 0.05 ? "+" : v < -0.05 ? "−" : "") + num(Math.abs(v));
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const norm = s => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/[^A-Z ]/g, " ").replace(/\s+/g, " ").trim();
+  const MINUSC = new Set(["de", "da", "do", "das", "dos", "e"]);
+  const titulo = s => s === s.toUpperCase()
+    ? s.toLowerCase().split(" ").map((w, i) => (i && MINUSC.has(w)) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
+    : s;
+
+  let cargo = null, sel = "ultima", colorir = "erro";
+  const brasil = () => CARGOS.cpres.dados.find(e => e.uf === "BR");
+  const resultados = {}; // arq -> { json, quando }
+  let porUF = {};
+
+  // Casa um nome da pesquisa com um nome do resultado: apelido, nome igual (sem acento) ou um contido no outro (palavras)
+  function casar(uf, nome, lista) {
+    const ap = APELIDOS[uf + "|" + nome];
+    const k = norm(ap || nome);
+    let i = lista.findIndex(c => c.k === k);
+    if (i >= 0) return i;
+    const w = k.split(" ");
+    const cands = lista.map((c, j) => [c, j]).filter(([c]) => {
+      const t = c.k.split(" ");
+      return w.every(x => t.includes(x)) || t.every(x => w.includes(x));
+    });
+    return cands.length === 1 ? cands[0][1] : -1;
+  }
+
+  // Compara uma pesquisa com o resultado do estado. Retorna null se não houver resultado.
+  function comparar(e, p, r) {
+    if (!r || !r.pct || !r.res || !r.res.length) return null;
+    const V = CARGOS[cargo].vagas;
+    const real = r.res.map(([nome, v, partido]) => ({ nome, v, partido, k: norm(nome) }));
+    const soma = p.res.reduce((a, x) => a + x[1], 0);
+    const escala = p.tipo === "V" || !soma ? 1 : 100 / soma;
+    const linhas = real.map((c, i) => ({ nome: titulo(c.nome), partido: partidoDe(e, c.nome, c.partido), real: c.v, pq: null, pos: i }));
+    const fora = [];
+    p.res.forEach(([nome, v]) => {
+      const i = casar(e.uf, nome, real);
+      if (i >= 0 && linhas[i].pq == null) { linhas[i].pq = v * escala; linhas[i].nome = nome; linhas[i].orig = v; }
+      else fora.push({ nome, partido: partidoDe(e, nome), pq: v * escala, orig: v, real: null });
+    });
+    const ambos = linhas.filter(l => l.pq != null);
+    if (!ambos.length) return null;
+    const erro = ambos.reduce((a, l) => a + Math.abs(l.pq - l.real), 0) / ambos.length;
+    const topPq = [...linhas, ...fora].filter(l => l.pq != null).sort((a, b) => b.pq - a.pq).slice(0, V);
+    const eleitos = linhas.slice(0, V);
+    const acertos = eleitos.filter(l => topPq.includes(l)).length;
+    // Margem decisiva: governador/presidente 1º − 2º; Senado 2º − 3º (pelos colocados reais)
+    const A = linhas[V - 1], B = linhas[V];
+    const mReal = B ? A.real - B.real : null;
+    const mPq = B && A.pq != null && B.pq != null ? A.pq - B.pq : null;
+    return { p, r, linhas, fora, erro, acertos, V, topPq, A, B, mReal, mPq, erroMargem: mPq != null ? mPq - mReal : null, escala };
+  }
+  function partidoDe(e, nome, padrao) {
+    const c = (e.candidatos || []).find(c => c.nome === nome || norm(c.nome) === norm(nome));
+    return c ? c.partido : (padrao || "—");
+  }
+
+  // Pesquisa escolhida no seletor, para um estado
+  // Presidente: só as pesquisas nacionais (uf "BR"), uma de cada vez (selPres = índice)
+  let selPres = 0;
+  const pesquisaDe = e => cargo === "cpres" ? e.pesquisas[selPres] : sel === "ultima" ? e.pesquisas[0] : e.pesquisas.find(p => p.inst === sel);
+  const resultadoDe = uf => ((resultados[CARGOS[cargo].arq] || {}).json || { ufs: {} }).ufs[uf];
+  function estadoComp(e) {
+    const p = e && pesquisaDe(e);
+    return p ? comparar(e, p, resultadoDe(e.uf)) : null;
+  }
+
+  function cor(c) {
+    if (!c) return CINZA;
+    if (colorir === "erro") return css("--" + FAIXAS.find(f => c.erro <= f.max).id);
+    if (c.acertos === c.V) return css("--folgada");
+    return css(c.acertos ? "--apertada" : "--empate");
+  }
+
+  // ---------- Mapa ----------
+  const svg = d3.select("#mapaC");
+  const tip = document.getElementById("tip");
+  let mapaPronto = null;
+  function desenharMapa() {
+    if (mapaPronto) return mapaPronto;
+    mapaPronto = fetch("data/brasil-estados.geojson").then(r => r.json()).then(geo => {
+      const proj = d3.geoMercator().fitExtent([[10, 10], [790, 770]], geo);
+      const path = d3.geoPath(proj);
+      const g = svg.append("g");
+      g.selectAll("path").data(geo.features).join("path")
+        .attr("d", path)
+        .on("mouseenter", (ev, d) => abrirTip(ev, d.properties.sigla))
+        .on("mousemove", moveTip)
+        .on("mouseleave", () => { tip.style.opacity = 0; })
+        .on("click", (ev, d) => { setEstado(d.properties.sigla); abrirTip(ev, d.properties.sigla); });
+      const pequenos = { DF: [0, 0], SE: [8, 4], AL: [10, 2], PB: [16, 0], RN: [10, -4], PE: [0, 0], ES: [6, 2], RJ: [4, 6] };
+      const xy = d => { const c = path.centroid(d), o = pequenos[d.properties.sigla] || [0, 0]; return [c[0] + o[0], c[1] + o[1]]; };
+      g.selectAll("text.uf").data(geo.features).join("text").attr("class", "uf")
+        .attr("x", d => xy(d)[0]).attr("y", d => xy(d)[1] + 2).text(d => d.properties.sigla);
+      g.selectAll("text.err").data(geo.features).join("text").attr("class", "err")
+        .attr("x", d => xy(d)[0]).attr("y", d => xy(d)[1] + 12);
+    });
+    return mapaPronto;
+  }
+  function pintar() {
+    const comps = {};
+    svg.selectAll("path").attr("fill", d => cor(comps[d.properties.sigla] = estadoComp(porUF[d.properties.sigla])));
+    svg.selectAll("text.err").text(d => { const c = comps[d.properties.sigla]; return c ? num(c.erro) : ""; });
+    svg.selectAll("path").classed("sel", d => d.properties.sigla === fEstado.value);
+  }
+  function moveTip(ev) {
+    const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+    let x = ev.clientX + pad, y = ev.clientY + pad;
+    if (x + w > innerWidth - 8) x = ev.clientX - w - pad;
+    if (x < 8) x = 8;
+    if (y + h > innerHeight - 8) y = Math.max(8, innerHeight - h - 8);
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  }
+  function abrirTip(ev, uf) {
+    const e = porUF[uf], nome = (INFO[uf] || {}).nome || uf;
+    let h = `<h4>${esc(nome)}</h4>`;
+    const c = estadoComp(e);
+    if (!e || !e.pesquisas.length) h += `<div class="sub">Sem pesquisa de ${CARGOS[cargo].nome} registrada aqui.</div>`;
+    else if (!pesquisaDe(e)) h += `<div class="sub">Sem pesquisa ${esc(sel)} neste estado.</div>`;
+    else if (!c) h += `<div class="sub">Resultado oficial ainda indisponível.</div>`;
+    else h += blocoComp(c, 8);
+    if (e && e.pesquisas.length > 1) {
+      const outras = e.pesquisas.filter(p => p !== (c && c.p)).map(p => [p, comparar(e, p, resultadoDe(uf))]).filter(x => x[1]);
+      if (outras.length) h += `<div class="nota">Outras pesquisas: ${outras.map(([p, o]) => `${esc(p.inst)} (${esc(p.campo)}) ${num(o.erro)} pts`).join(" · ")}</div>`;
+    }
+    tip.innerHTML = h;
+    tip.style.opacity = 1;
+    moveTip(ev);
+  }
+  function blocoComp(c, max) {
+    const V = c.V;
+    const ok = c.acertos === V ? `<span class="ok">acertou</span>` : c.acertos ? `<span class="nok">acertou 1 de 2</span>` : `<span class="nok">errou</span>`;
+    const quem = V === 2 ? "Eleitos" : "Vencedor";
+    let marg = "";
+    if (c.erroMargem != null) {
+      const sub = c.erroMargem > 0 ? c.A.nome : c.B.nome;
+      marg = `<br>Margem ${V === 2 ? "da 2ª vaga" : "1º − 2º"}: pesquisa ${sinal(c.mPq)} · urna ${sinal(c.mReal)} pts (erro de ${num(Math.abs(c.erroMargem))} pts, a favor de ${esc(sub)})`;
+    }
+    const linhas = [...c.linhas.filter(l => l.pq != null || l.pos < Math.max(V + 1, 3)), ...c.fora]
+      .sort((a, b) => (b.real ?? -1) - (a.real ?? -1)).slice(0, max);
+    const rows = linhas.map(l => `<tr class="${l.pos < V ? "eleito" : ""}"><td>${esc(l.nome)} <span class="pt">(${esc(l.partido)})</span></td><td>${l.pq != null ? num(l.pq) : "—"}</td><td>${l.real != null ? num(l.real) : "—"}</td><td>${l.pq != null && l.real != null ? sinal(l.pq - l.real) : ""}</td></tr>`).join("");
+    const conv = c.p.tipo !== "V" ? ` · convertida de ${c.p.tipo === "C" ? "citações" : "votos totais"}` : "";
+    return `<div class="sub">${esc(c.p.inst)} <span class="tag">${c.p.tipo}</span> ${esc(c.p.campo)}${conv} · TSE ${apurado(c.r.pct)}</div>
+      <div>${quem}: ${ok} · erro médio <strong>${num(c.erro)} pts</strong>${marg}</div>
+      <table class="cmp"><thead><tr><th>Candidato</th><th>Pesquisa</th><th>Urna</th><th>Dif.</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  const apurado = pct => pct >= 100 ? "100% apurado" : `${(Math.floor(pct * 10) / 10).toFixed(1).replace(".", ",")}% apurado`;
+
+  // ---------- Resultados oficiais ----------
+  function carregar(arq) {
+    const r = resultados[arq];
+    if (r && Date.now() - r.quando < 120000) return Promise.resolve();
+    return fetch(`data/apuracao/${arq}.json?t=${Date.now()}`, { cache: "no-store" }).then(x => x.json())
+      .then(json => { resultados[arq] = { json, quando: Date.now() }; })
+      .catch(() => { resultados[arq] = resultados[arq] || { json: { ufs: {} }, quando: 0 }; });
+  }
+
+  // ---------- Seletor de pesquisa ----------
+  const fPesq = document.getElementById("cPesq");
+  function institutos() {
+    const n = {};
+    CARGOS[cargo].dados.filter(e => e.uf !== "BR").forEach(e => new Set(e.pesquisas.map(p => p.inst)).forEach(i => { n[i] = (n[i] || 0) + 1; }));
+    return Object.entries(n).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }
+  function opcoes() {
+    if (cargo === "cpres") {
+      const br = brasil(), r = resultadoDe("BR");
+      fPesq.innerHTML = br.pesquisas.map((p, i) => {
+        const c = comparar(br, p, r);
+        return `<option value="${i}">${esc(p.inst)} (${esc(p.campo)})${c ? ` · erro médio ${num(c.erro)} pts` : ""}</option>`;
+      }).join("");
+      fPesq.value = selPres;
+      return;
+    }
+    const lista = institutos();
+    if (sel !== "ultima" && !lista.some(([i]) => i === sel)) sel = "ultima";
+    fPesq.innerHTML = `<option value="ultima">Última pesquisa de cada estado</option>` +
+      lista.map(([i, n]) => `<option value="${esc(i)}">${esc(i)} (${n} ${n > 1 ? "estados" : "estado"})</option>`).join("");
+    fPesq.value = sel;
+  }
+  fPesq.addEventListener("change", () => { if (cargo === "cpres") selPres = +fPesq.value; else sel = fPesq.value; tudo(); });
+  document.querySelectorAll("[data-ccolorir]").forEach(b => b.addEventListener("click", () => {
+    colorir = b.dataset.ccolorir;
+    document.querySelectorAll("[data-ccolorir]").forEach(x => x.setAttribute("aria-pressed", x === b));
+    pintar(); legenda();
+  }));
+
+  // ---------- Legenda e resumo ----------
+  function legenda() {
+    const ul = document.getElementById("cLegenda"), V = CARGOS[cargo].vagas;
+    if (colorir === "erro") {
+      document.getElementById("cLegTitulo").textContent = "Erro médio da pesquisa";
+      document.getElementById("cLegDesc").textContent = "Média, por candidato, da distância entre pesquisa e urna, em pontos de votos válidos";
+      ul.innerHTML = FAIXAS.map(f => `<li><span class="sw" style="background:var(--${f.id})"></span>${f.nome}</li>`).join("");
+    } else {
+      document.getElementById("cLegTitulo").textContent = V === 2 ? "Acerto dos eleitos" : "Acerto do vencedor";
+      document.getElementById("cLegDesc").textContent = V === 2 ? "Os 2 primeiros da pesquisa foram os 2 eleitos?" : "O 1º da pesquisa foi o mais votado na urna?";
+      ul.innerHTML = (V === 2
+        ? [["folgada", "Acertou os 2"], ["apertada", "Acertou 1"], ["empate", "Errou os 2"]]
+        : [["folgada", "Acertou"], ["empate", "Errou"]]).map(([v, t]) => `<li><span class="sw" style="background:var(--${v})"></span>${t}</li>`).join("");
+    }
+    ul.innerHTML += `<li><span class="sw" style="background:${CINZA}"></span>Sem pesquisa ou sem resultado</li>`;
+  }
+  function comps() {
+    return CARGOS[cargo].dados.filter(e => e.uf !== "BR").map(e => [e, estadoComp(e)]).filter(x => x[1]);
+  }
+  function resumo() {
+    const cs = comps(), V = CARGOS[cargo].vagas;
+    const ul = document.getElementById("cResumo");
+    if (!cs.length) { ul.innerHTML = `<li>Nenhum estado com pesquisa e resultado</li>`; return; }
+    const media = cs.reduce((a, x) => a + x[1].erro, 0) / cs.length;
+    const certos = cs.filter(x => x[1].acertos === V).length;
+    const pior = cs.reduce((a, x) => (x[1].erro > a[1].erro ? x : a));
+    const melhor = cs.reduce((a, x) => (x[1].erro < a[1].erro ? x : a));
+    ul.innerHTML = [
+      ["Estados comparados", cs.length],
+      [V === 2 ? "Acertou os 2 eleitos" : "Acertou o vencedor", `${certos} de ${cs.length}`],
+      ["Erro médio", `${num(media)} pts`],
+      ["Menor erro", `${melhor[0].uf} (${num(melhor[1].erro)} pts)`],
+      ["Maior erro", `${pior[0].uf} (${num(pior[1].erro)} pts)`]
+    ].map(([a, b]) => `<li><span>${a}</span><strong>${b}</strong></li>`).join("");
+  }
+  function status() {
+    const r = (resultados[CARGOS[cargo].arq] || {}).json;
+    const el = document.getElementById("cStatus");
+    if (!r || !Object.keys(r.ufs || {}).length) { el.textContent = "Resultado oficial ainda indisponível."; return; }
+    const ufs = ESTADOS.map(e => r.ufs[e.uf]).filter(Boolean);
+    const completos = ufs.filter(u => u.pct >= 100).length;
+    const br = r.ufs.BR;
+    el.innerHTML = `Resultado oficial do TSE (1º turno), atualizado às ${esc(r.atualizado || "—")}: ` +
+      (br ? `${apurado(br.pct)} no Brasil; ` : "") + `${completos} de 27 estados com 100% apurado.` +
+      (r.simulacao ? ` <strong>Dados simulados, não oficiais.</strong>` : "");
+  }
+
+  // ---------- Institutos ----------
+  function tabelaInstitutos() {
+    const V = CARGOS[cargo].vagas, estados = CARGOS[cargo].dados.filter(e => e.uf !== "BR");
+    const linha = (rot, valor, cs) => {
+      if (!cs.length) return null;
+      const media = cs.reduce((a, c) => a + c.erro, 0) / cs.length;
+      const ms = cs.filter(c => c.erroMargem != null);
+      const marg = ms.length ? ms.reduce((a, c) => a + Math.abs(c.erroMargem), 0) / ms.length : null;
+      const certos = cs.filter(c => c.acertos === V).length;
+      return { rot, valor, n: cs.length, media, marg, certos };
+    };
+    const antes = sel;
+    const linhas = [["Última pesquisa de cada estado", "ultima"], ...institutos().map(([i]) => [i, i])].map(([rot, v]) => {
+      sel = v;
+      return linha(rot, v, estados.map(estadoComp).filter(Boolean));
+    }).filter(Boolean);
+    sel = antes;
+    linhas.sort((a, b) => (a.valor === "ultima" ? -1 : b.valor === "ultima" ? 1 : b.n - a.n || a.media - b.media));
+    document.getElementById("cInstTab").innerHTML = `<thead><tr><th>Instituto</th><th style="text-align:right">Estados</th><th style="text-align:right">Erro médio</th><th style="text-align:right">Erro na margem${V === 2 ? " (2ª vaga)" : ""}</th><th style="text-align:right">${V === 2 ? "Acertou os 2 eleitos" : "Acertou o vencedor"}</th></tr></thead><tbody>` +
+      linhas.map(l => `<tr class="clic${l.valor === sel ? " atual" : ""}" data-v="${esc(l.valor)}"><td>${esc(l.rot)}</td><td class="num">${l.n}</td><td class="num">${num(l.media)} pts</td><td class="num">${l.marg != null ? num(l.marg) + " pts" : "—"}</td><td class="num">${l.certos} de ${l.n} (${Math.round(100 * l.certos / l.n)}%)</td></tr>`).join("") + `</tbody>`;
+  }
+  document.getElementById("cInstTab").addEventListener("click", ev => {
+    const tr = ev.target.closest("tr[data-v]");
+    if (!tr) return;
+    sel = tr.dataset.v; fPesq.value = sel; tudo();
+    document.getElementById("mapaC").scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  // ---------- Tabela por estado ----------
+  const fEstado = document.getElementById("cEstado"), fRegiao = document.getElementById("cRegiao");
+  [...ESTADOS].sort((a, b) => a.nome.localeCompare(b.nome)).forEach(e => fEstado.add(new Option(`${e.nome} (${e.uf})`, e.uf)));
+  ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"].forEach(r => fRegiao.add(new Option(r, r)));
+  function tabela() {
+    const uf = fEstado.value, reg = fRegiao.value, V = CARGOS[cargo].vagas;
+    const lista = cargo === "cpres" ? [[brasil(), estadoComp(brasil())]].filter(x => x[1])
+      : CARGOS[cargo].dados.filter(e => e.uf !== "BR" && INFO[e.uf] && (!uf || e.uf === uf) && (!reg || INFO[e.uf].regiao === reg))
+        .map(e => [e, estadoComp(e)]).filter(x => x[1]).sort((a, b) => INFO[a[0].uf].nome.localeCompare(INFO[b[0].uf].nome));
+    document.getElementById("cTbody").innerHTML = lista.length ? lista.map(([e, c]) => {
+      const ls = [...c.linhas.filter(l => l.pq != null || l.pos < V + 1), ...c.fora];
+      return ls.map((l, i) => `<tr class="${i === 0 ? "first" : ""}">
+        <td class="uf">${i === 0 ? e.uf : ""}</td>
+        <td class="${l.pos < V ? "lead" : ""}">${esc(l.nome)}${l.real == null ? ` <span class="tag">sem votos na urna</span>` : ""}</td>
+        <td><span class="party">${esc(l.partido)}</span></td>
+        <td class="num">${l.pq != null ? num(l.pq) + "%" : "—"}${l.pq != null && c.p.tipo !== "V" ? `<br><span class="tag">${String(l.orig).replace(".", ",")}% ${c.p.tipo}</span>` : ""}${i === 0 ? `<br><span class="tag">${esc(c.p.inst)} ${c.p.tipo} · ${esc(c.p.campo)}</span>` : ""}</td>
+        <td class="num">${l.real != null ? num(l.real) + "%" : "—"}${i === 0 ? `<br><span class="tag">${apurado(c.r.pct)}</span>` : ""}</td>
+        <td class="num">${l.pq != null && l.real != null ? sinal(l.pq - l.real) + " pts" : ""}${i === 0 ? `<br><span class="tag">erro médio ${num(c.erro)} · ${c.acertos === V ? "acertou" : V === 2 && c.acertos ? "acertou 1" : "errou"}</span>` : ""}${i === 0 && c.erroMargem != null ? `<br><span class="tag">margem: erro de ${num(Math.abs(c.erroMargem))}</span>` : ""}</td></tr>`).join("");
+    }).join("") : `<tr><td colspan="6">${cargo === "cpres" ? "Resultado nacional ainda indisponível." : "Nenhum estado com essa pesquisa e resultado no filtro escolhido."}</td></tr>`;
+    svg.selectAll("path").classed("sel", d => d.properties.sigla === uf);
+  }
+  function setEstado(uf) { fEstado.value = uf; fRegiao.value = ""; tabela(); }
+  fEstado.addEventListener("change", () => { if (fEstado.value) fRegiao.value = ""; tabela(); });
+  fRegiao.addEventListener("change", () => { fEstado.value = ""; tabela(); });
+  document.getElementById("cLimpar").addEventListener("click", () => { fEstado.value = ""; fRegiao.value = ""; tabela(); });
+
+  function tudo() {
+    const pres = cargo === "cpres";
+    ["cMapaCard", "cInstCard", "cFiltros", "cColorir"].forEach(id => { document.getElementById(id).hidden = pres; });
+    document.getElementById("cTabTitulo").textContent = pres ? "Pesquisa nacional × urna" : "Pesquisa × urna, por estado";
+    document.getElementById("cTabDesc").textContent = pres
+      ? "Uma pesquisa por vez: escolha o instituto acima. Tudo em % de votos válidos; pesquisas em votos totais (T) são reescaladas para os candidatos listados somarem 100%. Diferença positiva = a pesquisa deu mais do que a urna."
+      : "A pesquisa escolhida acima em cada estado, candidato a candidato. Diferença positiva = a pesquisa deu mais do que a urna. Clique no mapa para ver um estado só.";
+    if (pres) { opcoes(); status(); tabela(); return; }
+    pintar(); legenda(); resumo(); status(); tabelaInstitutos(); tabela();
+  }
+
+  window.Comparativo = {
+    abrir(m) {
+      cargo = m;
+      const C = CARGOS[m];
+      porUF = Object.fromEntries(C.dados.map(e => [e.uf, e]));
+      document.getElementById("titulo").textContent = `Pesquisas × urnas: ${C.nome} — 1º turno 2026`;
+      document.getElementById("subtitulo").textContent = m === "cpres"
+        ? "Compara cada pesquisa nacional da véspera com o resultado oficial do TSE no Brasil, em % de votos válidos."
+        : "Compara a pesquisa escolhida com o resultado oficial do TSE, em % de votos válidos. Passe o mouse (ou toque) sobre um estado para ver os números.";
+      document.title = C.docTitle;
+      document.querySelectorAll(".so-csen").forEach(el => { el.hidden = m !== "csen"; });
+      opcoes();
+      Promise.all([desenharMapa(), carregar(C.arq)]).then(() => { if (cargo === m) tudo(); });
+    }
+  };
+})();
+</script>
 <script>
 (function () {
   const MODOS = {
@@ -480,12 +902,35 @@
     legenda();
     render();
   }
+  // Abas "Comparativo" (pesquisa × resultado): ficam em #secComp e são desenhadas por window.Comparativo
+  const HASH = { sen: "#senado", cpres: "#comparativo-presidente", cgov: "#comparativo-governador", csen: "#comparativo-senado" };
+  const subtitulo = document.getElementById("subtitulo").innerHTML;
+  function trocar(m) {
+    const comp = m[0] === "c";
+    document.getElementById("secPesq").hidden = comp;
+    document.getElementById("secComp").hidden = !comp;
+    if (comp) {
+      tip.style.opacity = 0;
+      document.querySelectorAll(".so-sen").forEach(el => { el.hidden = true; });
+      document.querySelectorAll(".modo button").forEach(b => b.setAttribute("aria-pressed", b.dataset.modo === m));
+      window.Comparativo.abrir(m);
+    } else {
+      document.getElementById("subtitulo").innerHTML = subtitulo;
+      setModo(m);
+    }
+  }
   document.querySelectorAll(".modo button").forEach(b => b.addEventListener("click", () => {
-    history.replaceState(null, "", b.dataset.modo === "sen" ? "#senado" : location.pathname + location.search);
-    setModo(b.dataset.modo);
+    history.replaceState(null, "", HASH[b.dataset.modo] || location.pathname + location.search);
+    trocar(b.dataset.modo);
   }));
   document.querySelectorAll("[data-colorir]").forEach(b => b.setAttribute("aria-pressed", b.dataset.colorir === colorir));
   setModo(modo);
+  const inicial = Object.keys(HASH).find(k => k[0] === "c" && HASH[k] === location.hash);
+  if (inicial) trocar(inicial);
+  addEventListener("hashchange", () => {
+    const m = Object.keys(HASH).find(k => HASH[k] === location.hash) || "gov";
+    trocar(m);
+  });
 })();
 </script>
 <script>

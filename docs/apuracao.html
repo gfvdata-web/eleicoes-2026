@@ -140,9 +140,6 @@
   #mapa text.cand { font-size: 9px; font-weight: 500; }
   .tag.tse { border-color: var(--ao-vivo); color: var(--ao-vivo); }
   .sim { background: #f2c94c; color: #1d1d1b; padding: 1px 6px; border-radius: 4px; }
-  .atalhos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-  .atalhos a { font-size: .85rem; font-weight: 600; padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--accent); text-decoration: none; }
-  .atalhos a:hover { border-color: var(--accent); }
   footer { margin-top: 24px; font-size: .8rem; color: var(--muted); }
   footer a { color: var(--accent); }
 
@@ -154,6 +151,12 @@
   /* Tema escuro: cores do mapa/hemiciclo mais suaves (menos saturação e brilho) */
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) :is(#mapa path, #hemi circle, .sw) { filter: saturate(.62) brightness(.82); } }
   :root[data-theme="dark"] :is(#mapa path, #hemi circle, .sw) { filter: saturate(.62) brightness(.82); }
+  /* Switch de seções do site (igual em todas as páginas) */
+  .secoes { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; margin: 0 0 16px; padding: 3px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); }
+  .secoes a { display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.15; font-size: .85rem; font-weight: 600; padding: 6px 16px; border-radius: 999px; color: var(--muted); text-decoration: none; }
+  .secoes a:hover { color: var(--text); }
+  .secoes a[aria-current="page"] { background: var(--accent); color: var(--surface); }
+  @media (max-width: 560px) { .secoes { display: grid; margin-right: 84px; border-radius: 14px; } .secoes a { font-size: .75rem; padding: 5px 8px; border-radius: 11px; } }
 </style>
 </head>
 <body>
@@ -162,10 +165,7 @@
     <button type="button" class="tema-switch__btn" data-tema="light" aria-pressed="false"><span aria-hidden="true">☀️</span><span class="tema-switch__label">Claro</span></button>
     <button type="button" class="tema-switch__btn" data-tema="dark" aria-pressed="false"><span aria-hidden="true">🌙</span><span class="tema-switch__label">Escuro</span></button>
   </div>
-  <nav class="atalhos" aria-label="Outras páginas">
-    <a href="index.html">← Voltar às pesquisas</a>
-    <a href="es.html">Espírito Santo: apuração por município →</a>
-  </nav>
+  <nav class="secoes" id="secoes" aria-label="Seção do site"><a href="index.html" data-secao="pesq">Pesquisas e análises</a><a href="apuracao.html" data-secao="nac" aria-current="page">Nacional e bancadas</a><a href="es.html" data-secao="est">Estados</a></nav>
   <section class="apu" id="apu" aria-live="polite">
     <div class="apu-top">
       <strong>Apuração oficial</strong>

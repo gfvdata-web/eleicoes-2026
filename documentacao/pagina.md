@@ -11,6 +11,10 @@ Tudo está em [`docs/index.html`](../docs/index.html): HTML, CSS e JavaScript in
 | Dados | `data/dados.js` (governador) e `data/senado.js` (Senado), como script |
 | Malha | `data/brasil-estados.geojson` (via `fetch`, por isso exige servidor HTTP) |
 
+## Switch de seções (todas as páginas)
+
+`<nav class="secoes" id="secoes">` no topo de cada página, com 3 links: **Pesquisas e análises** (`index.html`), **Nacional e bancadas** (`apuracao.html`) e **Estados** (`es.html`). O item da página atual tem `aria-current="page"` (em `senado.html?apuracao` o script troca para "Nacional e bancadas"). O HTML e o CSS (`.secoes`) são copiados iguais nas 5 páginas; ao mudar, mude em todas.
+
 ## Seletor de cargo
 
 No cabeçalho, um grupo de botões (`.modo`, `data-modo="gov"` | `"sen"`) alterna entre **Governador** (dados de `ESTADOS`) e **Senado** (dados de `SENADO`). A troca atualiza título, legenda, cores do mapa, pop-up, tabela e fontes do rodapé. Elementos visíveis só no modo Senado usam a classe `so-sen`.
@@ -48,6 +52,18 @@ No cabeçalho, um grupo de botões (`.modo`, `data-modo="gov"` | `"sen"`) altern
 - Uma linha por candidato, agrupada por estado (ordem alfabética do nome do estado). Dentro do estado, a ordem segue o percentual na pesquisa principal.
 - Colunas: UF, Candidato, Partido, Última pesquisa (com instituto, tipo e data na primeira linha), Resumo.
 - Filtros: **Estado** e **Região**, que são mutuamente exclusivos (escolher um limpa o outro), e o botão "Limpar filtros". Clicar no mapa seleciona o estado e destaca o contorno (`path.sel`).
+
+## Abas Comparativo (pesquisa × resultado)
+
+Três botões no seletor de cargo (`data-modo="cpres" | "cgov" | "csen"`, URLs `#comparativo-presidente`, `#comparativo-governador`, `#comparativo-senado`) escondem `#secPesq` e mostram `#secComp`. O código fica no bloco `<script>` próprio que define `window.Comparativo.abrir(m)`; a troca é feita por `trocar(m)` no script principal.
+
+- **Dados:** pesquisas de `presidente.js`, `dados.js` e `senado.js`; resultado de `data/apuracao/<cargo>.json` (relido se tiver mais de 2 min). Sem resultado (`pct` 0) o estado fica cinza.
+- **Presidente (`cpres`):** sem mapa, sem ranking e sem filtros. O seletor lista as pesquisas nacionais (`PRESIDENTE[0].pesquisas`, com o erro médio de cada uma) e a tabela mostra uma por vez contra o total `BR`.
+- **Seletor "Pesquisa comparada"** (`#cPesq`), em governo e Senado: "Última pesquisa de cada estado" (`pesquisas[0]`) ou um instituto (a pesquisa mais recente dele em cada estado). Vale para mapa, resumo e tabela.
+- **Conversão:** tudo em % de votos válidos. `V` fica como está; `T` e `C` são reescaladas para os candidatos listados somarem 100%.
+- **Métricas** (`comparar()`): erro médio = média de |pesquisa − urna| dos candidatos da pesquisa que tiveram votos; acerto = os `vagas` primeiros da pesquisa são os `vagas` primeiros da urna; erro na margem = margem da pesquisa − margem da urna entre os colocados reais (1º − 2º; Senado 2º − 3º).
+- **Mapa:** cor por erro médio (até 2 / 2–4 / 4–7 / mais de 7 pts, reaproveitando as variáveis das faixas de folga) ou por acerto; o número abaixo da sigla é o erro médio.
+- **Cards (governo e Senado), nesta ordem:** mapa, tabela pesquisa × urna por estado com filtros próprios (`#cEstado`, `#cRegiao`) e "Institutos" (ranking; clicar seleciona o instituto).
 
 ## Tema
 
