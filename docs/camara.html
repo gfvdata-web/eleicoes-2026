@@ -36,8 +36,6 @@
   @media (max-width: 480px) { header h1 { margin-right: 84px; } }
   header p { margin: 0; color: var(--muted); font-size: .95rem; }
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 20px; }
-  .grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
-  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
   h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
   .muted { color: var(--muted); font-size: .85rem; }
   .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
@@ -47,7 +45,7 @@
   .seg button.on { background: var(--accent); color: var(--surface); }
   .status { font-size: .85rem; color: var(--muted); margin: 4px 0 10px; }
   .status b { color: var(--text); font-variant-numeric: tabular-nums; }
-  #hemi { width: 100%; height: auto; display: block; }
+  #hemi { width: 100%; height: auto; max-height: 72vh; display: block; }
   #hemi circle { cursor: pointer; }
   #hemi .total { font-size: 40px; font-weight: 700; fill: var(--text); text-anchor: middle; }
   #hemi .total-sub { font-size: 14px; fill: var(--muted); text-anchor: middle; }
@@ -59,16 +57,17 @@
   .mark.l span { right: 4px; } .mark.r span { left: 4px; }
   .key { display: flex; flex-wrap: wrap; gap: 14px; font-size: .8rem; color: var(--muted); }
   .key svg { vertical-align: -3px; margin-right: 4px; }
-  .plist { width: 100%; border-collapse: collapse; font-size: .88rem; }
-  .plist td { padding: 5px 4px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-  .plist td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .plist th { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; text-align: right; padding: 0 4px 6px; border-bottom: 1px solid var(--border); }
-  .plist th:first-child { text-align: left; }
-  .plist .det { color: var(--muted); font-size: .75rem; }
-  .plist select { max-width: 120px; padding: 3px 6px; font-size: .8rem; }
+  .plist { table-layout: fixed; border-collapse: collapse; font-size: .84rem; margin-bottom: 12px; }
+  .plist th, .plist td { padding: 5px 6px; border-bottom: 1px solid var(--border); text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; vertical-align: middle; }
+  .plist thead th { font-weight: 600; font-size: .78rem; white-space: normal; line-height: 1.2; overflow-wrap: anywhere; vertical-align: bottom; }
+  .plist thead th .sw { display: block; margin: 0 auto 4px; }
+  .plist th[scope=row] { text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+  .plist .det { display: block; color: var(--muted); font-size: .72rem; font-weight: 400; }
+  .plist select { width: 100%; padding: 3px 6px; font-size: .8rem; }
+  .plnota { color: var(--muted); font-size: .75rem; margin: 6px 0 0; }
   .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
   .groups { margin: 14px 0; }
-  .gform { display: flex; gap: 6px; margin-bottom: 8px; }
+  .gform { display: flex; gap: 6px; margin-bottom: 8px; max-width: 420px; }
   .gform input { flex: 1; min-width: 0; font: inherit; font-size: .85rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; padding: 3px 4px 3px 10px; border-radius: 999px; border: 1px solid var(--border); }
@@ -124,8 +123,7 @@
     </nav>
   </header>
 
-  <div class="card grid">
-    <div>
+  <div class="card">
       <div class="toolbar">
         <div class="seg" id="modo">
           <button data-v="partido" class="on">Por partido</button><button data-v="grupo">Por grupo</button>
@@ -143,18 +141,13 @@
         <span><svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="var(--muted)"/><circle cx="7" cy="7" r="2.4" fill="var(--surface)"/></svg>Projetado (vaga provisória)</span>
         <span><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="none" stroke="var(--muted)" stroke-width="1.5"/></svg>Ainda sem apuração</span>
       </div>
-    </div>
-    <div>
-      <h3>Grupos políticos</h3>
-      <p class="muted">Os partidos começam divididos em esquerda, centro e direita, numa classificação aproximada. Mude o grupo de qualquer partido no menu da lista abaixo, ou crie seus próprios grupos. Use "Por grupo" para ver o resultado.</p>
-      <div class="groups">
-        <form class="gform" id="gform"><input id="gnome" placeholder="Nome do grupo (ex.: Oposição)" maxlength="30"><button class="btn" type="submit">Criar</button></form>
+      <div class="groups" id="gbox" hidden>
+        <form class="gform" id="gform"><input id="gnome" placeholder="Criar grupo (ex.: Oposição)" maxlength="30"><button class="btn" type="submit">Criar</button></form>
         <div class="chips" id="chips"></div>
         <div class="toolbar" style="margin-top:8px"><button class="btn" id="exemplo">Restaurar esquerda / centro / direita</button><button class="btn" id="limparG">Apagar grupos</button></div>
       </div>
-      <h3>Bancadas</h3>
-      <table class="plist"><tbody id="plist"></tbody></table>
-    </div>
+      <div id="plist"></div>
+      <p class="plnota" id="plnota"></p>
   </div>
 
   <div class="card">
@@ -187,6 +180,7 @@
     RJ: "Rio de Janeiro", RN: "Rio Grande do Norte", RO: "Rondônia", RR: "Roraima", RS: "Rio Grande do Sul", SC: "Santa Catarina", SE: "Sergipe", SP: "São Paulo", TO: "Tocantins" };
   // Assembleias: 3 × deputados federais até 36; acima disso, 24 + deputados federais (CF, art. 27). DF: Câmara Legislativa, 24.
   const vagasEst = uf => uf === "DF" ? 24 : VAGAS[uf] <= 12 ? 3 * VAGAS[uf] : 24 + VAGAS[uf];
+  const prep = uf => ["BA", "PB"].includes(uf) ? "da" : ["AL", "GO", "MG", "PE", "RO", "RR", "SC", "SP", "SE"].includes(uf) ? "de" : "do";
   const casaDe = uf => uf === "DF" ? "Câmara Legislativa do DF" : "Assembleia Legislativa · " + NOMES[uf];
   const UFS = Object.keys(VAGAS).sort((a, b) => NOMES[a].localeCompare(NOMES[b]));
   // Siglas do TSE → nomes usados no site (cores em CORES_PARTIDOS, senado-atual.js)
@@ -281,9 +275,11 @@
   function geometria() {
     LINHAS = Math.max(3, Math.min(14, Math.round(Math.sqrt(TOTAL / 2.6))));
     const passo = R * (1 - R0) / (LINHAS - 1), arco = Math.PI * R * (1 + R0) / 2 * LINHAS / TOTAL;
-    RAIO = Math.min(22, 0.38 * Math.min(passo, arco));
+    // Casas pequenas: círculos de no máximo 11 e fileira externa recuada para nada sair do quadro (viewBox 600 × 315)
+    RAIO = Math.min(11, 0.38 * Math.min(passo, arco));
+    const Rext = Math.min(R, CX - RAIO - 2);
     POS = (() => {
-    const raios = Array.from({ length: LINHAS }, (_, i) => R * (R0 + (1 - R0) * i / (LINHAS - 1)));
+    const raios = Array.from({ length: LINHAS }, (_, i) => Rext * (R0 + (1 - R0) * i / (LINHAS - 1)));
     const soma = raios.reduce((a, b) => a + b, 0);
     const qtd = raios.map(r => Math.round(TOTAL * r / soma));
     qtd[LINHAS - 1] += TOTAL - qtd.reduce((a, b) => a + b, 0);
@@ -372,12 +368,22 @@
 
     // Lista de partidos com seletor de grupo
     const opts = p => [SEM_GRUPO, ...grupos].map(g => `<option value="${g.id}" ${partidoGrupo[p] === g.id || (!g.id && !grupoDe(p).id) ? "selected" : ""}>${esc(g.nome)}</option>`).join("");
-    document.getElementById("plist").innerHTML = `<tr><th>Partido</th><th>Cadeiras</th><th>%</th><th></th></tr>` + linhas.map(l => `<tr>
-      <td><span class="sw" style="background:${corPartido(l.partido)}"></span>${esc(l.partido)}</td>
-      <td class="n"><strong>${l.total}</strong>${l.proj ? ` <span class="det">(${l.conf} + ${l.proj})</span>` : ""}</td>
-      <td class="n">${pct(l.total)}</td>
-      <td>${grupos.length ? `<select data-p="${esc(l.partido)}" aria-label="Grupo do ${esc(l.partido)}">${opts(l.partido)}</select>` : ""}</td></tr>`).join("") +
-      `<tr><td colspan="4" class="det">Entre parênteses: confirmados + projetados. % sobre as ${TOTAL} cadeiras.</td></tr>`;
+    document.getElementById("gbox").hidden = modo !== "grupo";
+    const box = document.getElementById("plist"), comSel = modo === "grupo" && grupos.length;
+    const LAB = 84, COL = comSel ? 112 : 94;
+    const cabem = Math.max(2, Math.floor(((box.clientWidth || 900) - LAB) / COL));
+    const porLinha = Math.ceil(linhas.length / Math.ceil(linhas.length / cabem));
+    const partes = [];
+    for (let k = 0; k < linhas.length; k += porLinha) partes.push(linhas.slice(k, k + porLinha));
+    box.innerHTML = partes.map(parte => {
+      const cols = f => parte.map(f).join("");
+      return `<table class="plist" style="width:${LAB + parte.length * COL}px"><colgroup><col style="width:${LAB}px">${cols(() => `<col style="width:${COL}px">`)}</colgroup>` +
+      `<thead><tr><th scope="row">Partido</th>${cols(l => `<th><span class="sw" style="background:${corPartido(l.partido)}"></span>${esc(l.partido)}</th>`)}</tr></thead><tbody>` +
+      `<tr><th scope="row">Cadeiras</th>${cols(l => `<td><strong>${l.total}</strong>${l.proj ? `<span class="det">${l.conf} + ${l.proj}</span>` : ""}</td>`)}</tr>` +
+      `<tr><th scope="row">%</th>${cols(l => `<td>${pct(l.total)}</td>`)}</tr>` +
+      (comSel ? `<tr><th scope="row">Grupo</th>${cols(l => `<td><select data-p="${esc(l.partido)}" aria-label="Grupo do ${esc(l.partido)}">${opts(l.partido)}</select></td>`)}</tr>` : "") + `</tbody></table>`;
+    }).join("");
+    document.getElementById("plnota").textContent = `Abaixo do número: confirmados + projetados. % sobre as ${TOTAL} cadeiras.`;
     document.querySelectorAll("#plist select").forEach(sel => sel.addEventListener("change", () => {
       if (sel.value) partidoGrupo[sel.dataset.p] = sel.value; else delete partidoGrupo[sel.dataset.p];
       salvarGrupos(); render();
@@ -452,7 +458,7 @@
     if (!EST) return;
     const casa = casaDe(UF);
     document.title = `${UF === "DF" ? "Câmara Legislativa" : "Assembleia"} ${UF} 2027 — Bancadas`;
-    document.getElementById("titulo").textContent = `Como fica a ${UF === "DF" ? "Câmara Legislativa do DF" : "Assembleia Legislativa de " + NOMES[UF]} a partir de 2027`;
+    document.getElementById("titulo").textContent = `Como fica a ${UF === "DF" ? "Câmara Legislativa do DF" : "Assembleia Legislativa " + prep(UF) + " " + NOMES[UF]} a partir de 2027`;
     document.getElementById("subtitulo").textContent = `${casa}: ${TOTAL} deputados ${UF === "DF" ? "distritais" : "estaduais"}, eleitos pelo sistema proporcional (cada partido ou federação recebe cadeiras conforme os votos de sua lista). ` +
       "Enquanto a apuração não termina, o TSE distribui as vagas de forma provisória com os votos já contados; elas podem mudar até o fim.";
     document.getElementById("t2").textContent = `Deputados eleitos · ${UF}`;
@@ -492,6 +498,7 @@
   document.getElementById("limparG").addEventListener("click", () => { grupos = []; partidoGrupo = {}; salvarGrupos(); setModo("partido"); });
   function seg(id, set) { document.querySelectorAll(`#${id} button`).forEach(b => b.addEventListener("click", () => set(b.dataset.v))); }
   function marcar(id, v) { document.querySelectorAll(`#${id} button`).forEach(b => b.classList.toggle("on", b.dataset.v === v)); }
+  let rszT; addEventListener("resize", () => { clearTimeout(rszT); rszT = setTimeout(render, 150); });
   function setModo(v) { modo = v; marcar("modo", v); render(); }
   seg("modo", setModo);
   seg("destaque", v => { destaque = v; marcar("destaque", v); render(); });
