@@ -370,7 +370,7 @@
     // Lista de partidos com seletor de grupo
     const opts = p => [SEM_GRUPO, ...grupos].map(g => `<option value="${g.id}" ${partidoGrupo[p] === g.id || (!g.id && !grupoDe(p).id) ? "selected" : ""}>${esc(g.nome)}</option>`).join("");
     document.getElementById("gbox").hidden = modo !== "grupo";
-    const box = document.getElementById("plist"), comSel = modo === "grupo" && grupos.length;
+    const box = document.getElementById("plist"), comSel = grupos.length > 0;
     const LAB = 84, COL = comSel ? 112 : 94;
     const cabem = Math.max(2, Math.floor(((box.clientWidth || 900) - LAB) / COL));
     const porLinha = Math.ceil(linhas.length / Math.ceil(linhas.length / cabem));
