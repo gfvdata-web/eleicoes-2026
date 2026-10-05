@@ -125,6 +125,7 @@
   .tag { display: inline-block; font-size: .7rem; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
   .tag.ok { border-color: var(--ok); color: var(--ok); }
   .tag.tse { border-color: var(--ao-vivo); color: var(--ao-vivo); }
+  .filtrado { display: inline-block; vertical-align: 2px; margin-left: 8px; font-size: .72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--accent); color: var(--surface); white-space: nowrap; }
   .filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
   .filtros input[type=search] { flex: 1 1 180px; }
   .mais { margin-top: 10px; }
@@ -204,25 +205,25 @@
   </div>
 
   <div class="card so-prop" id="cardProj" hidden>
-    <h2>Quem está passando</h2>
+    <h2>Quem está passando<span class="badge-area"></span></h2>
     <p class="desc" id="projDesc"></p>
     <div class="proj-top" id="projTop"></div>
     <div class="cols">
       <div>
         <div class="sub-h"><h3>Eleitos na projeção</h3></div>
-        <div class="tbl-wrap"><table><thead><tr><th></th><th>Candidato</th><th>Partido</th><th class="num">Votos</th><th>Como</th></tr></thead><tbody id="projEleitos"></tbody></table></div>
+        <div class="tbl-wrap"><table><thead><tr><th></th><th>Candidato</th><th>Partido</th><th class="num">Votos</th><th class="num">%</th><th>Como</th></tr></thead><tbody id="projEleitos"></tbody></table></div>
         <div class="sub-h"><h3>Próximos da fila</h3></div>
-        <div class="tbl-wrap"><table><thead><tr><th>Candidato</th><th>Partido</th><th class="num">Votos</th><th>Situação</th></tr></thead><tbody id="projFila"></tbody></table></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Candidato</th><th>Partido</th><th class="num">Votos</th><th class="num">%</th><th>Situação</th></tr></thead><tbody id="projFila"></tbody></table></div>
       </div>
       <div>
         <div class="sub-h"><h3>Partidos e federações</h3></div>
-        <div class="tbl-wrap"><table><thead><tr><th>Lista</th><th class="num">Votos</th><th class="num">% válidos</th><th class="num">% QE</th><th class="num">Cadeiras</th></tr></thead><tbody id="projListas"></tbody></table></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Lista</th><th class="num">Votos</th><th class="num">% válidos</th><th class="num" id="thQE">% QE</th><th class="num">Cadeiras</th></tr></thead><tbody id="projListas"></tbody></table></div>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <h2 id="rankTitulo">Candidatos</h2>
+    <h2>Candidatos<span class="badge-area"></span></h2>
     <p class="desc" id="rankDesc"></p>
     <div class="filtros">
       <input type="search" id="busca" placeholder="Buscar por nome ou número" aria-label="Buscar candidato">
@@ -238,7 +239,7 @@
   </div>
 
   <div class="card">
-    <h2>Por região</h2>
+    <h2>Por região<span class="badge-area"></span></h2>
     <p class="desc">Mais votado e desempenho dos candidatos fixados (★) em cada recorte. Clique no cabeçalho para ordenar e na linha para filtrar a página.</p>
     <div class="filtros">
       <div class="seg" role="group" aria-label="Recorte">
@@ -619,22 +620,33 @@
     const d = D(), p = projetar();
     const casa = cargo === "deputado-federal" ? "Câmara dos Deputados" : "Assembleia Legislativa";
     const oficial = d && d.cand.some(c => /eleito/i.test(c.st)) && d.es && d.es.pct >= 100;
+    // Eleitos e fila vêm da projeção do estado inteiro; com área filtrada, votos, % e ordem são os da área.
+    const t = area && p ? areaAtual() : null;
+    const votos = t ? t.v : p && p.votos, base = t ? t.vv : p && p.validos;
     document.getElementById("projDesc").textContent = !p ? "A projeção aparece quando houver votos apurados."
-      : `${esc(nomeUF())} tem ${d.vagas} vagas na ${casa}. Projeção com os votos já apurados no estado inteiro (não muda com o filtro de área): quem seria eleito se a apuração terminasse agora.`
+      : `${nomeUF()} tem ${d.vagas} vagas na ${casa}. Projeção com os votos já apurados no estado inteiro: quem seria eleito se a apuração terminasse agora.`
+        + (t ? ` Eleitos, fila e cadeiras são do estado; votos, % e ordem das tabelas são de ${nomeArea()}.` : "")
         + (oficial ? " A apuração terminou: a coluna Situação mostra o resultado oficial do TSE." : "");
+    document.getElementById("thQE").hidden = !!t;
     if (!p) {
       ["projTop", "projEleitos", "projFila", "projListas"].forEach(id => { document.getElementById(id).innerHTML = ""; });
       return;
     }
-    document.getElementById("projTop").innerHTML = `<span>Quociente eleitoral: <b>${int(p.qe)}</b> votos</span><span>10% do QE: <b>${int(p.qe * 0.1)}</b></span><span>Válidos: <b>${int(p.validos)}</b></span><span>Apurado: <b>${pctApu(p.pct)}</b></span>`;
-    const linha = (k, extra) => { const c = d.cand[k]; return `<td class="nm"><button type="button" data-foco="${esc(c.num)}">${esc(c.nome)}</button><small>${esc(c.num)}</small></td><td>${partido(c.partido)}</td><td class="num">${int(p.votos[k])}</td>${extra}`; };
+    document.getElementById("projTop").innerHTML = `<span>Quociente eleitoral: <b>${int(p.qe)}</b> votos</span><span>10% do QE: <b>${int(p.qe * 0.1)}</b></span><span>Válidos: <b>${int(p.validos)}</b></span><span>Apurado: <b>${pctApu(p.pct)}</b></span>`
+      + (t ? `<span>Válidos em ${esc(nomeArea())}: <b>${int(t.vv)}</b></span><span>Apurado na área: <b>${pctApu(t.pct)}</b></span>` : "");
+    const pc = v => (base ? pct(100 * v / base, 1) : "—");
+    const linha = (k, extra) => { const c = d.cand[k]; return `<td class="nm"><button type="button" data-foco="${esc(c.num)}">${esc(c.nome)}</button><small>${esc(c.num)}</small></td><td>${partido(c.partido)}</td><td class="num">${int(votos[k])}</td><td class="num">${pc(votos[k])}</td>${extra}`; };
     const stTSE = c => (c.st ? `<span class="tag tse">${esc(c.st)}</span>` : "");
-    document.getElementById("projEleitos").innerHTML = [...p.eleitos].sort((a, b) => p.votos[b.k] - p.votos[a.k])
+    document.getElementById("projEleitos").innerHTML = [...p.eleitos].sort((a, b) => votos[b.k] - votos[a.k] || p.votos[b.k] - p.votos[a.k])
       .map((e, i) => `<tr${foco === d.cand[e.k].num ? ` class="foco"` : ""}><td class="num">${i + 1}</td>${linha(e.k, `<td><span class="tag ok">${e.como}</span> ${stTSE(d.cand[e.k])}</td>`)}</tr>`).join("");
-    document.getElementById("projFila").innerHTML = p.fila.map(f => `<tr>${linha(f.k, `<td><span class="mini">1º fora de ${esc(f.l.tipo === "f" ? f.l.nome : sigla(f.l.nome))}</span> ${stTSE(d.cand[f.k])}</td>`)}</tr>`).join("")
-      || `<tr><td colspan="4" class="vazio">—</td></tr>`;
-    document.getElementById("projListas").innerHTML = [...p.L].sort((a, b) => b.votos - a.votos).filter(l => l.votos > 0)
-      .map(l => `<tr><td>${esc(l.tipo === "f" ? l.nome : sigla(l.nome))}</td><td class="num">${int(l.votos)}</td><td class="num">${pct(100 * l.votos / p.validos, 1)}</td><td class="num">${pct(100 * l.votos / p.qe, 0)}</td><td class="num"><strong>${l.cad.length}</strong></td></tr>`).join("");
+    document.getElementById("projFila").innerHTML = [...p.fila].sort((a, b) => votos[b.k] - votos[a.k] || p.votos[b.k] - p.votos[a.k])
+      .map(f => `<tr>${linha(f.k, `<td><span class="mini">1º fora de ${esc(f.l.tipo === "f" ? f.l.nome : sigla(f.l.nome))}</span> ${stTSE(d.cand[f.k])}</td>`)}</tr>`).join("")
+      || `<tr><td colspan="5" class="vazio">—</td></tr>`;
+    // Votos de cada lista (nominais + legenda) na área
+    const vl = p.L.map(l => (t ? l.cands.reduce((s, k) => s + votos[k], 0) : l.votos));
+    if (t) (d.partidos || []).forEach(([, li], k) => { vl[li] += t.leg[k] || 0; });
+    document.getElementById("projListas").innerHTML = [...p.L].sort((a, b) => vl[b.i] - vl[a.i] || b.votos - a.votos).filter(l => l.votos > 0)
+      .map(l => `<tr><td>${esc(l.tipo === "f" ? l.nome : sigla(l.nome))}</td><td class="num">${int(vl[l.i])}</td><td class="num">${pc(vl[l.i])}</td>${t ? "" : `<td class="num">${pct(100 * l.votos / p.qe, 0)}</td>`}<td class="num"><strong>${l.cad.length}</strong></td></tr>`).join("");
   }
   const partido = p => `<span class="party"><i style="background:${corPartido(p)}"></i>${esc(sigla(p))}</span>`;
 
@@ -652,7 +664,6 @@
   }
   function ranking() {
     const d = D(), t = areaAtual(), tb = document.getElementById("ranking");
-    document.getElementById("rankTitulo").textContent = `Candidatos — ${nomeArea()}`;
     if (!d || !t) { tb.innerHTML = `<tr><td colspan="8" class="vazio">Sem dados ainda.</td></tr>`; return; }
     const prop = proporcional(), p = prop ? projetar() : null;
     const r = ordenados(t), base = t.vv || 0;
@@ -726,9 +737,11 @@
     if (!d || !d.cand.length) { head.innerHTML = ""; body.innerHTML = `<tr><td class="vazio">Sem dados ainda.</td></tr>`; return; }
     const fx = (fixados[uf + ":" + cargo] || []).map(n => d.porNum[n]).filter(Boolean);
     const dentro = new Set(munsDaArea());
-    const grupos = recorte === "macro" ? MACROS.map(m => ({ nome: m, a: "macro:" + m, muns: munsDaArea("macro:" + m) }))
+    let grupos = recorte === "macro" ? MACROS.map(m => ({ nome: m, a: "macro:" + m, muns: munsDaArea("macro:" + m) }))
       : recorte === "micro" ? MICROS.map(m => ({ nome: m, a: "micro:" + m, muns: munsDaArea("micro:" + m), sub: MUN.find(x => x.micro === m).macro }))
-      : MUN.filter(m => !area || dentro.has(m.tse)).map(m => ({ nome: m.nome, a: "mun:" + m.tse, muns: [m.tse], sub: m.micro }));
+      : MUN.map(m => ({ nome: m.nome, a: "mun:" + m.tse, muns: [m.tse], sub: m.micro }));
+    // Com área filtrada, só os recortes que tocam a área (um município mostra a micro e a macro dele)
+    if (area) grupos = grupos.filter(g => g.muns.some(m => dentro.has(m)));
     const linhas = grupos.map(g => {
       const t = agregar(g.muns, false);
       let lk = -1; t.v.forEach((x, i) => { if (x > 0 && (lk < 0 || x > t.v[lk])) lk = i; });
@@ -780,8 +793,13 @@
     montarPartidos();
     tudo();
   }
+  function badges() {
+    document.querySelectorAll(".badge-area").forEach(b => {
+      b.innerHTML = area ? `<span class="filtrado" title="Tabela filtrada pela área escolhida no topo">Filtrado: ${esc(nomeArea())}</span>` : "";
+    });
+  }
   function tudo() {
-    faixaApu(); kpis(); pintar(); cardProj(); ranking(); regioes();
+    badges(); faixaApu(); kpis(); pintar(); cardProj(); ranking(); regioes();
   }
 
   // ---------- estado ----------

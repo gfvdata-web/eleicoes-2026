@@ -3,6 +3,7 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-04
+- **Apuração por estado, filtro de área:** ao escolher um município ou região, as tabelas de "Quem está passando" (eleitos, próximos da fila e partidos/federações) passam a mostrar votos, % válidos e ordem daquela área (eleitos, fila e cadeiras continuam sendo os da projeção do estado, com os selos de situação do TSE), e "Por região" mostra só os recortes da área. Selo "Filtrado: <área>" no título dos cards de tabelas.
 - **Apuração por estado, projeção de deputados:** a tabela "Partidos e federações" ganhou a coluna "% válidos" (votos da lista sobre os votos válidos).
 - **Apuração por estado, mapa de municípios:** corrigido o mapa quebrado em Minas Gerais e em mais 16 estados (AC a PR): a correção anterior do sentido dos polígonos só tinha sido aplicada de RJ em diante. Todas as malhas em `docs/data/uf/` estão no sentido certo e `gerar_ufs.py` agora corrige isso ao gerar.
 - **Bancada Câmara, Assembleias e Bancada Senado, layout:** o hemiciclo ocupa toda a largura do quadro; a lista de bancadas virou uma tabela horizontal logo abaixo (partidos nas colunas; cadeiras, detalhamento e %), quebrada em linhas que cabem na tela. A tabela tem uma última linha "Grupo" com o menu de cada partido (começa em esquerda / centro / direita e o leitor pode trocar); criar e apagar grupos só aparece em "Por grupo". Saiu o texto explicativo da coluna lateral. Hemiciclo e barra de maioria menores e centralizados. Corrigido o seletor de estado vazio que aparecia na Bancada Câmara nacional.

@@ -68,8 +68,9 @@ Arquivos estáticos (gerados uma vez, não mudam durante a apuração):
 - **Números da área**: % de urnas apuradas (média ponderada pelo eleitorado), eleitores, comparecimento, válidos, brancos e nulos. Nos majoritários, uma frase com a situação no estado ("haverá 2º turno entre…"; no fim, a situação oficial do TSE).
 - **Mapa** colorido pelo mais votado (cor do partido), por um candidato (clique no nome dele: % dos válidos em cada município) ou pelo % apurado.
 - **Quem está passando** (só deputados): projeção das vagas com os votos já apurados no estado inteiro, pelas regras do Código Eleitoral (QE com fração até 0,5 desprezada; QP com mínimo de 10% do QE; sobras pela maior média entre listas com 80% do QE e candidatos com 20%; depois, maior média entre todas, conforme o STF nas ADIs 7228/7263/7325). Mostra eleitos, o 1º fora de cada lista e os votos por lista. A situação oficial do TSE (`st`) aparece ao lado quando divulgada.
+- **Filtro de área nas tabelas**: com área escolhida, os cards de tabela ganham o selo "Filtrado: <área>". Em "Quem está passando", eleitos, fila e cadeiras continuam vindo da projeção do estado, mas votos, % válidos e ordem são os da área (a coluna % QE some).
 - **Candidatos**: ranking da área, com busca e filtro de partido nos deputados (40 primeiros, botão para todos). ★ fixa o candidato: ele vai para o topo e ganha coluna na tabela "Por região". Fixados, cor do mapa e recorte ficam salvos só no navegador do leitor (`localStorage`).
-- **Por região**: macrorregiões, microrregiões ou municípios da área, com eleitores, % apurado, mais votado, vantagem sobre o 2º e o % de cada fixado; colunas ordenáveis.
+- **Por região**: macrorregiões, microrregiões ou municípios que tocam a área filtrada, com eleitores, % apurado, mais votado, vantagem sobre o 2º e o % de cada fixado; colunas ordenáveis.
 
 ## Todos os estados e variação do % apurado (04/10/2026)
 
