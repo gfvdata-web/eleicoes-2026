@@ -71,6 +71,7 @@
   .conf-frase { grid-column: 1 / -1; margin: 0; font-size: .82rem; }
   .conf { display: inline-block; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; margin-right: 4px; white-space: nowrap; }
   .conf--bom { color: var(--text); }
+  h2 .conf { vertical-align: 3px; margin-left: 6px; }
   .conf--medio { color: var(--muted); }
   .conf--fraco { color: var(--muted); background: var(--bar-bg); border-style: dashed; }
   .pesos--fraco, .pesos-uf--fraco { opacity: .5; }
@@ -341,7 +342,7 @@
       <div class="leg" id="legCampos"></div>
     </section>
     <section class="card">
-      <h2>Presidente previsto pelos outros votos</h2>
+      <h2 id="tModelo">Presidente previsto pelos outros votos</h2>
       <p class="desc" id="descModelo"></p>
       <div class="modelo" id="kpis"></div>
       <h3>Peso de cada cargo na previsão</h3>
@@ -659,6 +660,7 @@
   // ---- Modelo
   function modelo() {
     const m = modeloAtual()[st.g], c = CAMPOS.find(x => x.g === st.g), cf = confianca(m);
+    document.getElementById("tModelo").innerHTML = `Presidente previsto pelos outros votos ${cf.selo}`;
     document.getElementById("descModelo").innerHTML = `Quanto do % da <b>${c.txt}</b> para presidente (${c.pres}) em cada urna dá para prever só com o % do mesmo campo nos outros 4 cargos.
       O que sobra (a diferença) é o voto para presidente que não segue os outros cargos.
       <b>Padrão ${brasil() ? "do Brasil (ajustado nas urnas de todo o país)" : "de " + nomeAT() + " (ajustado nas urnas do estado)"}</b>; não muda com o filtro de município.`;
@@ -679,7 +681,7 @@
   function dispersao(us) {
     const W = 560, H = 460, m = { t: 14, r: 14, b: 44, l: 50 };
     const c = CAMPOS.find(x => x.g === st.g), nomeX = st.comp === "m" ? "previsto pelos outros cargos" : CARGOS[st.comp].toLowerCase();
-    document.getElementById("tDisp").textContent = `Presidente × ${st.comp === "m" ? "previsto" : CARGOS[st.comp].toLowerCase()}`;
+    document.getElementById("tDisp").innerHTML = `Presidente × ${st.comp === "m" ? "previsto " + confianca(modeloAtual()[st.g]).selo : CARGOS[st.comp].toLowerCase()}`;
     document.getElementById("descDisp").innerHTML = `Cada ponto é ${{ s: "uma urna", l: "um local de votação", m: "um município", uf: "um estado" }[st.nivel]} (tamanho = votantes).
       Na linha tracejada, o % da ${c.txt} para presidente é igual ao ${nomeX}. Acima dela, o presidente teve mais voto desse campo; abaixo, menos.`;
     document.getElementById("legDisp").innerHTML =

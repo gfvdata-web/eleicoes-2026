@@ -3,6 +3,7 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-06
+- **Voto cruzado, análise por campo:** o selo de encaixe (bom / moderado / fraco) aparece também nos títulos do card do modelo e do gráfico "Presidente × previsto", como no comparativo.
 - **Voto cruzado, nova subaba "Tabela de estados" (`#tabela`):** os 27 estados e o Brasil numa tabela ordenável: % do campo para presidente, encaixe, diferença típica, urnas acima de +10 p.p. e abaixo de −10 p.p., lado dos desvios, faixa de 80% dos votantes, índice de anomalia e cargos fora do modelo, na régua e no campo escolhidos. Números pré-calculados por `scripts/metricas_estados.py` com a classificação padrão.
 - **Voto cruzado, comparativo estados:** botões para adicionar ou tirar uma região inteira (Norte, Nordeste, Centro-Oeste, Sudeste, Sul) e para remover todos os estados.
 - **Voto cruzado, urna esperada × anômala:** o título do cargo (Presidente, Governador, Senado, deputados) e a urna (município, zona e seção) aparecem dentro de cada card, nos dois lados, para que um print de um lado só se explique sozinho.
