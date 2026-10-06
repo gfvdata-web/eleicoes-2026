@@ -129,7 +129,9 @@
   .eq .barras { grid-template-columns: max-content 1fr; font-size: .8rem; }
   .eq table td:first-child { white-space: normal; }
   .eq table td, .eq table th { padding: 4px 6px; }
-  .cargo-h { font-size: 1.05rem; margin: 28px 0 0; }
+  .cargo-card { font-size: 1.05rem; font-weight: 700; margin: 0; text-transform: none; letter-spacing: 0; color: var(--text); }
+  .cargo-card small { font-size: .78rem; font-weight: 400; color: var(--muted); }
+  .cargo-urna { margin: 2px 0 8px; font-size: .78rem; color: var(--muted); }
   .eq details summary { cursor: pointer; font-size: .82rem; color: var(--accent); margin-top: 8px; }
   .eq tr.extra td { color: var(--muted); }
   .eq tbody tr { cursor: default; }
@@ -936,18 +938,20 @@
       document.getElementById("sec" + k).innerHTML = doMun.map(x => `<option value="${chave(x.r)}" ${chave(x.r) === urnaSel[k] ? "selected" : ""}>Zona ${x.r[1]} · seção ${x.r[2]} · ${esc(titulo(L[x.r[0]][2]))} · ${int(x.t[1])} votantes · ${fmt(100 * x.ind)} p.p.</option>`).join("");
     });
     document.getElementById("resumoUrnas").innerHTML = resumo(a, Q) + resumo(b, Q);
-    const cab = k => `<h2 class="cargo-h">${CARGOS[k]}${k === 2 ? " <small style='font-weight:400;color:var(--muted);font-size:.8rem'>(2 votos por eleitor)</small>" : ""}</h2>`;
+    // cada card leva o cargo e a urna no título, para que um print de um lado só se explique sozinho
+    const card = (k, o, corpo) => `<section class="card"><h3 class="cargo-card">${CARGOS[k]}${k === 2 ? " <small>(2 votos por eleitor)</small>" : ""}</h3>
+      <p class="cargo-urna">${esc(AT.mun[L[o.r[0]][0]])} · zona ${o.r[1]} · seção ${o.r[2]}</p>${corpo}</section>`;
     if (UFA !== "ES") {   // outros estados: votos por entidade (candidato; partido nos deputados)
-      document.getElementById("cargosUrnas").innerHTML = [0, 1, 2, 3, 4].map(k => cab(k) +
-        `<div class="eq"><section class="card">${votosEnt(a, k)}</section><section class="card">${votosEnt(b, k)}</section></div>`).join("");
+      document.getElementById("cargosUrnas").innerHTML = [0, 1, 2, 3, 4].map(k =>
+        `<div class="eq">${card(k, a, votosEnt(a, k))}${card(k, b, votosEnt(b, k))}</div>`).join("");
       return;
     }
     if (!CT) CT = await fetch("data/es/secoes/cargos.json").then(r => r.json());
     const [ma, mb] = await Promise.all([munJSON(L[a.r[0]][0]), munJSON(L[b.r[0]][0])]);
     const secDe = (m, o) => m.secoes.find(s => s[0] === o.r[1] && s[1] === o.r[2]);
     const sa = secDe(ma, a), sb = secDe(mb, b);
-    document.getElementById("cargosUrnas").innerHTML = CHAVES.map((c, k) => `<h2 class="cargo-h">${CARGOS[k]}${k === 2 ? " <small style='font-weight:400;color:var(--muted);font-size:.8rem'>(2 votos por eleitor)</small>" : ""}</h2>
-      <div class="eq"><section class="card">${votosCargo(c, sa[9][c], k)}</section><section class="card">${votosCargo(c, sb[9][c], k)}</section></div>`).join("");
+    document.getElementById("cargosUrnas").innerHTML = CHAVES.map((c, k) =>
+      `<div class="eq">${card(k, a, votosCargo(c, sa[9][c], k))}${card(k, b, votosCargo(c, sb[9][c], k))}</div>`).join("");
   }
 
   // ---- Subaba: comparativo entre estados
