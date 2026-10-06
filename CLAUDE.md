@@ -9,7 +9,7 @@ Leia este arquivo antes de qualquer mudança. Para detalhes, consulte:
 - [documentacao/apuracao.md](documentacao/apuracao.md): página de apuração (`apuracao.html`, dados em `docs/data/apuracao/`, coleta em `scripts/apuracao.py`)
 - [documentacao/es.md](documentacao/es.md): página do Espírito Santo (`es.html`, só apuração do TSE por município, dados em `docs/data/es/`, coleta em `scripts/apuracao_es.py`)
 - [documentacao/es-secoes.md](documentacao/es-secoes.md): votos por urna no ES (`es-secoes.html`, sem link no menu; município → zona → local de votação → seção; dados em `docs/data/es/secoes/`, gerados por `scripts/secoes_es.py`)
-- [documentacao/voto-cruzado.md](documentacao/voto-cruzado.md): análise de voto cruzado entre cargos (`voto-cruzado.html`, sem link no menu, análise do ES, unidade Estados e comparativo entre estados; dados dos 27 estados em `docs/data/voto-cruzado/`, gerados por `scripts/voto_cruzado.py`)
+- [documentacao/voto-cruzado.md](documentacao/voto-cruzado.md): análise de voto cruzado entre cargos; base estatística e matemática (para explicar números da página) em [documentacao/voto-cruzado-estatistica.md](documentacao/voto-cruzado-estatistica.md) (`voto-cruzado.html`, sem link no menu, análise do ES, unidade Estados e comparativo entre estados; dados dos 27 estados em `docs/data/voto-cruzado/`, gerados por `scripts/voto_cruzado.py`)
 
 ## Contexto
 

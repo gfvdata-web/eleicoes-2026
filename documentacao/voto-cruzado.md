@@ -2,6 +2,8 @@
 
 Página criada a pedido do usuário em 06/10/2026. **Não tem link no menu** (endereço próprio: `voto-cruzado.html`). A aba "Análise por campo" é do Espírito Santo (com a unidade "Estados" para o Brasil); a subaba "Comparativo estados" mostra qualquer estado.
 
+Base estatística, fórmulas, resultados de referência e plano da opção A: [voto-cruzado-estatistica.md](voto-cruzado-estatistica.md).
+
 ## Objetivo
 
 Medir se o voto para presidente acompanha os outros cargos do 1º turno (governador, Senado, deputado federal e estadual) e achar onde ele se descola. Direção principal combinada com o usuário: **prever o voto para presidente a partir dos outros votos** (ex.: urna com muito voto de esquerda para deputado, Senado e governador, mas pouco para o Lula).
