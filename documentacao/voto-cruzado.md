@@ -1,6 +1,6 @@
 # Voto cruzado (`voto-cruzado.html` + `scripts/voto_cruzado.py`)
 
-Página criada a pedido do usuário em 06/10/2026. **Não tem link no menu** (endereço próprio: `voto-cruzado.html`). A aba "Análise por campo" é do Espírito Santo (com a unidade "Estados" para o Brasil); a subaba "Comparativo estados" mostra qualquer estado.
+Página criada a pedido do usuário em 06/10/2026. Desde 06/10 é a seção **"Voto cruzado"** do switch de seções no topo do site. A aba "Análise por campo" é do Espírito Santo (com a unidade "Estados" para o Brasil); a subaba "Comparativo estados" mostra qualquer estado.
 
 Base estatística, fórmulas, resultados de referência e plano da opção A: [voto-cruzado-estatistica.md](voto-cruzado-estatistica.md).
 

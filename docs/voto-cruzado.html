@@ -124,6 +124,8 @@
   .uf-top button:hover { color: var(--text); border-color: var(--text); }
   .gradeUF .cv canvas { display: block; }
 
+  .nota-ruido { font-size: .8rem; color: var(--muted); border-left: 3px solid var(--border); padding: 2px 0 2px 10px; margin: 12px 0 4px; max-width: 820px; }
+  .nota-ruido b { color: var(--text); }
   .aviso { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; font-size: .88rem; max-width: 900px; }
   .aviso p { margin: 0 0 6px; }
 
@@ -139,6 +141,12 @@
   .tema-switch__btn + .tema-switch__btn { border-left: 1px solid var(--border); }
   .tema-switch__btn--ativo { background: var(--accent); color: var(--surface); }
   @media (max-width: 480px) { .tema-switch__label { display: none; } .tema-switch__btn { padding: .32rem .6rem; font-size: .85rem; } header h1 { padding-right: 90px; font-size: 1.4rem; } }
+  /* Switch de seções do site (igual em todas as páginas) */
+  .secoes { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; margin: 0 0 16px; padding: 3px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); }
+  .secoes a { display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.15; font-size: .85rem; font-weight: 600; padding: 6px 16px; border-radius: 999px; color: var(--muted); text-decoration: none; }
+  .secoes a:hover { color: var(--text); }
+  .secoes a[aria-current="page"] { background: var(--accent); color: var(--surface); }
+  @media (max-width: 700px) { .secoes { display: grid; grid-auto-flow: row; grid-template-columns: repeat(3, 1fr); margin-right: 84px; border-radius: 14px; } .secoes a { font-size: .75rem; padding: 5px 8px; border-radius: 11px; } }
 </style>
 </head>
 <body>
@@ -147,6 +155,8 @@
     <button type="button" class="tema-switch__btn" data-tema="light" aria-pressed="false"><span aria-hidden="true">☀️</span><span class="tema-switch__label">Claro</span></button>
     <button type="button" class="tema-switch__btn" data-tema="dark" aria-pressed="false"><span aria-hidden="true">🌙</span><span class="tema-switch__label">Escuro</span></button>
   </div>
+
+  <nav class="secoes" id="secoes" aria-label="Seção do site"><a href="index.html" data-secao="pesq">Pesquisas e análises</a><a href="apuracao.html" data-secao="nac">Nacional e bancadas</a><a href="es.html" data-secao="est">Estados</a><a href="es-secoes.html" data-secao="urnas">Urnas ES</a><a href="voto-cruzado.html" data-secao="cruz" aria-current="page">Voto cruzado</a></nav>
 
   <header>
     <h1>Voto cruzado — Espírito Santo</h1>
@@ -191,6 +201,9 @@
         <b>daquele estado</b> (ajustado nas urnas dele): os pontos mostram o quanto o voto para presidente acompanha os outros 4 cargos ali.
         Quanto mais colados na linha tracejada, mais o voto para presidente segue os outros cargos. Roxo = presidente acima do previsto; verde = abaixo.
         Todos os gráficos usam a mesma escala (0 a 100%).</p>
+      <p class="nota-ruido"><b>Quanto é muito?</b> Uma urna tem em média ~230 votos válidos, e o percentual de um campo oscila cerca de <b>3 p.p.</b> só por acaso.
+        Diferenças de até ±5 p.p. numa urna <b>não</b> indicam anomalia; a partir de <b>±10 p.p.</b> fica difícil atribuir ao acaso.
+        Em locais de votação (~1.000 votos) o acaso pesa ~1,5 p.p., e em municípios e estados, quase nada.</p>
       <div class="controles2">
         <div class="ctl"><span>Campo</span><div class="seg" id="ctlCampoE"></div></div>
         <div class="ctl"><span>Unidade</span><div class="seg" id="ctlNivelE"></div></div>
@@ -230,6 +243,9 @@
       <p class="desc" id="descDisp"></p>
       <div id="disp"></div>
       <div class="leg" id="legDisp"></div>
+      <p class="nota-ruido"><b>Quanto é muito?</b> Uma urna tem em média ~230 votos válidos, e o percentual de um campo oscila cerca de <b>3 p.p.</b> só por acaso.
+        Diferenças de até ±5 p.p. numa urna <b>não</b> indicam anomalia; a partir de <b>±10 p.p.</b> fica difícil atribuir ao acaso.
+        Em locais de votação (~1.000 votos) o acaso pesa ~1,5 p.p., e em municípios e estados, quase nada.</p>
     </section>
     <section class="card">
       <h2>Diferença por município</h2>

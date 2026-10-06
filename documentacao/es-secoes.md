@@ -1,6 +1,6 @@
 # Espírito Santo: votos por urna (`es-secoes.html` + `scripts/secoes_es.py`)
 
-Página criada a pedido do usuário em 05/10/2026. Mostra o 1º turno no ES com o maior detalhe que o TSE publica: estado → município → zona eleitoral → local de votação → seção (urna), nos 5 cargos. **Não tem link no menu** (endereço próprio: `es-secoes.html`); só um link de volta para `es.html`. Só ES; não baixar dados de outros estados para ela.
+Página criada a pedido do usuário em 05/10/2026. Mostra o 1º turno no ES com o maior detalhe que o TSE publica: estado → município → zona eleitoral → local de votação → seção (urna), nos 5 cargos. Desde 06/10 é a seção **"Urnas ES"** do switch de seções no topo do site; tem também um link de volta para `es.html`. Só ES; não baixar dados de outros estados para ela.
 
 ## Nomenclatura do TSE
 

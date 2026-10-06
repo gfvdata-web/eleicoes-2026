@@ -113,7 +113,7 @@
   .secoes a { display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.15; font-size: .85rem; font-weight: 600; padding: 6px 16px; border-radius: 999px; color: var(--muted); text-decoration: none; }
   .secoes a:hover { color: var(--text); }
   .secoes a[aria-current="page"] { background: var(--accent); color: var(--surface); }
-  @media (max-width: 560px) { .secoes { display: grid; margin-right: 84px; border-radius: 14px; } .secoes a { font-size: .75rem; padding: 5px 8px; border-radius: 11px; } }
+  @media (max-width: 700px) { .secoes { display: grid; grid-auto-flow: row; grid-template-columns: repeat(3, 1fr); margin-right: 84px; border-radius: 14px; } .secoes a { font-size: .75rem; padding: 5px 8px; border-radius: 11px; } }
 </style>
 </head>
 <body>
@@ -122,7 +122,7 @@
     <button type="button" class="tema-switch__btn" data-tema="light" aria-pressed="false"><span aria-hidden="true">☀️</span><span class="tema-switch__label">Claro</span></button>
     <button type="button" class="tema-switch__btn" data-tema="dark" aria-pressed="false"><span aria-hidden="true">🌙</span><span class="tema-switch__label">Escuro</span></button>
   </div>
-  <nav class="secoes" id="secoes" aria-label="Seção do site"><a href="index.html" data-secao="pesq" aria-current="page">Pesquisas e análises</a><a href="apuracao.html" data-secao="nac">Nacional e bancadas</a><a href="es.html" data-secao="est">Estados</a></nav>
+  <nav class="secoes" id="secoes" aria-label="Seção do site"><a href="index.html" data-secao="pesq" aria-current="page">Pesquisas e análises</a><a href="apuracao.html" data-secao="nac">Nacional e bancadas</a><a href="es.html" data-secao="est">Estados</a><a href="es-secoes.html" data-secao="urnas">Urnas ES</a><a href="voto-cruzado.html" data-secao="cruz">Voto cruzado</a></nav>
   <header>
     <h1>Como pode ficar o Senado a partir de 2027</h1>
     <p>Em 2026 são eleitos 54 dos 81 senadores (2 por estado). Os outros 27, eleitos em 2022, têm mandato até 2031.
