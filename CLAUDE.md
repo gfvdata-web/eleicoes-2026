@@ -9,7 +9,7 @@ Leia este arquivo antes de qualquer mudança. Para detalhes, consulte:
 - [documentacao/apuracao.md](documentacao/apuracao.md): página de apuração (`apuracao.html`, dados em `docs/data/apuracao/`, coleta em `scripts/apuracao.py`)
 - [documentacao/es.md](documentacao/es.md): página do Espírito Santo (`es.html`, só apuração do TSE por município, dados em `docs/data/es/`, coleta em `scripts/apuracao_es.py`)
 - [documentacao/es-secoes.md](documentacao/es-secoes.md): votos por urna no ES (`es-secoes.html`, sem link no menu; município → zona → local de votação → seção; dados em `docs/data/es/secoes/`, gerados por `scripts/secoes_es.py`)
-- [documentacao/voto-cruzado.md](documentacao/voto-cruzado.md): análise de voto cruzado entre cargos (`voto-cruzado.html`, sem link no menu, protótipo do ES; dados em `docs/data/voto-cruzado/`, gerados por `scripts/voto_cruzado_es.py`)
+- [documentacao/voto-cruzado.md](documentacao/voto-cruzado.md): análise de voto cruzado entre cargos (`voto-cruzado.html`, sem link no menu, análise do ES, unidade Estados e comparativo entre estados; dados dos 27 estados em `docs/data/voto-cruzado/`, gerados por `scripts/voto_cruzado.py`)
 
 ## Contexto
 
@@ -20,7 +20,7 @@ Leia este arquivo antes de qualquer mudança. Para detalhes, consulte:
 
 ## Regras do projeto
 
-1. **Sem build, sem framework, sem testes automatizados.** O site é só `docs/index.html` + `docs/data/`. Não adicione npm, bundler, CI de testes nem subagentes. Exceções combinadas para a apuração: `scripts/apuracao.py`, `scripts/apuracao_es.py`, `scripts/secoes_es.py` e `scripts/voto_cruzado_es.py` (Python, só biblioteca padrão, roda no computador do usuário) e `.github/workflows/pages.yml` (só publica `docs/`).
+1. **Sem build, sem framework, sem testes automatizados.** O site é só `docs/index.html` + `docs/data/`. Não adicione npm, bundler, CI de testes nem subagentes. Exceções combinadas para a apuração: `scripts/apuracao.py`, `scripts/apuracao_es.py`, `scripts/secoes_es.py` e `scripts/voto_cruzado.py` (Python, só biblioteca padrão, roda no computador do usuário) e `.github/workflows/pages.yml` (só publica `docs/`).
 2. **Dados só nos arquivos de dados:** governador em `docs/data/dados.js` (`window.ESTADOS`), Senado em `docs/data/senado.js` (`window.SENADO`); senadores com mandato até 2031 e cores dos partidos em `docs/data/senado-atual.js`; pesquisas de presidente (só para as abas Comparativo) em `docs/data/presidente.js` (`window.PRESIDENTE`). Não coloque números de pesquisa dentro do HTML.
 3. **Uma única página.** Governador e Senado convivem em `index.html` via seletor de cargo; a exceção é `senado.html` (simulação das bancadas do Senado, criada a pedido do usuário; ver [documentacao/senado.md](documentacao/senado.md)) `apuracao.html` (réplica de `index.html` para a apuração; ver [documentacao/apuracao.md](documentacao/apuracao.md)) e `es.html` (apuração do Espírito Santo por município, sem pesquisas; ver [documentacao/es.md](documentacao/es.md)) e `camara.html` (bancadas da Câmara pela apuração; ver [documentacao/camara.md](documentacao/camara.md)) e `es-secoes.html` (votos por urna no ES, sem link no menu; ver [documentacao/es-secoes.md](documentacao/es-secoes.md)) e `voto-cruzado.html` (relação entre os votos nos cargos, sem link no menu; ver [documentacao/voto-cruzado.md](documentacao/voto-cruzado.md)). Não crie outras páginas sem pedido explícito.
 4. **Dependências externas só via CDN confiável** (cdnjs para D3; Google Fonts para a fonte Inter).

@@ -118,6 +118,12 @@
   .eq tbody tr { cursor: default; }
   .frase { font-size: .88rem; margin: 8px 0 10px; }
 
+  .gradeUF { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 0 20px; }
+  .uf-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .uf-top button { border: 1px solid var(--border); background: var(--surface); color: var(--muted); border-radius: 999px; width: 28px; height: 28px; font-size: 1rem; line-height: 1; cursor: pointer; }
+  .uf-top button:hover { color: var(--text); border-color: var(--text); }
+  .gradeUF .cv canvas { display: block; }
+
   .aviso { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; font-size: .88rem; max-width: 900px; }
   .aviso p { margin: 0 0 6px; }
 
@@ -162,6 +168,7 @@
   <nav class="subabas" aria-label="Subabas">
     <a href="#" data-aba="analise">Análise por campo</a>
     <a href="#urnas" data-aba="urnas">Urna esperada × urna anômala</a>
+    <a href="#estados" data-aba="estados">Comparativo estados</a>
   </nav>
 
   <div id="abaUrnas" hidden>
@@ -175,6 +182,22 @@
     </section>
     <div class="eq" id="resumoUrnas"></div>
     <div id="cargosUrnas"></div>
+  </div>
+
+  <div id="abaEstados" hidden>
+    <section class="card">
+      <h2>Presidente × previsto, estado por estado</h2>
+      <p class="desc">O mesmo gráfico da aba "Análise por campo", um por estado, para comparar. Em cada estado a previsão usa o padrão
+        <b>daquele estado</b> (ajustado nas urnas dele): os pontos mostram o quanto o voto para presidente acompanha os outros 4 cargos ali.
+        Quanto mais colados na linha tracejada, mais o voto para presidente segue os outros cargos. Roxo = presidente acima do previsto; verde = abaixo.
+        Todos os gráficos usam a mesma escala (0 a 100%).</p>
+      <div class="controles2">
+        <div class="ctl"><span>Campo</span><div class="seg" id="ctlCampoE"></div></div>
+        <div class="ctl"><span>Unidade</span><div class="seg" id="ctlNivelE"></div></div>
+        <label class="ctl"><span>Adicionar estado</span><select id="addUF"></select></label>
+      </div>
+    </section>
+    <div class="gradeUF" id="gradeUF"></div>
   </div>
 
   <div id="abaAnalise">
@@ -226,8 +249,9 @@
 
   <footer>
     <p><b>Campos:</b> <span id="listaCampos"></span>. A divisão é aproximada, segue o uso comum na imprensa (a mesma da página de bancadas) e pode conter imprecisões.</p>
-    <p><b>Previsão:</b> regressão linear ponderada pelo comparecimento, ajustada nas urnas do estado inteiro: o % do campo para presidente
-      é estimado a partir do % do mesmo campo para governador, Senado, deputado federal e estadual. A diferença é o % real menos o previsto.
+    <p><b>Previsão:</b> regressão linear ponderada pelo comparecimento: o % do campo para presidente
+      é estimado a partir do % do mesmo campo para governador, Senado, deputado federal e estadual (no DF, distrital). É ajustada nas urnas do estado
+      (unidades urna, local e município, e cada gráfico do comparativo) ou nas urnas do país inteiro (unidade "Estados"). A diferença é o % real menos o previsto.
       <b>Voto dividido mínimo</b> (comparação com um cargo): parcela de eleitores que, com certeza, votou em campos diferentes nos dois cargos
       (metade da soma das diferenças entre os 3 campos). <b>Núcleo mínimo</b>: parcela que, com certeza, votou no campo escolhido nos dois cargos.
       Os dois são limites matemáticos, não estimativas, e não se aplicam ao Senado (2 votos por eleitor). Urnas com poucos votantes oscilam mais.</p>
@@ -245,12 +269,15 @@
   const CARGOS = ["Presidente", "Governador", "Senado", "Dep. federal", "Dep. estadual"];
   const CAMPOS = [{ g: 0, nome: "Esquerda", pres: "Lula e outros" }, { g: 2, nome: "Direita", pres: "Flávio e outros" }];
   const COMPS = [{ k: "m", nome: "Previsto" }, { k: 1, nome: "Governador" }, { k: 2, nome: "Senado" }, { k: 3, nome: "Dep. federal" }, { k: 4, nome: "Dep. estadual" }];
-  const NIVEIS = [{ k: "s", nome: "Urnas" }, { k: "l", nome: "Locais de votação" }, { k: "m", nome: "Municípios" }];
+  const NIVEIS = [{ k: "s", nome: "Urnas" }, { k: "l", nome: "Locais de votação" }, { k: "m", nome: "Municípios" }, { k: "uf", nome: "Estados" }];
   // coluna de cada seção: 0 aptos, 1 comparecimento, 2 lula, 3 flávio, depois 4 + 4·cargo: válidos, esq, centro, dir
-  const C0 = 3, NV = 4;
+  const C0 = 3, NV = 4, NT = 24;
 
   const st = { g: 0, comp: "m", nivel: "l", mun: null, ordem: "dif", dir: -1, lim: 50, foco: null };
-  let D, L, S, munPorTSE = {}, munPorIBGE = {}, geo, beta = {};
+  // ES = dados do ES (aba "Análise por campo"); BR = totais por estado e modelo nacional (unidade "Estados")
+  let ES, BR, D, L, S, munPorIBGE = {}, geo, geoBR, nomeUF = {};
+  const brasil = () => st.nivel === "uf";
+  const modeloAtual = () => brasil() ? BR.MOD : ES.MOD;
 
   const fmt = (x, d = 1) => x == null || isNaN(x) ? "—" : x.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
   const pct = x => fmt(100 * x) + "%";
@@ -262,27 +289,26 @@
 
   // ---- Somas e proporções
   function somaLinhas(rows) {
-    const t = new Array(S[0].length - C0).fill(0);
+    const t = new Array(NT).fill(0);
     rows.forEach(r => { for (let i = 0; i < t.length; i++) t[i] += r[C0 + i]; });
     return t;
   }
   const valid = (t, k) => t[NV + 4 * k];
   const parte = (t, k, g) => valid(t, k) ? t[NV + 4 * k + 1 + g] / valid(t, k) : NaN;
-  function previsto(t, g) {
-    const b = beta[g]; let y = b[0];
+  function previsto(t, g, M = modeloAtual()) {
+    const b = M[g].b; let y = b[0];
     for (let k = 1; k <= 4; k++) y += b[k] * parte(t, k, g);
     return Math.max(0, Math.min(1, y));
   }
-  const xDe = (t, g) => st.comp === "m" ? previsto(t, g) : parte(t, st.comp, g);
   // limites (cargo com 1 voto): voto dividido mínimo e núcleo mínimo do campo
-  function limites(t, g) {
-    if (st.comp === "m" || st.comp === 2) return [NaN, NaN];
-    let tv = 0; for (let h = 0; h < 3; h++) tv += Math.abs(parte(t, 0, h) - parte(t, st.comp, h));
-    return [tv / 2, Math.max(0, parte(t, 0, g) + parte(t, st.comp, g) - 1)];
+  function limites(t, g, comp) {
+    if (comp === "m" || comp === 2) return [NaN, NaN];
+    let tv = 0; for (let h = 0; h < 3; h++) tv += Math.abs(parte(t, 0, h) - parte(t, comp, h));
+    return [tv / 2, Math.max(0, parte(t, 0, g) + parte(t, comp, g) - 1)];
   }
 
   // regressão ponderada (comparecimento) do % do campo para presidente sobre os 4 outros cargos
-  function ajustar(g) {
+  function ajustar(S, g) {
     const n = 5, A = Array.from({ length: n }, () => new Array(n + 1).fill(0));
     let sw = 0, sy = 0, syy = 0;
     S.forEach(r => {
@@ -297,16 +323,23 @@
       [A[i], A[p]] = [A[p], A[i]];
       for (let r = 0; r < n; r++) if (r !== i) { const f = A[r][i] / A[i][i]; for (let c = i; c <= n; c++) A[r][c] -= f * A[i][c]; }
     }
-    const b = A.map((row, i) => row[n] / row[i]);
-    beta[g] = b;
+    const b = A.map((row, i) => row[n] / row[i]), M = { [g]: { b } };
     let sr = 0;
-    S.forEach(r => { const t = r.slice(C0), w = t[1], y = parte(t, 0, g), p = previsto(t, g); if (w && !isNaN(y) && !isNaN(p)) sr += w * (y - p) ** 2; });
+    S.forEach(r => { const t = r.slice(C0), w = t[1], y = parte(t, 0, g), p = previsto(t, g, M); if (w && !isNaN(y) && !isNaN(p)) sr += w * (y - p) ** 2; });
     const vy = syy - sy * sy / sw;
     return { b, r2: 1 - sr / vy, erro: Math.sqrt(sr / sw) };
   }
 
   // ---- Unidades (urna, local, município)
-  function unidades(nivel, mun) {
+  // ds: dados de um estado (S, L, mun); o: { g: campo, comp: "m" ou índice do cargo, M: modelo }
+  function unidades(ds, nivel, mun, o) {
+    const fim = u => {
+      u.y = parte(u.t, 0, o.g); u.x = o.comp === "m" ? previsto(u.t, o.g, o.M) : parte(u.t, o.comp, o.g);
+      u.dif = u.y - u.x; [u.div, u.nuc] = limites(u.t, o.g, o.comp); u.comp = u.t[1];
+      return u;
+    };
+    if (nivel === "uf") return Object.entries(BR.ufs).map(([uf, t]) => fim({ id: "uf" + uf, uf, mun: null, nome: nomeUF[uf] || uf, sub: uf, t })).filter(u => !isNaN(u.y) && !isNaN(u.x));
+    const { S, L } = ds, nm = t => ds.mun[t] || t;
     const rows = mun ? S.filter(r => L[r[0]][0] === mun) : S;
     const grupos = new Map();
     rows.forEach(r => {
@@ -317,11 +350,10 @@
     return [...grupos].map(([k, rs]) => {
       const t = somaLinhas(rs), l = L[rs[0][0]];
       let nome, sub;
-      if (nivel === "s") { nome = `Seção ${rs[0][2]} · zona ${rs[0][1]}`; sub = `${titulo(l[2])} · ${munPorTSE[l[0]].nome}`; }
-      else if (nivel === "l") { nome = titulo(l[2]); sub = `${l[3] ? titulo(l[3]) + " · " : ""}${munPorTSE[l[0]].nome} · ${rs.length} ${rs.length > 1 ? "seções" : "seção"}`; }
-      else { nome = munPorTSE[k].nome; sub = `${rs.length} seções`; }
-      const y = parte(t, 0, st.g), x = xDe(t, st.g), [div, nuc] = limites(t, st.g);
-      return { id: nivel === "s" ? "s" + rs[0][1] + "-" + rs[0][2] : nivel + k, mun: l[0], nome, sub, t, comp: t[1], y, x, dif: y - x, div, nuc };
+      if (nivel === "s") { nome = `Seção ${rs[0][2]} · zona ${rs[0][1]}`; sub = `${titulo(l[2])} · ${nm(l[0])}`; }
+      else if (nivel === "l") { nome = titulo(l[2]); sub = `${l[3] ? titulo(l[3]) + " · " : ""}${nm(l[0])} · ${rs.length} ${rs.length > 1 ? "seções" : "seção"}`; }
+      else { nome = nm(k); sub = `${rs.length} seções`; }
+      return fim({ id: nivel === "s" ? "s" + rs[0][1] + "-" + rs[0][2] : nivel + k, mun: l[0], munNome: nm(l[0]), nome, sub, t });
     }).filter(u => !isNaN(u.y) && !isNaN(u.x));
   }
 
@@ -329,14 +361,16 @@
   function seg(el, ops, chave, rotulo) {
     el.innerHTML = ops.map(o => `<button type="button" data-v="${o.k ?? o.g}">${esc(rotulo(o))}</button>`).join("");
     el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
-      const v = b.dataset.v; st[chave] = isNaN(+v) ? v : +v; st.lim = 50; st.foco = null; tudo();
+      const v = b.dataset.v; st[chave] = isNaN(+v) ? v : +v; st.lim = 50; st.foco = null;
+      if (chave === "nivel" && v === "uf") st.mun = null;
+      tudo();
     }));
   }
   function marcar() {
     [["ctlCampo", "g"], ["ctlComp", "comp"], ["ctlNivel", "nivel"]].forEach(([id, k]) =>
       document.querySelectorAll(`#${id} button`).forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v) === String(st[k]))));
     const f = document.getElementById("filtro");
-    f.hidden = !st.mun; if (st.mun) document.getElementById("filtroNome").textContent = munPorTSE[st.mun].nome;
+    f.hidden = !st.mun; if (st.mun) document.getElementById("filtroNome").textContent = ES.mun[st.mun];
   }
 
   // ---- Tooltip
@@ -371,9 +405,11 @@
 
   // ---- Barras por cargo
   function barras() {
-    const rows = st.mun ? S.filter(r => L[r[0]][0] === st.mun) : S, t = somaLinhas(rows);
+    let t;
+    if (brasil()) { t = new Array(NT).fill(0); Object.values(BR.ufs).forEach(u => u.forEach((v, i) => (t[i] += v))); }
+    else t = somaLinhas(st.mun ? S.filter(r => L[r[0]][0] === st.mun) : S);
     const cores = [cor("--esq"), cor("--cen"), cor("--dir")];
-    document.getElementById("tBarras").textContent = "Cada cargo por campo · " + (st.mun ? munPorTSE[st.mun].nome : "Espírito Santo");
+    document.getElementById("tBarras").textContent = "Cada cargo por campo · " + (brasil() ? "Brasil" : st.mun ? ES.mun[st.mun] : "Espírito Santo");
     document.getElementById("barras").innerHTML = [0, 1, 2, 3, 4].map(k => {
       const ps = [0, 1, 2].map(g => parte(t, k, g));
       return `<div class="rot">${CARGOS[k]}${k === 2 ? "<small>2 votos por eleitor</small>" : ""}</div><div class="pilha">${ps.map((p, g) =>
@@ -383,11 +419,11 @@
   }
 
   // ---- Modelo
-  const MOD = {};
   function modelo() {
-    const m = MOD[st.g], c = CAMPOS.find(x => x.g === st.g);
+    const m = modeloAtual()[st.g], c = CAMPOS.find(x => x.g === st.g);
     document.getElementById("descModelo").innerHTML = `Quanto do % da <b>${c.nome.toLowerCase()}</b> para presidente (${c.pres}) em cada urna dá para prever só com o % do mesmo campo nos outros 4 cargos.
-      O que sobra (a diferença) é o voto para presidente que não segue os outros cargos.`;
+      O que sobra (a diferença) é o voto para presidente que não segue os outros cargos.
+      <b>Padrão ${brasil() ? "do Brasil (ajustado nas urnas de todo o país)" : "do Espírito Santo (ajustado nas urnas do estado)"}</b>; não muda com o filtro de município.`;
     document.getElementById("kpis").innerHTML =
       `<div class="kpi"><b>${fmt(100 * m.r2, 0)}%</b><span>da variação entre urnas explicada pelos outros cargos</span></div>
        <div class="kpi"><b>${fmt(100 * m.erro)} p.p.</b><span>diferença típica entre real e previsto, por urna</span></div>`;
@@ -402,11 +438,11 @@
     const W = 560, H = 460, m = { t: 14, r: 14, b: 44, l: 50 };
     const c = CAMPOS.find(x => x.g === st.g), nomeX = st.comp === "m" ? "previsto pelos outros cargos" : CARGOS[st.comp].toLowerCase();
     document.getElementById("tDisp").textContent = `Presidente × ${st.comp === "m" ? "previsto" : CARGOS[st.comp].toLowerCase()}`;
-    document.getElementById("descDisp").innerHTML = `Cada ponto é ${st.nivel === "s" ? "uma urna" : st.nivel === "l" ? "um local de votação" : "um município"} (tamanho = votantes).
+    document.getElementById("descDisp").innerHTML = `Cada ponto é ${{ s: "uma urna", l: "um local de votação", m: "um município", uf: "um estado" }[st.nivel]} (tamanho = votantes).
       Na linha tracejada, o % da ${c.nome.toLowerCase()} para presidente é igual ao ${nomeX}. Acima dela, o presidente teve mais voto desse campo; abaixo, menos.`;
     const ext = [0, 1];
     const xs = d3.scaleLinear().domain(ext).range([m.l, W - m.r]), ys = d3.scaleLinear().domain(ext).range([H - m.b, m.t]);
-    const rmax = st.nivel === "m" ? 16 : st.nivel === "l" ? 7 : 3.2;
+    const rmax = { uf: 22, m: 16, l: 7, s: 3.2 }[st.nivel];
     const rs = d3.scaleSqrt().domain([0, d3.max(us, u => u.comp) || 1]).range([0, rmax]);
     const svg = d3.select("#disp").html("").append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img")
       .attr("aria-label", `Dispersão: % da ${c.nome.toLowerCase()} para presidente contra ${nomeX}`);
@@ -423,6 +459,8 @@
       .classed("foco", u => u.id === st.foco)
       .on("mousemove", (ev, u) => mostrarTip(ev, tipUnidade(u))).on("mouseleave", esconderTip)
       .on("click", (ev, u) => { if (st.nivel === "m") { st.mun = st.mun === u.mun ? null : u.mun; } else st.foco = u.id; tudo(); });
+    if (st.nivel === "uf") svg.append("g").selectAll("text").data(us).join("text").attr("x", u => xs(u.x)).attr("y", u => ys(u.y) + 3.5)
+      .attr("text-anchor", "middle").attr("font-size", 9.5).attr("font-weight", 700).attr("fill", "#fff").attr("pointer-events", "none").text(u => u.uf);
     document.getElementById("legDisp").innerHTML =
       `<span><span class="sw" style="background:${cor("--acima")}"></span>Presidente acima (mais ${c.nome.toLowerCase()} que ${st.comp === "m" ? "o previsto" : "em " + CARGOS[st.comp].toLowerCase()})</span>
        <span><span class="sw" style="background:${cor("--abaixo")}"></span>Presidente abaixo</span>`;
@@ -430,7 +468,8 @@
 
   // ---- Mapa
   function mapa() {
-    const us = unidades("m", null), porMun = Object.fromEntries(us.map(u => [u.mun, u]));
+    if (brasil()) return mapaBR();
+    const us = unidades(ES, "m", null, { g: st.g, comp: st.comp, M: ES.MOD }), porMun = Object.fromEntries(us.map(u => [u.mun, u]));
     const W = 440, H = 520, proj = d3.geoMercator().fitExtent([[8, 8], [W - 8, H - 8]], geo), path = d3.geoPath(proj);
     const c = CAMPOS.find(x => x.g === st.g);
     document.getElementById("descMapa").innerHTML = `% da ${c.nome.toLowerCase()} para presidente menos ${st.comp === "m" ? "o previsto pelos outros cargos" : "o % do campo para " + CARGOS[st.comp].toLowerCase()}, somando todas as urnas do município. Clique para filtrar.`;
@@ -442,7 +481,26 @@
       .on("mouseleave", esconderTip)
       .on("click", (ev, f) => { const t = munPorIBGE[f.properties.ibge]?.tse; if (!t) return; st.mun = st.mun === t ? null : t; st.lim = 50; st.foco = null; esconderTip(); tudo(); });
     svg.select("g").selectAll("path.sel").raise();
+    escala();
+  }
+  function escala() {
     document.getElementById("escala").innerHTML = `<span>−10 p.p.</span><span class="grad" style="background:linear-gradient(90deg,${cor("--abaixo")},${cor("--zero")},${cor("--acima")})"></span><span>+10 p.p.</span>`;
+  }
+
+  function mapaBR() {
+    const us = unidades(null, "uf", null, { g: st.g, comp: st.comp, M: BR.MOD }), porUF = Object.fromEntries(us.map(u => [u.uf, u]));
+    const W = 440, H = 460, proj = d3.geoMercator().fitExtent([[8, 8], [W - 8, H - 8]], geoBR), path = d3.geoPath(proj);
+    const c = CAMPOS.find(x => x.g === st.g);
+    document.getElementById("descMapa").innerHTML = `% da ${c.nome.toLowerCase()} para presidente menos ${st.comp === "m" ? "o previsto pelo padrão nacional" : "o % do campo para " + CARGOS[st.comp].toLowerCase()}, somando todas as urnas do estado.`;
+    const svg = d3.select("#mapa").html("").append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", "Mapa dos estados pela diferença");
+    svg.append("g").selectAll("path").data(geoBR.features).join("path").attr("d", path)
+      .attr("fill", f => porUF[f.properties.sigla] ? corDif(porUF[f.properties.sigla].dif) : cor("--sem-dado"))
+      .classed("sel", f => "uf" + f.properties.sigla === st.foco)
+      .on("mousemove", (ev, f) => { const u = porUF[f.properties.sigla]; if (u) mostrarTip(ev, tipUnidade(u)); })
+      .on("mouseleave", esconderTip)
+      .on("click", (ev, f) => { st.foco = "uf" + f.properties.sigla; esconderTip(); tudo(); });
+    svg.select("g").selectAll("path.sel").raise();
+    escala();
   }
 
   // ---- Tabela
@@ -453,16 +511,15 @@
   ];
   function tabela(us) {
     const c = CAMPOS.find(x => x.g === st.g), semLim = st.comp === "m" || st.comp === 2;
-    const cols = COLS.filter(x => !(semLim && (x.k === "div" || x.k === "nuc")) && !(st.nivel === "m" && x.k === "munNome"));
+    const cols = COLS.filter(x => !(semLim && (x.k === "div" || x.k === "nuc")) && !((st.nivel === "m" || st.nivel === "uf") && x.k === "munNome"));
     const nomeX = st.comp === "m" ? "Previsto" : CARGOS[st.comp];
-    us.forEach(u => (u.munNome = munPorTSE[u.mun].nome));
     const ord = st.ordem === "dif" && st.dir === -1 ? null : st.ordem;
     const arr = us.slice().sort((a, b) => {
       if (!ord) return Math.abs(b.dif) - Math.abs(a.dif);
       const va = a[st.ordem], vb = b[st.ordem];
       return (typeof va === "string" ? va.localeCompare(vb, "pt-BR") : (va - vb)) * st.dir;
     });
-    document.getElementById("tTab").textContent = "Onde o voto mais se descola" + (st.mun ? " · " + munPorTSE[st.mun].nome : "");
+    document.getElementById("tTab").textContent = "Onde o voto mais se descola" + (st.mun ? " · " + ES.mun[st.mun] : brasil() ? " · Brasil" : "");
     document.getElementById("descTab").innerHTML = `${NIVEIS.find(n => n.k === st.nivel).nome} ${ord ? "na ordem escolhida" : "com a maior diferença (para mais ou para menos)"} entre o % da ${c.nome.toLowerCase()} para presidente e ${st.comp === "m" ? "o previsto pelos outros cargos" : "para " + CARGOS[st.comp].toLowerCase()}.
       ${st.nivel === "s" ? "Urnas com poucos votantes oscilam mais; locais de votação e municípios dão um quadro mais estável." : ""} Clique no título da coluna para ordenar; clique na linha para destacar o ponto.`;
     const th = document.querySelector("#tab thead");
@@ -489,14 +546,17 @@
   }
 
   function tudo() {
-    const urnas = location.hash === "#urnas";
-    document.getElementById("abaAnalise").hidden = urnas;
-    document.getElementById("abaUrnas").hidden = !urnas;
-    document.querySelectorAll(".subabas a").forEach(a => { if ((a.dataset.aba === "urnas") === urnas) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+    const aba = location.hash.startsWith("#urnas") ? "urnas" : location.hash.startsWith("#estados") ? "estados" : "analise";
+    document.getElementById("abaAnalise").hidden = aba !== "analise";
+    document.getElementById("abaUrnas").hidden = aba !== "urnas";
+    document.getElementById("abaEstados").hidden = aba !== "estados";
+    document.querySelectorAll(".subabas a").forEach(a => { if (a.dataset.aba === aba) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+    document.querySelector("header h1").textContent = "Voto cruzado — " + (aba === "estados" ? "comparativo entre estados" : aba === "analise" && brasil() ? "Brasil" : "Espírito Santo");
     escalaCor();
-    if (urnas) { abaUrnas(); return; }
+    if (aba === "urnas") { abaUrnas(); return; }
+    if (aba === "estados") { abaEstados(); return; }
     marcar(); barras(); modelo();
-    const us = unidades(st.nivel, st.mun);
+    const us = unidades(ES, st.nivel, st.mun, { g: st.g, comp: st.comp, M: modeloAtual() });
     dispersao(us); mapa(); tabela(us);
   }
 
@@ -509,7 +569,7 @@
   function indices() {
     if (IDX) return IDX;
     IDX = S.map(r => {
-      const t = r.slice(C0), rE = parte(t, 0, 0) - previsto(t, 0), rD = parte(t, 0, 2) - previsto(t, 2);
+      const t = r.slice(C0), rE = parte(t, 0, 0) - previsto(t, 0, ES.MOD), rD = parte(t, 0, 2) - previsto(t, 2, ES.MOD);
       return { r, t, rE, rD, ind: Math.sqrt((rE * rE + rD * rD) / 2) };
     }).filter(o => !isNaN(o.ind));
     return IDX;
@@ -524,22 +584,22 @@
     return `<div class="pilha">${[0, 1, 2].map(g => { const p = parte(t, k, g);
       return `<i style="width:${100 * p}%;background:${cores[g]}" title="${D.grupos[g]}: ${pct(p)}">${p > .12 ? fmt(100 * p, 0) + "%" : ""}</i>`; }).join("")}</div>`;
   }
-  const rotUrna = o => { const l = L[o.r[0]]; return `${munPorTSE[l[0]].nome} · zona ${o.r[1]} · seção ${o.r[2]} · ${titulo(l[2])}`; };
+  const rotUrna = o => { const l = L[o.r[0]]; return `${ES.mun[l[0]]} · zona ${o.r[1]} · seção ${o.r[2]} · ${titulo(l[2])}`; };
 
   function resumo(o, tipo) {
     const l = L[o.r[0]], esperado = tipo === "A";
     const campos = [0, 2].map(g => {
-      const real = parte(o.t, 0, g), prev = previsto(o.t, g);
+      const real = parte(o.t, 0, g), prev = previsto(o.t, g, ES.MOD);
       return `<tr><td>${D.grupos[g]}</td><td class="num">${pct(real)}</td><td class="num">${pct(prev)}</td><td class="num dif" style="color:${real - prev > 0 ? cor("--acima") : cor("--abaixo")}">${pp(real - prev)}</td></tr>`;
     }).join("");
-    const gMaior = Math.abs(o.rE) >= Math.abs(o.rD) ? 0 : 2, real = parte(o.t, 0, gMaior), prev = previsto(o.t, gMaior);
+    const gMaior = Math.abs(o.rE) >= Math.abs(o.rD) ? 0 : 2, real = parte(o.t, 0, gMaior), prev = previsto(o.t, gMaior, ES.MOD);
     const frase = esperado
       ? `Os votos para presidente estão exatamente onde o padrão do estado previa, dado o que esta urna votou nos outros cargos.`
       : `Aqui a ${D.grupos[gMaior].toLowerCase()} teve <b>${pct(real)}</b> para presidente, mas o padrão do estado, dado o voto desta urna nos outros cargos, previa <b>${pct(prev)}</b>.`;
     return `<section class="card">
       <span class="selo" style="background:${esperado ? cor("--abaixo") : cor("--acima")}">${esperado ? "Esperada" : "Anômala"}</span>
       <h2 style="margin-top:6px">${esc(titulo(l[2]))}</h2>
-      <p class="desc" style="margin:0">${esc(munPorTSE[l[0]].nome)}${l[3] ? " · " + esc(titulo(l[3])) : ""} · zona ${o.r[1]} · seção ${o.r[2]} · ${int(o.t[1])} votantes</p>
+      <p class="desc" style="margin:0">${esc(ES.mun[l[0]])}${l[3] ? " · " + esc(titulo(l[3])) : ""} · zona ${o.r[1]} · seção ${o.r[2]} · ${int(o.t[1])} votantes</p>
       <div class="modelo" style="margin-top:10px"><div class="kpi"><b>${fmt(100 * o.ind)} p.p.</b><span>índice de anomalia</span></div></div>
       <p class="frase">${frase}</p>
       <table><thead><tr><th>Presidente</th><th>Real</th><th>Previsto</th><th>Diferença</th></tr></thead><tbody>${campos}</tbody></table>
@@ -600,17 +660,124 @@
       <div class="eq"><section class="card">${votosCargo(c, sa[9][c], k)}</section><section class="card">${votosCargo(c, sb[9][c], k)}</section></div>`).join("");
   }
 
+  // ---- Subaba: comparativo entre estados
+  const stE = { g: 0, nivel: "l", ufs: ["ES", "SP"] };
+  const NIVEIS_E = NIVEIS.filter(n => n.k !== "uf");
+  const cacheUF = {};
+  let tokE = 0;
+  function carregarUF(uf) {
+    return cacheUF[uf] || (cacheUF[uf] = fetch(`data/voto-cruzado/${uf.toLowerCase()}.json`).then(r => r.json()).then(d => {
+      const ds = { uf, S: d.secoes, L: d.locais, mun: d.mun, MOD: {} };
+      CAMPOS.forEach(c => (ds.MOD[c.g] = ajustar(ds.S, c.g)));
+      return ds;
+    }));
+  }
+  function lerHashE() {
+    const m = location.hash.match(/^#estados=([a-z,]*)/i);
+    if (m) stE.ufs = [...new Set(m[1].toUpperCase().split(",").filter(u => BR.ufs[u]))];
+  }
+  const gravarHashE = () => history.replaceState(null, "", "#estados=" + stE.ufs.join(",").toLowerCase());
+  function segE(id, ops, chave) {
+    const el = document.getElementById(id);
+    el.innerHTML = ops.map(o => `<button type="button" data-v="${o.k ?? o.g}">${esc(o.nome)}</button>`).join("");
+    el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { const v = b.dataset.v; stE[chave] = isNaN(+v) ? v : +v; tudo(); }));
+  }
+  function abaEstados() {
+    lerHashE();
+    [["ctlCampoE", "g"], ["ctlNivelE", "nivel"]].forEach(([id, k]) =>
+      document.querySelectorAll(`#${id} button`).forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v) === String(stE[k]))));
+    const resto = Object.keys(BR.ufs).filter(u => !stE.ufs.includes(u)).sort((a, b) => nomeUF[a].localeCompare(nomeUF[b], "pt-BR"));
+    document.getElementById("addUF").innerHTML = `<option value="">Escolha…</option>` + resto.map(u => `<option value="${u}">${esc(nomeUF[u])}</option>`).join("");
+    const grade = document.getElementById("gradeUF"), tok = ++tokE;
+    grade.innerHTML = stE.ufs.length ? stE.ufs.map(uf => `<section class="card" data-uf="${uf}">
+        <div class="uf-top"><h2>${esc(nomeUF[uf])}</h2><button type="button" data-uf="${uf}" aria-label="Remover ${esc(nomeUF[uf])}" title="Remover">×</button></div>
+        <p class="desc">Carregando os dados do estado…</p><div class="cv"></div></section>`).join("")
+      : `<section class="card"><p class="desc" style="margin:0">Nenhum estado escolhido. Use "Adicionar estado".</p></section>`;
+    grade.querySelectorAll(".uf-top button").forEach(b => b.addEventListener("click", () => {
+      stE.ufs = stE.ufs.filter(u => u !== b.dataset.uf); gravarHashE(); tudo();
+    }));
+    stE.ufs.forEach(uf => carregarUF(uf).then(ds => {
+      const card = grade.querySelector(`[data-uf="${uf}"]`);
+      if (tok !== tokE || !card) return;
+      const m = ds.MOD[stE.g];
+      const us = unidades(ds, stE.nivel, null, { g: stE.g, comp: "m", M: ds.MOD });
+      card.querySelector(".desc").innerHTML = `<b>${fmt(100 * m.r2, 0)}%</b> da variação entre urnas explicada pelos outros cargos ·
+        diferença típica de <b>${fmt(100 * m.erro)} p.p.</b> por urna · ${int(ds.S.length)} urnas<br>
+        Pesos: ${[1, 2, 3, 4].map(k => `${CARGOS[k]} <b>${fmt(m.b[k], 2)}</b>`).join(" · ")}`;
+      dispersaoCanvas(card.querySelector(".cv"), us, stE.nivel, stE.g);
+    }));
+  }
+  // dispersão em canvas (estados grandes têm dezenas de milhares de urnas)
+  function dispersaoCanvas(div, us, nivel, g) {
+    const W = Math.max(280, div.clientWidth), H = Math.round(W * .82), dpr = window.devicePixelRatio || 1;
+    div.innerHTML = "";
+    const cv = document.createElement("canvas");
+    cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + "px"; cv.style.height = H + "px";
+    cv.setAttribute("role", "img");
+    cv.setAttribute("aria-label", `Dispersão: % da ${CAMPOS.find(c => c.g === g).nome.toLowerCase()} para presidente contra o previsto pelos outros cargos`);
+    div.appendChild(cv);
+    const ctx = cv.getContext("2d"); ctx.scale(dpr, dpr);
+    const m = { t: 10, r: 12, b: 38, l: 46 };
+    const xs = d3.scaleLinear([0, 1], [m.l, W - m.r]), ys = d3.scaleLinear([0, 1], [H - m.b, m.t]);
+    ctx.font = "11px Inter, system-ui, sans-serif"; ctx.lineWidth = 1;
+    for (let i = 0; i <= 5; i++) {
+      const v = i / 5;
+      ctx.strokeStyle = cor("--border"); ctx.setLineDash(i ? [2, 3] : []);
+      ctx.beginPath(); ctx.moveTo(m.l, ys(v)); ctx.lineTo(W - m.r, ys(v)); ctx.stroke();
+      ctx.setLineDash([]); ctx.fillStyle = cor("--muted");
+      ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText(fmt(100 * v, 0) + "%", m.l - 6, ys(v));
+      ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText(fmt(100 * v, 0) + "%", xs(v), H - m.b + 6);
+    }
+    ctx.strokeStyle = cor("--text"); ctx.globalAlpha = .6; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(xs(0), ys(0)); ctx.lineTo(xs(1), ys(1)); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+    const rmax = { m: 12, l: 5, s: 2.4 }[nivel], rs = d3.scaleSqrt([0, d3.max(us, u => u.comp) || 1], [0, rmax]);
+    ctx.globalAlpha = nivel === "s" ? .7 : .85;
+    us.slice().sort((a, b) => b.comp - a.comp).forEach(u => {
+      ctx.beginPath(); ctx.arc(xs(u.x), ys(u.y), Math.max(1, rs(u.comp)), 0, 2 * Math.PI);
+      ctx.fillStyle = corDif(u.dif); ctx.fill();
+    });
+    ctx.globalAlpha = 1; ctx.fillStyle = cor("--muted"); ctx.font = "12px Inter, system-ui, sans-serif";
+    const nomeC = CAMPOS.find(c => c.g === g).nome;
+    ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillText(`${nomeC}: previsto pelos outros cargos`, (m.l + W - m.r) / 2, H - 2);
+    ctx.save(); ctx.translate(12, (m.t + H - m.b) / 2); ctx.rotate(-Math.PI / 2); ctx.textBaseline = "middle"; ctx.fillText(`${nomeC}: presidente`, 0, 0); ctx.restore();
+    const qt = d3.quadtree(us, u => xs(u.x), u => ys(u.y));
+    cv.addEventListener("mousemove", ev => {
+      const r = cv.getBoundingClientRect(), u = qt.find(ev.clientX - r.left, ev.clientY - r.top, 10);
+      if (!u) return esconderTip();
+      mostrarTip(ev, `<h4>${esc(u.nome)}</h4><div class="sub">${esc(u.sub)} · ${int(u.comp)} votantes</div>
+        <table><tr><td><b>Presidente (${nomeC.toLowerCase()})</b></td><td class="num" style="text-align:right"><b>${pct(u.y)}</b></td></tr>
+        <tr><td>Previsto pelos outros cargos</td><td class="num" style="text-align:right">${pct(u.x)}</td></tr>
+        <tr><td>Diferença</td><td class="num" style="text-align:right"><b>${pp(u.dif)}</b></td></tr>
+        <tr><td colspan="2" style="padding-top:6px;color:var(--muted)">Mesmo campo nos outros cargos</td></tr>
+        ${[1, 2, 3, 4].map(k => `<tr><td>${CARGOS[k]}</td><td class="num" style="text-align:right">${pct(parte(u.t, k, g))}</td></tr>`).join("")}</table>`);
+    });
+    cv.addEventListener("mouseleave", esconderTip);
+  }
+
   // ---- Início
-  Promise.all([fetch("data/voto-cruzado/es.json").then(r => r.json()), fetch("data/es/municipios.geojson").then(r => r.json())]).then(([d, g]) => {
-    D = d; L = d.locais; S = d.secoes; geo = g;
-    window.ES_MUNICIPIOS.forEach(m => { munPorTSE[m.tse] = m; munPorIBGE[m.ibge] = m; });
-    CAMPOS.forEach(c => (MOD[c.g] = ajustar(c.g)));
+  const json = u => fetch(u).then(r => r.json());
+  Promise.all([json("data/voto-cruzado/es.json"), json("data/voto-cruzado/brasil.json"), json("data/es/municipios.geojson"), json("data/brasil-estados.geojson")]).then(([d, b, g, gb]) => {
+    D = d; L = d.locais; S = d.secoes; geo = g; geoBR = gb;
+    ES = { uf: "ES", S, L, mun: d.mun, MOD: {} };
+    CAMPOS.forEach(c => (ES.MOD[c.g] = ajustar(S, c.g)));
+    cacheUF.ES = Promise.resolve(ES);
+    BR = { ufs: b.ufs, MOD: b.modelo };
+    gb.features.forEach(f => (nomeUF[f.properties.sigla] = f.properties.nome));
+    window.ES_MUNICIPIOS.forEach(m => { munPorIBGE[m.ibge] = m; });
     const nomes = { 0: [], 1: [], 2: [] };
     Object.entries(d.partidos).forEach(([p, g]) => nomes[g].push(p));
     document.getElementById("listaCampos").textContent = d.grupos.map((n, g) => `${n}: ${nomes[g].join(", ")}`).join(" · ");
     seg(document.getElementById("ctlCampo"), CAMPOS, "g", o => o.nome);
     seg(document.getElementById("ctlComp"), COMPS, "comp", o => o.nome);
     seg(document.getElementById("ctlNivel"), NIVEIS, "nivel", o => o.nome);
+    segE("ctlCampoE", CAMPOS, "g");
+    segE("ctlNivelE", NIVEIS_E, "nivel");
+    document.getElementById("addUF").addEventListener("change", e => {
+      if (!e.target.value) return;
+      stE.ufs.push(e.target.value); gravarHashE(); tudo();
+    });
+    let redim; addEventListener("resize", () => { clearTimeout(redim); redim = setTimeout(() => { if (!document.getElementById("abaEstados").hidden) tudo(); }, 200); });
     document.getElementById("limpar").addEventListener("click", () => { st.mun = null; st.lim = 50; st.foco = null; tudo(); });
     document.getElementById("mais").addEventListener("click", () => { st.lim += 50; tudo(); });
     document.getElementById("selA").addEventListener("change", e => { urnaSel.A = e.target.value; tudo(); });
