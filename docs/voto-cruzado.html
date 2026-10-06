@@ -99,6 +99,25 @@
   .dif { font-weight: 600; }
   .mais { margin-top: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; font: inherit; font-size: .82rem; padding: .35rem .8rem; cursor: pointer; }
 
+  .subabas { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 20px; border-bottom: 1px solid var(--border); }
+  .subabas a { padding: 8px 14px; border: 1px solid transparent; border-bottom: 0; border-radius: 8px 8px 0 0; color: var(--muted); text-decoration: none; font-size: .9rem; font-weight: 600; margin-bottom: -1px; }
+  .subabas a[aria-current="page"] { background: var(--surface); border-color: var(--border); color: var(--text); }
+  .controles2 { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+  .controles2 .ctl { flex: 1 1 280px; min-width: 0; }
+  .controles2 select { width: 100%; font: inherit; font-size: .85rem; padding: .35rem .5rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); max-width: 100%; }
+  .eq { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+  .eq > .card { margin-top: 20px; overflow-x: auto; }
+  @media (max-width: 640px) { .eq { gap: 8px; } .eq .card { padding: 10px; } .eq table { font-size: .74rem; } .eq td:first-child { min-width: 0; } }
+  .selo { display: inline-block; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 2px 8px; border-radius: 999px; color: #fff; }
+  .eq .barras { grid-template-columns: max-content 1fr; font-size: .8rem; }
+  .eq table td:first-child { white-space: normal; }
+  .eq table td, .eq table th { padding: 4px 6px; }
+  .cargo-h { font-size: 1.05rem; margin: 28px 0 0; }
+  .eq details summary { cursor: pointer; font-size: .82rem; color: var(--accent); margin-top: 8px; }
+  .eq tr.extra td { color: var(--muted); }
+  .eq tbody tr { cursor: default; }
+  .frase { font-size: .88rem; margin: 8px 0 10px; }
+
   .aviso { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; font-size: .88rem; max-width: 900px; }
   .aviso p { margin: 0 0 6px; }
 
@@ -140,6 +159,25 @@
     </div>
   </section>
 
+  <nav class="subabas" aria-label="Subabas">
+    <a href="#" data-aba="analise">Análise por campo</a>
+    <a href="#urnas" data-aba="urnas">Urna esperada × urna anômala</a>
+  </nav>
+
+  <div id="abaUrnas" hidden>
+    <section class="card">
+      <h2>Urna esperada × urna anômala</h2>
+      <p class="desc" id="descUrnas"></p>
+      <div class="controles2">
+        <label class="ctl"><span>Urna esperada</span><select id="selA"></select></label>
+        <label class="ctl"><span>Urna anômala</span><select id="selB"></select></label>
+      </div>
+    </section>
+    <div class="eq" id="resumoUrnas"></div>
+    <div id="cargosUrnas"></div>
+  </div>
+
+  <div id="abaAnalise">
   <div class="controles" role="group" aria-label="Opções da análise">
     <div class="ctl"><span>Campo</span><div class="seg" id="ctlCampo"></div></div>
     <div class="ctl"><span>Comparar presidente com</span><div class="seg" id="ctlComp"></div></div>
@@ -184,6 +222,7 @@
     <div class="tabwrap"><table id="tab"><thead></thead><tbody></tbody></table></div>
     <button type="button" class="mais" id="mais" hidden>Mostrar mais</button>
   </section>
+  </div>
 
   <footer>
     <p><b>Campos:</b> <span id="listaCampos"></span>. A divisão é aproximada, segue o uso comum na imprensa (a mesma da página de bancadas) e pode conter imprecisões.</p>
@@ -215,7 +254,7 @@
 
   const fmt = (x, d = 1) => x == null || isNaN(x) ? "—" : x.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
   const pct = x => fmt(100 * x) + "%";
-  const pp = x => (x > 0 ? "+" : x < 0 ? "−" : "") + fmt(Math.abs(100 * x)) + " p.p.";
+  const pp = x => { const v = Math.round(1000 * x) / 10; return (v > 0 ? "+" : v < 0 ? "−" : "") + fmt(Math.abs(v)) + " p.p."; };
   const int = x => Math.round(x).toLocaleString("pt-BR");
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const cor = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
@@ -450,9 +489,115 @@
   }
 
   function tudo() {
-    marcar(); escalaCor(); barras(); modelo();
+    const urnas = location.hash === "#urnas";
+    document.getElementById("abaAnalise").hidden = urnas;
+    document.getElementById("abaUrnas").hidden = !urnas;
+    document.querySelectorAll(".subabas a").forEach(a => { if ((a.dataset.aba === "urnas") === urnas) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+    escalaCor();
+    if (urnas) { abaUrnas(); return; }
+    marcar(); barras(); modelo();
     const us = unidades(st.nivel, st.mun);
     dispersao(us); mapa(); tabela(us);
+  }
+
+  // ---- Subaba: urna esperada × urna anômala
+  // índice de anomalia = raiz da média dos quadrados dos erros da previsão (esquerda e direita para presidente), em p.p.
+  const MIN_VOT = 200;
+  let IDX = null, CT = null;
+  const cacheMun = {};
+  const chave = r => `${r[1]}-${r[2]}`;
+  function indices() {
+    if (IDX) return IDX;
+    IDX = S.map(r => {
+      const t = r.slice(C0), rE = parte(t, 0, 0) - previsto(t, 0), rD = parte(t, 0, 2) - previsto(t, 2);
+      return { r, t, rE, rD, ind: Math.sqrt((rE * rE + rD * rD) / 2) };
+    }).filter(o => !isNaN(o.ind));
+    return IDX;
+  }
+  const munJSON = tse => cacheMun[tse] || (cacheMun[tse] = fetch(`data/es/secoes/m/${tse}.json`).then(r => r.json()));
+  const campoDe = p => D.partidos[p];
+  const corCampo = p => campoDe(p) == null ? cor("--sem-dado") : cor(["--esq", "--cen", "--dir"][campoDe(p)]);
+  const CHAVES = ["presidente", "governador", "senador", "deputado-federal", "deputado-estadual"];
+
+  function pilha(t, k) {
+    const cores = [cor("--esq"), cor("--cen"), cor("--dir")];
+    return `<div class="pilha">${[0, 1, 2].map(g => { const p = parte(t, k, g);
+      return `<i style="width:${100 * p}%;background:${cores[g]}" title="${D.grupos[g]}: ${pct(p)}">${p > .12 ? fmt(100 * p, 0) + "%" : ""}</i>`; }).join("")}</div>`;
+  }
+  const rotUrna = o => { const l = L[o.r[0]]; return `${munPorTSE[l[0]].nome} · zona ${o.r[1]} · seção ${o.r[2]} · ${titulo(l[2])}`; };
+
+  function resumo(o, tipo) {
+    const l = L[o.r[0]], esperado = tipo === "A";
+    const campos = [0, 2].map(g => {
+      const real = parte(o.t, 0, g), prev = previsto(o.t, g);
+      return `<tr><td>${D.grupos[g]}</td><td class="num">${pct(real)}</td><td class="num">${pct(prev)}</td><td class="num dif" style="color:${real - prev > 0 ? cor("--acima") : cor("--abaixo")}">${pp(real - prev)}</td></tr>`;
+    }).join("");
+    const gMaior = Math.abs(o.rE) >= Math.abs(o.rD) ? 0 : 2, real = parte(o.t, 0, gMaior), prev = previsto(o.t, gMaior);
+    const frase = esperado
+      ? `Os votos para presidente estão exatamente onde o padrão do estado previa, dado o que esta urna votou nos outros cargos.`
+      : `Aqui a ${D.grupos[gMaior].toLowerCase()} teve <b>${pct(real)}</b> para presidente, mas o padrão do estado, dado o voto desta urna nos outros cargos, previa <b>${pct(prev)}</b>.`;
+    return `<section class="card">
+      <span class="selo" style="background:${esperado ? cor("--abaixo") : cor("--acima")}">${esperado ? "Esperada" : "Anômala"}</span>
+      <h2 style="margin-top:6px">${esc(titulo(l[2]))}</h2>
+      <p class="desc" style="margin:0">${esc(munPorTSE[l[0]].nome)}${l[3] ? " · " + esc(titulo(l[3])) : ""} · zona ${o.r[1]} · seção ${o.r[2]} · ${int(o.t[1])} votantes</p>
+      <div class="modelo" style="margin-top:10px"><div class="kpi"><b>${fmt(100 * o.ind)} p.p.</b><span>índice de anomalia</span></div></div>
+      <p class="frase">${frase}</p>
+      <table><thead><tr><th>Presidente</th><th>Real</th><th>Previsto</th><th>Diferença</th></tr></thead><tbody>${campos}</tbody></table>
+      <h3 style="margin-top:14px">Campos em cada cargo</h3>
+      <div class="barras">${[0, 1, 2, 3, 4].map(k => `<div class="rot">${CARGOS[k]}</div>${pilha(o.t, k)}`).join("")}</div>
+    </section>`;
+  }
+
+  // lista completa dos votos de um cargo numa seção
+  function votosCargo(c, v, k) {
+    const [br, nu, cv, pv] = v, cand = CT[c].cand, parts = CT[c].partidos;
+    let val = 0;
+    for (let i = 0; i < cv.length; i += 2) if (cand[cv[i]][5]) val += cv[i + 1];
+    for (let i = 0; i < pv.length; i += 2) val += pv[i + 1];
+    const linha = (nome, sigla, n, valido = true, campo = sigla) => `<tr><td><span class="sw" style="background:${corCampo(campo)}"></span>${esc(nome)} <small style="display:inline;color:var(--muted)">${esc(sigla)}</small></td>
+      <td class="num">${int(n)}</td><td class="num">${valido && val ? pct(n / val) : "sub judice"}</td></tr>`;
+    const rodape = `<tr class="extra"><td>Brancos</td><td class="num">${int(br)}</td><td></td></tr><tr class="extra"><td>Nulos</td><td class="num">${int(nu)}</td><td></td></tr>`;
+    const cab = `<thead><tr><th>${k >= 3 ? "Partido" : "Candidato"}</th><th>Votos</th><th>% válidos</th></tr></thead>`;
+    if (k < 3) {
+      const rows = [];
+      for (let i = 0; i < cv.length; i += 2) rows.push(linha(titulo(cand[cv[i]][1]), cand[cv[i]][2], cv[i + 1], !!cand[cv[i]][5]));
+      return `<table>${cab}<tbody>${rows.join("")}${rodape}</tbody></table>`;
+    }
+    // deputados: total por partido (nominais + legenda) e, abaixo, todos os candidatos
+    const porP = {};
+    for (let i = 0; i < cv.length; i += 2) if (cand[cv[i]][5]) porP[cand[cv[i]][2]] = (porP[cand[cv[i]][2]] || 0) + cv[i + 1];
+    for (let i = 0; i < pv.length; i += 2) porP[parts[pv[i]][1]] = (porP[parts[pv[i]][1]] || 0) + pv[i + 1];
+    const ps = Object.entries(porP).sort((a, b) => b[1] - a[1]).map(([p, n]) => linha(p, "", n, true, p));
+    const todos = [];
+    for (let i = 0; i < cv.length; i += 2) todos.push(linha(titulo(cand[cv[i]][1]), cand[cv[i]][2], cv[i + 1], !!cand[cv[i]][5]));
+    for (let i = 0; i < pv.length; i += 2) todos.push(linha("Legenda", parts[pv[i]][1], pv[i + 1]));
+    return `<table>${cab}<tbody>${ps.join("")}${rodape}</tbody></table>
+      <details><summary>Todos os ${int(cv.length / 2)} candidatos votados e a legenda</summary><table><tbody>${todos.join("")}</tbody></table></details>`;
+  }
+
+  let urnaSel = { A: null, B: null };
+  async function abaUrnas() {
+    const ok = indices().filter(o => o.t[1] >= MIN_VOT).sort((a, b) => a.ind - b.ind);
+    const esperadas = ok.slice(0, 15), anomalas = ok.slice(-15).reverse();
+    const med = d3.median(indices(), o => o.ind), p90 = d3.quantile(indices().map(o => o.ind).sort(d3.ascending), .9);
+    document.getElementById("descUrnas").innerHTML = `O <b>índice de anomalia</b> mede o quanto o voto para presidente de uma urna fugiu do previsto pelos outros 4 cargos
+      (o modelo da aba "Análise por campo"): junta o erro da previsão da esquerda e o da direita, em pontos percentuais. Zero = a urna votou para presidente exatamente
+      como o padrão do estado indica. No ES, metade das urnas fica abaixo de ${fmt(100 * med)} p.p. e 90% abaixo de ${fmt(100 * p90)} p.p.
+      Abaixo, a urna mais esperada e a mais anômala do estado (só urnas com ${MIN_VOT} votantes ou mais, para reduzir o efeito do acaso), com todos os votos de cada uma lado a lado.
+      Os menus trazem as 15 mais esperadas e as 15 mais anômalas.`;
+    const opts = (lista, k) => lista.map(o => `<option value="${chave(o.r)}" ${urnaSel[k] === chave(o.r) ? "selected" : ""}>${fmt(100 * o.ind)} p.p. · ${esc(rotUrna(o))}</option>`).join("");
+    if (!urnaSel.A) urnaSel.A = chave(esperadas[0].r);
+    if (!urnaSel.B) urnaSel.B = chave(anomalas[0].r);
+    document.getElementById("selA").innerHTML = opts(esperadas, "A");
+    document.getElementById("selB").innerHTML = opts(anomalas, "B");
+    const a = ok.find(o => chave(o.r) === urnaSel.A), b = ok.find(o => chave(o.r) === urnaSel.B);
+    document.getElementById("resumoUrnas").innerHTML = resumo(a, "A") + resumo(b, "B");
+    if (!CT) CT = await fetch("data/es/secoes/cargos.json").then(r => r.json());
+    const [ma, mb] = await Promise.all([munJSON(L[a.r[0]][0]), munJSON(L[b.r[0]][0])]);
+    const secDe = (m, o) => m.secoes.find(s => s[0] === o.r[1] && s[1] === o.r[2]);
+    const sa = secDe(ma, a), sb = secDe(mb, b);
+    document.getElementById("cargosUrnas").innerHTML = CHAVES.map((c, k) => `<h2 class="cargo-h">${CARGOS[k]}${k === 2 ? " <small style='font-weight:400;color:var(--muted);font-size:.8rem'>(2 votos por eleitor)</small>" : ""}</h2>
+      <div class="eq"><section class="card">${votosCargo(c, sa[9][c], k)}</section><section class="card">${votosCargo(c, sb[9][c], k)}</section></div>`).join("");
   }
 
   // ---- Início
@@ -468,6 +613,9 @@
     seg(document.getElementById("ctlNivel"), NIVEIS, "nivel", o => o.nome);
     document.getElementById("limpar").addEventListener("click", () => { st.mun = null; st.lim = 50; st.foco = null; tudo(); });
     document.getElementById("mais").addEventListener("click", () => { st.lim += 50; tudo(); });
+    document.getElementById("selA").addEventListener("change", e => { urnaSel.A = e.target.value; tudo(); });
+    document.getElementById("selB").addEventListener("change", e => { urnaSel.B = e.target.value; tudo(); });
+    addEventListener("hashchange", tudo);
     tudo();
     window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", tudo);
     document.querySelectorAll("#tema-switch button").forEach(b => b.addEventListener("click", () => setTimeout(tudo)));
