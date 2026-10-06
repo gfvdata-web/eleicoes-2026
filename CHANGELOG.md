@@ -3,6 +3,7 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-06
+- **Voto cruzado, protótipo do Espírito Santo (`voto-cruzado.html`, sem link no menu):** compara, urna por urna, o voto para presidente com os votos para governador, Senado e deputados, agrupados por campo (esquerda / centro / direita, pelo partido). Barras de cada cargo por campo; previsão do % do campo para presidente a partir dos outros 4 cargos (quanto explica e o peso de cada cargo); dispersão presidente × previsto ou × um cargo; mapa dos municípios pela diferença; tabela das urnas, locais de votação ou municípios onde o voto mais se descola, com o voto dividido mínimo e o núcleo mínimo. Filtro por município. Dados gerados por `scripts/voto_cruzado_es.py` em `docs/data/voto-cruzado/es.json`.
 - **Nova página "Voto cruzado" (`voto-cruzado.html`, sem link no menu):** página em construção para a análise da relação entre os votos para presidente, governador, Senado e deputados.
 
 ## 2026-10-05
