@@ -3,6 +3,7 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-06
+- **Voto cruzado, confiabilidade dos gráficos:** a página abre na régua **aliança presidencial** (o campo do partido segue disponível no seletor). Cada modelo ganhou um selo de **encaixe** (bom, moderado ou fraco, pelo quanto os outros cargos explicam o voto para presidente); com encaixe fraco, os pesos ficam esmaecidos e marcados como sem interpretação. Cargos em que o grupo quase não teve votos (ex.: esquerda para governador em Alagoas) saem do modelo e aparecem como "fora", em vez de gerar pesos absurdos. Nota no comparativo explica o selo e por que um peso negativo não quer dizer efeito contrário.
 - **Voto cruzado, urna esperada × anômala:** além dos atalhos (15 mais esperadas e 15 mais anômalas), cada lado permite escolher qualquer urna do ES por município e seção. O selo passa a seguir o índice (esperada, intermediária, anômala) e a frase diz o percentil da urna.
 - **Voto cruzado, comparativo estados:** cada gráfico ganhou conclusões rápidas geradas dos números: onde a nuvem está na diagonal (estado × Brasil), espalhamento, quanto ela cola na diagonal, se os pontos acima e abaixo se equilibram e os municípios que mais fogem do previsto.
 - **Voto cruzado:** corrigidos os nomes de municípios que apareciam como código em AC, AM, AP, MA, PA, RO e RR.

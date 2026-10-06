@@ -68,6 +68,12 @@
   .kpi { border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; }
   .kpi b { display: block; font-size: 1.25rem; }
   .kpi span { font-size: .75rem; color: var(--muted); }
+  .conf-frase { grid-column: 1 / -1; margin: 0; font-size: .82rem; }
+  .conf { display: inline-block; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; margin-right: 4px; white-space: nowrap; }
+  .conf--bom { color: var(--text); }
+  .conf--medio { color: var(--muted); }
+  .conf--fraco { color: var(--muted); background: var(--bar-bg); border-style: dashed; }
+  .pesos--fraco, .pesos-uf--fraco { opacity: .5; }
   .pesos { display: grid; grid-template-columns: max-content 1fr max-content; gap: 6px 10px; align-items: center; font-size: .85rem; }
   .pesos .bar { height: 10px; border-radius: 3px; background: var(--bar-bg); overflow: hidden; }
   .pesos .bar i { display: block; height: 100%; background: var(--accent); }
@@ -209,8 +215,8 @@
   <div class="regua" role="group" aria-label="Régua de classificação">
     <span class="regua__rot">Régua</span>
     <div class="seg" id="ctlRegua">
-      <button type="button" data-v="b">Campo do partido</button>
       <button type="button" data-v="a">Aliança presidencial</button>
+      <button type="button" data-v="b">Campo do partido</button>
     </div>
     <span class="regua__nota" id="reguaNota"></span>
   </div>
@@ -272,6 +278,10 @@
       <p class="nota-ruido"><b>Quanto é muito?</b> Uma urna tem em média ~230 votos válidos, e o percentual de um campo oscila cerca de <b>3 p.p.</b> só por acaso.
         Diferenças de até ±5 p.p. numa urna <b>não</b> indicam anomalia; a partir de <b>±10 p.p.</b> fica difícil atribuir ao acaso.
         Em locais de votação (~1.000 votos) o acaso pesa ~1,5 p.p., e em municípios e estados, quase nada.</p>
+      <p class="nota-ruido"><b>Encaixe:</b> o selo de cada estado resume quanto os outros cargos explicam o voto para presidente
+        (<b>bom</b>: 60% ou mais; <b>moderado</b>: 40% a 60%; <b>fraco</b>: menos de 40%). Com encaixe fraco, o padrão do estado não se aplica bem e os desvios não são anomalias.
+        <b>Pesos:</b> os cargos andam juntos, e a regressão divide o crédito entre eles; peso negativo não quer dizer efeito contrário.
+        Um cargo em que o grupo quase não teve votos fica <b>fora</b> do modelo.</p>
       <div class="controles2">
         <div class="ctl"><span>Campo</span><div class="seg" id="ctlCampoE"></div></div>
         <div class="ctl"><span>Unidade</span><div class="seg" id="ctlNivelE"></div></div>
@@ -356,7 +366,7 @@
   "use strict";
   const CARGOS = ["Presidente", "Governador", "Senado", "Dep. federal", "Dep. estadual"];
   // Régua: "b" = campo do partido (esquerda/centro/direita); "a" = aliança presidencial (Lula/neutros/Flávio). Índices 0, 1, 2 nas duas.
-  let REG = "b";
+  let REG = "a";
   try { if (["a", "b"].includes(localStorage.getItem("vc-regua"))) REG = localStorage.getItem("vc-regua"); } catch (e) {}
   const NOMES_G = { b: ["Esquerda", "Centro", "Direita"], a: ["Aliança de Lula", "Neutros e outros", "Aliança de Flávio"] };
   const grupos = () => NOMES_G[REG];
@@ -459,7 +469,7 @@
   const parte = (t, k, g) => valid(t, k) ? t[NV + 4 * k + 1 + g] / valid(t, k) : NaN;
   function previsto(t, g, M = modeloAtual()) {
     const b = M[g].b; let y = b[0];
-    for (let k = 1; k <= 4; k++) y += b[k] * parte(t, k, g);
+    for (let k = 1; k <= 4; k++) if (b[k]) y += b[k] * parte(t, k, g);
     return Math.max(0, Math.min(1, y));
   }
   // limites (cargo com 1 voto): voto dividido mínimo e núcleo mínimo do campo
@@ -469,14 +479,27 @@
     return [tv / 2, Math.max(0, parte(t, 0, g) + parte(t, comp, g) - 1)];
   }
 
-  // regressão ponderada (comparecimento) do % do campo para presidente sobre os 4 outros cargos
+  // regressão ponderada (comparecimento) do % do campo para presidente sobre os 4 outros cargos.
+  // Cargo "vazio" (campo com menos de 3% dos votos ou quase sem variação entre urnas) sai do ajuste com peso 0:
+  // senão o coeficiente explode (ex.: −5,7 em AL na régua do partido) sem significado.
+  const VAZIO_MED = 0.03, VAZIO_DP = 0.02;
   function ajustar(S, g) {
-    const n = 5, A = Array.from({ length: n }, () => new Array(n + 1).fill(0));
-    let sw = 0, sy = 0, syy = 0;
+    const xs = [];
     S.forEach(r => {
       const t = r.slice(C0), w = t[1], y = parte(t, 0, g);
       const x = [1, parte(t, 1, g), parte(t, 2, g), parte(t, 3, g), parte(t, 4, g)];
-      if (!w || x.some(isNaN) || isNaN(y)) return;
+      if (w && !x.some(isNaN) && !isNaN(y)) xs.push({ w, x, y });
+    });
+    const W = d3.sum(xs, o => o.w), fora = [];
+    for (let k = 1; k <= 4; k++) {
+      const med = d3.sum(xs, o => o.w * o.x[k]) / W, dp = Math.sqrt(d3.sum(xs, o => o.w * (o.x[k] - med) ** 2) / W);
+      if (med < VAZIO_MED || dp < VAZIO_DP) fora.push({ k, med });
+    }
+    const usa = [0, 1, 2, 3, 4].filter(k => !fora.some(f => f.k === k)), n = usa.length;
+    const A = Array.from({ length: n }, () => new Array(n + 1).fill(0));
+    let sw = 0, sy = 0, syy = 0;
+    xs.forEach(({ w, x: xx, y }) => {
+      const x = usa.map(k => xx[k]);
       for (let i = 0; i < n; i++) { for (let j = 0; j < n; j++) A[i][j] += w * x[i] * x[j]; A[i][n] += w * x[i] * y; }
       sw += w; sy += w * y; syy += w * y * y;
     });
@@ -485,12 +508,24 @@
       [A[i], A[p]] = [A[p], A[i]];
       for (let r = 0; r < n; r++) if (r !== i) { const f = A[r][i] / A[i][i]; for (let c = i; c <= n; c++) A[r][c] -= f * A[i][c]; }
     }
-    const b = A.map((row, i) => row[n] / row[i]), M = { [g]: { b } };
+    const b = [0, 0, 0, 0, 0]; usa.forEach((k, i) => (b[k] = A[i][n] / A[i][i]));
+    const M = { [g]: { b } };
     let sr = 0;
     S.forEach(r => { const t = r.slice(C0), w = t[1], y = parte(t, 0, g), p = previsto(t, g, M); if (w && !isNaN(y) && !isNaN(p)) sr += w * (y - p) ** 2; });
     const vy = syy - sy * sy / sw;
-    return { b, r2: 1 - sr / vy, erro: Math.sqrt(sr / sw) };
+    return { b, fora, r2: 1 - sr / vy, erro: Math.sqrt(sr / sw) };
   }
+  // confiabilidade do modelo pelo R²: selo e frase curta
+  function confianca(m) {
+    const n = m.r2 >= .6 ? ["bom", "bom", "Os outros cargos preveem bem o voto para presidente."]
+      : m.r2 >= .4 ? ["medio", "moderado", "Os outros cargos preveem só parte do voto para presidente."]
+      : ["fraco", "fraco", "Os outros cargos quase não preveem o voto para presidente neste estado, com esta régua: leia a diferença como \"o padrão não se aplica\", não como anomalia."];
+    return { cls: n[0], selo: `<span class="conf conf--${n[0]}">Encaixe ${n[1]}</span>`, frase: n[2], fraco: n[0] === "fraco" };
+  }
+  // aviso dos cargos fora do modelo
+  const txtFora = (m, c) => m.fora.length ? `Fora do modelo (${c.txt} quase sem votos ou sem variação): ` +
+    m.fora.map(f => `${CARGOS[f.k]} (${pct(f.med)})`).join(", ") + "." : "";
+  const NOTA_PESOS = "Os cargos andam juntos, e a regressão divide o crédito entre eles: leia o encaixe (R²), não um peso isolado. Peso negativo não quer dizer efeito contrário.";
 
   // ---- Unidades (urna, local, município)
   // ds: dados de um estado (S, L, mun); o: { g: campo, comp: "m" ou índice do cargo, M: modelo }
@@ -585,17 +620,21 @@
 
   // ---- Modelo
   function modelo() {
-    const m = modeloAtual()[st.g], c = CAMPOS.find(x => x.g === st.g);
+    const m = modeloAtual()[st.g], c = CAMPOS.find(x => x.g === st.g), cf = confianca(m);
     document.getElementById("descModelo").innerHTML = `Quanto do % da <b>${c.txt}</b> para presidente (${c.pres}) em cada urna dá para prever só com o % do mesmo campo nos outros 4 cargos.
       O que sobra (a diferença) é o voto para presidente que não segue os outros cargos.
       <b>Padrão ${brasil() ? "do Brasil (ajustado nas urnas de todo o país)" : "do Espírito Santo (ajustado nas urnas do estado)"}</b>; não muda com o filtro de município.`;
     document.getElementById("kpis").innerHTML =
       `<div class="kpi"><b>${fmt(100 * m.r2, 0)}%</b><span>da variação entre urnas explicada pelos outros cargos</span></div>
-       <div class="kpi"><b>${fmt(100 * m.erro)} p.p.</b><span>diferença típica entre real e previsto, por urna</span></div>`;
-    const max = Math.max(...m.b.slice(1).map(Math.abs));
-    document.getElementById("pesos").innerHTML = [1, 2, 3, 4].map(k =>
-      `<span>${CARGOS[k]}</span><span class="bar"><i style="width:${Math.max(0, 100 * m.b[k] / max)}%"></i></span><span class="num">${fmt(m.b[k], 2)}</span>`).join("") +
-      `<span style="grid-column:1/-1;font-size:.75rem;color:var(--muted)">Peso = quanto o previsto para presidente sobe, em p.p., para cada 1 p.p. a mais do campo naquele cargo, com os outros fixos. Os cargos se sobrepõem, então os pesos se dividem entre eles.</span>`;
+       <div class="kpi"><b>${fmt(100 * m.erro)} p.p.</b><span>diferença típica entre real e previsto, por urna</span></div>
+       <p class="conf-frase">${cf.selo} ${cf.frase} ${txtFora(m, c)}</p>`;
+    const max = Math.max(...m.b.slice(1).map(Math.abs)) || 1;
+    const pesos = document.getElementById("pesos");
+    pesos.classList.toggle("pesos--fraco", cf.fraco);
+    pesos.innerHTML = [1, 2, 3, 4].map(k => m.fora.some(f => f.k === k)
+      ? `<span>${CARGOS[k]}</span><span class="bar"></span><span class="num">fora</span>`
+      : `<span>${CARGOS[k]}</span><span class="bar"><i style="width:${Math.max(0, 100 * m.b[k] / max)}%"></i></span><span class="num">${fmt(m.b[k], 2)}</span>`).join("") +
+      `<span style="grid-column:1/-1;font-size:.75rem;color:var(--muted)">Peso = quanto o previsto para presidente sobe, em p.p., para cada 1 p.p. a mais do campo naquele cargo, com os outros fixos. ${NOTA_PESOS}${cf.fraco ? " Com encaixe fraco, os pesos não têm interpretação." : ""}</span>`;
   }
 
   // ---- Dispersão
@@ -900,11 +939,14 @@
       const card = grade.querySelector(`[data-uf="${uf}"]`);
       if (tok !== tokE || !card) return;
       prep(ds);
-      const m = ds.MOD[stE.g];
+      const m = ds.MOD[stE.g], cf = confianca(m), c = CAMPOS.find(x => x.g === stE.g);
       const us = unidades(ds, stE.nivel, null, { g: stE.g, comp: "m", M: ds.MOD });
-      card.querySelector(".desc").innerHTML = `<b>${fmt(100 * m.r2, 0)}%</b> da variação entre urnas explicada pelos outros cargos ·
+      card.querySelector(".desc").innerHTML = `${cf.selo} <b>${fmt(100 * m.r2, 0)}%</b> da variação entre urnas explicada pelos outros cargos ·
         diferença típica de <b>${fmt(100 * m.erro)} p.p.</b> por urna · ${int(ds.S.length)} urnas<br>
-        Pesos: ${[1, 2, 3, 4].map(k => `${CARGOS[k]} <b>${fmt(m.b[k], 2)}</b>`).join(" · ")}`;
+        <span class="pesos-uf${cf.fraco ? " pesos-uf--fraco" : ""}">Pesos${cf.fraco ? " (sem interpretação com encaixe fraco)" : ""}: ${[1, 2, 3, 4].map(k =>
+          `${CARGOS[k]} <b>${m.fora.some(f => f.k === k) ? "fora" : fmt(m.b[k], 2)}</b>`).join(" · ")}</span>` +
+        (m.fora.length ? `<br><small>${txtFora(m, c)}</small>` : "") +
+        (cf.fraco ? `<br><small>${cf.frase}</small>` : "");
       dispersaoCanvas(card.querySelector(".cv"), us, stE.nivel, stE.g);
       card.querySelector(".concl").innerHTML = conclusoes(ds, us, stE.nivel, stE.g);
     }));

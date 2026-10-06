@@ -35,7 +35,7 @@ Logo, toda a análise é **ecológica**: compara **grupos de eleitores** (urnas,
 
 Toda a análise usa **3 grupos com índices 0, 1, 2**. O que eles significam depende da **régua** escolhida no topo da página (guardada no navegador):
 
-### Régua B: campo do partido (padrão da página)
+### Régua B: campo do partido
 
 | Grupo | Partidos |
 |---|---|
@@ -47,7 +47,7 @@ Base: `camara.html` (uso comum na imprensa), mais os partidos que faltavam (Agir
 Esquerda para presidente ≈ Lula; direita para presidente ≈ Flávio + Renan + Zema + DC + Democrata. Fraqueza: o campo é do *partido*, não da *aliança*
 (um governador do MDB ou PSD aliado ao Lula conta como "centro").
 
-### Régua A: aliança presidencial (implementada em 06/10)
+### Régua A: aliança presidencial (implementada em 06/10; padrão da página desde então)
 
 0 = aliança de Lula, 1 = neutros e outros, 2 = aliança de Flávio. Classificação **feita sem olhar o resultado das urnas** (evita circularidade), por `scripts/alinhamento.py`:
 1. **Presidente:** Lula = 0, Flávio = 2, os outros 10 candidatos = 1 ("outros", incluindo Caiado, Zema e Renan).
@@ -142,8 +142,11 @@ Consequências:
 2. **Regressor quase constante → peso absurdo.** Quando o campo quase não teve candidato num cargo, a coluna é ~0 em todas as urnas e o coeficiente explode.
    Em 06/10 isso acontece com a esquerda para governador em AL (0,4%), AM, AP, MT, PA, PB, SE e TO, com pesos como −5,7 (AL), −6,8 (PB) e −7,4 (TO).
    Esses pesos **não têm interpretação**. Leia o R² e o erro, não o peso.
+   **Desde 06/10 a página tira esse cargo do ajuste** (peso 0, "fora" no card) quando o grupo tem média < 3% ou desvio-padrão entre urnas < 2 p.p.
+   O R² cai pouco (régua B: AL 0,20 → 0,15; régua A: RR 0,51 → 0,49) e os pesos absurdos somem. Os números das tabelas da 5.6 são do ajuste com os 4 cargos.
 3. **Não é causal.** O peso descreve associação entre urnas, não "o efeito" de um cargo sobre o outro.
 4. **Intercepto (b0)** não aparece no card. É o previsto quando os 4 cargos têm 0% do campo, normalmente fora da faixa dos dados.
+5. **Selo de encaixe** no card: bom (R² ≥ 0,6), moderado (0,4–0,6), fraco (< 0,4). Com encaixe fraco, os desvios dizem que o padrão não se aplica, não que há anomalia.
 
 ### 5.6 Resultados de referência (06/10/2026)
 

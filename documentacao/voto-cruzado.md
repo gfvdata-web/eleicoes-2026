@@ -15,8 +15,8 @@ Não há dado por eleitor. Testado em 06/10: o RDV (Registro Digital do Voto) de
 
 ## Réguas
 
-Duas réguas, escolhidas no topo da página (guardadas em `localStorage` `vc-regua`): **B, campo do partido** (esquerda / centro / direita, como em `camara.html`, padrão)
-e **A, aliança presidencial** (aliança de Lula / neutros / aliança de Flávio: coligação no TSE → apoio declarado com fonte → neutro; deputados pelo partido da coligação presidencial).
+Duas réguas, escolhidas no topo da página (guardadas em `localStorage` `vc-regua`): **A, aliança presidencial** (padrão desde 06/10, por explicar melhor o voto para presidente) e **B, campo do partido** (esquerda / centro / direita, como em `camara.html`).
+A régua A agrupa em aliança de Lula / neutros / aliança de Flávio: coligação no TSE → apoio declarado com fonte → neutro; deputados pelo partido da coligação presidencial.
 Critérios, resultados e comparação em [voto-cruzado-estatistica.md](voto-cruzado-estatistica.md) (seções 3 e 5.6).
 
 ## Dados
@@ -37,6 +37,8 @@ Ao gravar no Windows com o servidor local aberto, a escrita pode falhar ("Invali
 - Controles: campo (esquerda / direita, ou Lula / Flávio na régua A), comparação (previsto, governador, Senado, dep. federal, dep. estadual), unidade (urnas, locais de votação, municípios do ES; **Estados** = Brasil, com o modelo nacional, mapa dos estados e tabela por UF) e filtro de município (clique no mapa).
 - Barras: cada cargo por campo no estado ou no município.
 - Modelo: regressão linear ponderada pelo comparecimento, nas urnas do estado inteiro, do % do campo para presidente sobre o % do mesmo campo nos 4 outros cargos (calculada no navegador). Em 06/10: R² 0,74 (esquerda) e 0,82 (direita); o Senado tem o maior peso.
+  **Cargo vazio:** se o grupo tem menos de 3% dos votos num cargo ou desvio-padrão entre urnas abaixo de 2 p.p. (`VAZIO_MED`, `VAZIO_DP`), o cargo sai do ajuste (peso 0, "fora" no card, com aviso).
+  **Selo de encaixe** (`confianca`): bom com R² ≥ 0,6, moderado de 0,4 a 0,6, fraco abaixo de 0,4; com encaixe fraco os pesos ficam esmaecidos e marcados como sem interpretação. Vale também para o comparativo.
 - Dispersão (presidente × comparação, linha de igualdade), mapa dos municípios pela diferença (±10 p.p.) e tabela das unidades com maior diferença, ordenável.
 - Limites matemáticos para comparação com um cargo de 1 voto (não Senado): voto dividido mínimo = metade da soma das diferenças entre os 3 campos; núcleo mínimo do campo = máx(0, a + b − 1).
 
