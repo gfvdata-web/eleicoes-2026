@@ -290,6 +290,16 @@ Com V ≈ 230 e p ≈ 0,4, isso dá ≈ **3,2 p.p.** (média ponderada no ES: 3,
 - **Barras "Cada cargo por campo":** p_kg agregado do recorte (estado, município ou Brasil). No Senado, sobre os 2 votos.
 - **Comparativo estados:** um gráfico por UF, cada um com o modelo próprio (5.3); mesmo eixo 0–100% em todos. R², erro e pesos acima de cada gráfico.
 
+### 9.1 Conclusões automáticas do comparativo
+
+Cada gráfico do comparativo tem frases geradas dos números (ver [voto-cruzado.md](voto-cruzado.md), subaba "Comparativo estados"). Como ler:
+- **Posição na diagonal** = quanto o estado vota no campo. Nuvem mais acima e à direita = estado mais favorável ao campo que o Brasil.
+- **Comprimento da nuvem** ao longo da diagonal = diferenças regionais dentro do estado.
+- **Largura da nuvem** em volta da diagonal = o quanto os outros cargos explicam o presidente (R²).
+- **Acima × abaixo:** o modelo tem intercepto, então a diferença média ponderada é ~0 **por construção**. Uma nuvem simétrica é o esperado; o informativo é
+  quanta gente está além do limiar de acaso (±10 p.p. por urna, ±5 por local, ±3 por município, cerca de 3 desvios do ruído da seção 8) e se um lado tem muito mais que o outro
+  (bolsões onde o presidenciável teve mais ou menos voto que o resto da chapa do seu lado).
+
 ## 10. Opção A: decisões do usuário e pendências (06/10)
 
 - **Implementada** como "régua A" (seção 3), com a subaba Classificação para recategorizar.

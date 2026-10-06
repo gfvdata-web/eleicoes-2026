@@ -43,7 +43,7 @@ Ao gravar no Windows com o servidor local aberto, a escrita pode falhar ("Invali
 ## Subaba "Urna esperada × urna anômala" (`voto-cruzado.html#urnas`)
 
 - **Índice de anomalia** de uma urna = raiz da média dos quadrados dos dois erros da previsão (% da esquerda e % da direita para presidente, real − previsto), em p.p. Zero = votou para presidente exatamente como o padrão do estado indica dado o voto nos outros 4 cargos. No ES (06/10): mediana 3,6 p.p.; 90% abaixo de 7,5.
-- Escolhe a urna de menor e a de maior índice entre as com 200+ votantes (menus com as 15 de cada ponta). Em 06/10: esperada = Vitória, zona 52, seção 407 (0,0); anômala = Pinheiros, zona 39, seção 111 (26,1: Lula 74%, previsto 49%; a anomalia vem de votos locais, como 84% em um deputado federal do PSB e 79% no centro para deputado estadual, e do governador do MDB contado como centro).
+- Começa com a urna de menor e a de maior índice entre as com 200+ votantes. Cada lado tem um atalho (as 15 mais esperadas / as 15 mais anômalas) e a escolha de **qualquer urna** do ES por município e seção (todas, inclusive as pequenas). Selo pelo índice: "Esperada" = 25% menores; "Anômala" = 10% maiores; "Intermediária" = o resto; a frase diz o percentil e avisa urna com menos de 200 votantes. Em 06/10: esperada = Vitória, zona 52, seção 407 (0,0); anômala = Pinheiros, zona 39, seção 111 (26,1: Lula 74%, previsto 49%; a anomalia vem de votos locais, como 84% em um deputado federal do PSB e 79% no centro para deputado estadual, e do governador do MDB contado como centro).
 - Lado a lado: resumo (índice, real × previsto, campos em cada cargo) e, por cargo, todos os votos da urna (deputados: por partido, com a lista completa de candidatos em "Todos os candidatos"). Lê `docs/data/es/secoes/cargos.json` e `m/<tse>.json`.
 
 ## Subaba "Classificação" (`voto-cruzado.html#classificacao`)
@@ -55,7 +55,7 @@ do site, grave-a em `apoios-declarados.json` (governador/senador) ou no script `
 
 ## Subaba "Comparativo estados" (`voto-cruzado.html#estados=es,sp`)
 
-Um gráfico "Presidente × previsto" por estado escolhido (padrão ES e SP; o endereço guarda a lista), lado a lado, com a mesma escala. A previsão de cada estado usa o modelo ajustado nas urnas **dele** (calculado no navegador ao carregar `<uf>.json`). Controles: campo, unidade (urnas, locais, municípios) e "Adicionar estado"; × remove. O gráfico é em canvas (SP tem ~100 mil urnas), com tooltip pelo ponto mais próximo.
+Um gráfico "Presidente × previsto" por estado escolhido (padrão ES e SP; o endereço guarda a lista), lado a lado, com a mesma escala. A previsão de cada estado usa o modelo ajustado nas urnas **dele** (calculado no navegador ao carregar `<uf>.json`). Controles: campo, unidade (urnas, locais, municípios) e "Adicionar estado"; × remove. O gráfico é em canvas (SP tem ~100 mil urnas), com tooltip pelo ponto mais próximo. Abaixo de cada gráfico, **conclusões geradas dos números** (função `conclusoes`): onde a nuvem está na diagonal (% do campo no estado × Brasil, ±3 p.p.), espalhamento (faixas de 50% e 80% dos votantes; >30 p.p. = "comprida", <15 = "curta"), encaixe (R² ≥ 0,85 "estreita", ≥ 0,6 "moderada", senão "larga"), acima × abaixo (% dos votantes em unidades além de ±10 p.p. para urnas, ±5 para locais, ±3 para municípios; equilíbrio se nenhum lado tem mais que o dobro do outro; "quase nada" se os dois somam menos de 3%) e os municípios com 2 mil votantes ou mais que mais fogem do previsto.
 
 ## Dados do Brasil (baixados em 06/10)
 

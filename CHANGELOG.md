@@ -3,6 +3,9 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-06
+- **Voto cruzado, urna esperada × anômala:** além dos atalhos (15 mais esperadas e 15 mais anômalas), cada lado permite escolher qualquer urna do ES por município e seção. O selo passa a seguir o índice (esperada, intermediária, anômala) e a frase diz o percentil da urna.
+- **Voto cruzado, comparativo estados:** cada gráfico ganhou conclusões rápidas geradas dos números: onde a nuvem está na diagonal (estado × Brasil), espalhamento, quanto ela cola na diagonal, se os pontos acima e abaixo se equilibram e os municípios que mais fogem do previsto.
+- **Voto cruzado:** corrigidos os nomes de municípios que apareciam como código em AC, AM, AP, MA, PA, RO e RR.
 - **Voto cruzado, régua "aliança presidencial":** seletor de régua no topo: além do campo do partido (esquerda / centro / direita), a aliança presidencial (aliança de Lula / neutros / aliança de Flávio).
   Governador e senador classificados pela coligação registrada no TSE (com o PT ou com o PL) e, quando ela não decide, pelo apoio declarado (com fonte); deputados pelo partido da coligação presidencial.
   Classificação feita sem olhar o resultado das urnas. Todas as abas (análise, unidade Estados, urna esperada × anômala, comparativo) usam a régua escolhida.

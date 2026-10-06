@@ -104,6 +104,14 @@
   .subabas a[aria-current="page"] { background: var(--surface); border-color: var(--border); color: var(--text); }
   .controles2 { display: flex; flex-wrap: wrap; gap: 10px 22px; }
   .controles2 .ctl { flex: 1 1 280px; min-width: 0; }
+  .escolhas { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 24px; }
+  @media (max-width: 640px) { .escolhas { grid-template-columns: minmax(0, 1fr); } }
+  .escolha { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .escolha h3 { margin: 0; }
+  .escolha select { width: 100%; font: inherit; font-size: .85rem; padding: .35rem .5rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); }
+  .concl { margin: 12px 0 0; padding: 0 0 0 18px; font-size: .84rem; }
+  .concl li { margin: 0 0 6px; }
+  .concl b { font-weight: 600; }
   .controles2 select { width: 100%; font: inherit; font-size: .85rem; padding: .35rem .5rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); max-width: 100%; }
   .eq { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
   .eq > .card { margin-top: 20px; overflow-x: auto; }
@@ -233,9 +241,19 @@
     <section class="card">
       <h2>Urna esperada × urna anômala</h2>
       <p class="desc" id="descUrnas"></p>
-      <div class="controles2">
-        <label class="ctl"><span>Urna esperada</span><select id="selA"></select></label>
-        <label class="ctl"><span>Urna anômala</span><select id="selB"></select></label>
+      <div class="escolhas">
+        <div class="escolha">
+          <h3>Urna da esquerda</h3>
+          <label class="ctl"><span>Atalho: as 15 mais esperadas</span><select id="selA"></select></label>
+          <label class="ctl"><span>Ou qualquer urna: município</span><select id="munA"></select></label>
+          <label class="ctl"><span>Urna (zona · seção · local)</span><select id="secA"></select></label>
+        </div>
+        <div class="escolha">
+          <h3>Urna da direita</h3>
+          <label class="ctl"><span>Atalho: as 15 mais anômalas</span><select id="selB"></select></label>
+          <label class="ctl"><span>Ou qualquer urna: município</span><select id="munB"></select></label>
+          <label class="ctl"><span>Urna (zona · seção · local)</span><select id="secB"></select></label>
+        </div>
       </div>
     </section>
     <div class="eq" id="resumoUrnas"></div>
@@ -248,7 +266,9 @@
       <p class="desc">O mesmo gráfico da aba "Análise por campo", um por estado, para comparar. Em cada estado a previsão usa o padrão
         <b>daquele estado</b> (ajustado nas urnas dele): os pontos mostram o quanto o voto para presidente acompanha os outros 4 cargos ali.
         Quanto mais colados na linha tracejada, mais o voto para presidente segue os outros cargos. Roxo = presidente acima do previsto; verde = abaixo.
-        Todos os gráficos usam a mesma escala (0 a 100%).</p>
+        Todos os gráficos usam a mesma escala (0 a 100%). Abaixo de cada gráfico, conclusões rápidas: onde a nuvem está na diagonal (estado mais ou menos favorável ao campo),
+        quão comprida ela é (diferenças regionais), quão colada à diagonal (quanto os outros cargos explicam) e se os pontos acima e abaixo se equilibram.
+        Por construção a diferença média é perto de zero; o que importa é o tamanho e o lado dos desvios.</p>
       <p class="nota-ruido"><b>Quanto é muito?</b> Uma urna tem em média ~230 votos válidos, e o percentual de um campo oscila cerca de <b>3 p.p.</b> só por acaso.
         Diferenças de até ±5 p.p. numa urna <b>não</b> indicam anomalia; a partir de <b>±10 p.p.</b> fica difícil atribuir ao acaso.
         Em locais de votação (~1.000 votos) o acaso pesa ~1,5 p.p., e em municípios e estados, quase nada.</p>
@@ -749,8 +769,10 @@
   }
   const rotUrna = o => { const l = L[o.r[0]]; return `${ES.mun[l[0]]} · zona ${o.r[1]} · seção ${o.r[2]} · ${titulo(l[2])}`; };
 
-  function resumo(o, tipo) {
-    const l = L[o.r[0]], esperado = tipo === "A";
+  function resumo(o, Q) {
+    const l = L[o.r[0]], esperado = o.ind < 0.01;
+    const papel = o.ind <= Q.p25 ? ["Esperada", cor("--abaixo")] : o.ind >= Q.p90 ? ["Anômala", cor("--acima")] : ["Intermediária", cor("--muted")];
+    const acima = Math.round(100 * Q.ord.filter(x => x < o.ind).length / Q.ord.length);
     const campos = [0, 2].map(g => {
       const real = parte(o.t, 0, g), prev = previsto(o.t, g, ES.MOD);
       return `<tr><td>${grupos()[g]}</td><td class="num">${pct(real)}</td><td class="num">${pct(prev)}</td><td class="num dif" style="color:${real - prev > 0 ? cor("--acima") : cor("--abaixo")}">${pp(real - prev)}</td></tr>`;
@@ -759,12 +781,13 @@
     const frase = esperado
       ? `Os votos para presidente estão exatamente onde o padrão do estado previa, dado o que esta urna votou nos outros cargos.`
       : `Aqui a ${CAMPOS.find(c => c.g === gMaior).txt} teve <b>${pct(real)}</b> para presidente, mas o padrão do estado, dado o voto desta urna nos outros cargos, previa <b>${pct(prev)}</b>.`;
+    const extra = `Mais anômala que ${acima}% das urnas do ES.` + (o.t[1] < MIN_VOT ? ` Urna pequena (${int(o.t[1])} votantes): o acaso pesa mais.` : "");
     return `<section class="card">
-      <span class="selo" style="background:${esperado ? cor("--abaixo") : cor("--acima")}">${esperado ? "Esperada" : "Anômala"}</span>
+      <span class="selo" style="background:${papel[1]}">${papel[0]}</span>
       <h2 style="margin-top:6px">${esc(titulo(l[2]))}</h2>
       <p class="desc" style="margin:0">${esc(ES.mun[l[0]])}${l[3] ? " · " + esc(titulo(l[3])) : ""} · zona ${o.r[1]} · seção ${o.r[2]} · ${int(o.t[1])} votantes</p>
       <div class="modelo" style="margin-top:10px"><div class="kpi"><b>${fmt(100 * o.ind)} p.p.</b><span>índice de anomalia</span></div></div>
-      <p class="frase">${frase}</p>
+      <p class="frase">${frase} <span style="color:var(--muted)">${extra}</span></p>
       <table><thead><tr><th>Presidente</th><th>Real</th><th>Previsto</th><th>Diferença</th></tr></thead><tbody>${campos}</tbody></table>
       <h3 style="margin-top:14px">Campos em cada cargo</h3>
       <div class="barras">${[0, 1, 2, 3, 4].map(k => `<div class="rot">${CARGOS[k]}</div>${pilha(o.t, k)}`).join("")}</div>
@@ -801,21 +824,36 @@
 
   let urnaSel = { A: null, B: null };
   async function abaUrnas() {
-    const ok = indices().filter(o => o.t[1] >= MIN_VOT).sort((a, b) => a.ind - b.ind);
+    const todas = indices(), ok = todas.filter(o => o.t[1] >= MIN_VOT).sort((a, b) => a.ind - b.ind);
+    const ord = todas.map(o => o.ind).sort(d3.ascending), Q = { ord, p25: d3.quantile(ord, .25), p90: d3.quantile(ord, .9) };
     const esperadas = ok.slice(0, 15), anomalas = ok.slice(-15).reverse();
     const med = d3.median(indices(), o => o.ind), p90 = d3.quantile(indices().map(o => o.ind).sort(d3.ascending), .9);
     document.getElementById("descUrnas").innerHTML = `O <b>índice de anomalia</b> mede o quanto o voto para presidente de uma urna fugiu do previsto pelos outros 4 cargos
       (o modelo da aba "Análise por campo", na régua escolhida): junta o erro da previsão dos dois lados (${CAMPOS[0].txt} e ${CAMPOS[1].txt}), em pontos percentuais. Zero = a urna votou para presidente exatamente
       como o padrão do estado indica. No ES, metade das urnas fica abaixo de ${fmt(100 * med)} p.p. e 90% abaixo de ${fmt(100 * p90)} p.p.
-      Abaixo, a urna mais esperada e a mais anômala do estado (só urnas com ${MIN_VOT} votantes ou mais, para reduzir o efeito do acaso), com todos os votos de cada uma lado a lado.
-      Os menus trazem as 15 mais esperadas e as 15 mais anômalas.`;
-    const opts = (lista, k) => lista.map(o => `<option value="${chave(o.r)}" ${urnaSel[k] === chave(o.r) ? "selected" : ""}>${fmt(100 * o.ind)} p.p. · ${esc(rotUrna(o))}</option>`).join("");
-    if (!urnaSel.A) urnaSel.A = chave(esperadas[0].r);
-    if (!urnaSel.B) urnaSel.B = chave(anomalas[0].r);
+      Começa com a urna mais esperada e a mais anômala do estado (só urnas com ${MIN_VOT} votantes ou mais, para reduzir o efeito do acaso), com todos os votos de cada uma lado a lado.
+      Use os atalhos (as 15 mais esperadas e as 15 mais anômalas) ou escolha <b>qualquer urna</b> pelo município e pela seção, dos dois lados.
+      Selo: "Esperada" = entre as 25% com menor índice; "Anômala" = entre as 10% com maior índice; "Intermediária" = o resto.`;
+    const porChave = new Map(todas.map(o => [chave(o.r), o]));
+    if (!porChave.has(urnaSel.A)) urnaSel.A = chave(esperadas[0].r);
+    if (!porChave.has(urnaSel.B)) urnaSel.B = chave(anomalas[0].r);
+    const opts = (lista, k) => {
+      const dentro = lista.some(o => chave(o.r) === urnaSel[k]);
+      return (dentro ? "" : `<option value="" selected>— outra urna (escolhida abaixo) —</option>`) +
+        lista.map(o => `<option value="${chave(o.r)}" ${urnaSel[k] === chave(o.r) ? "selected" : ""}>${fmt(100 * o.ind)} p.p. · ${esc(rotUrna(o))}</option>`).join("");
+    };
     document.getElementById("selA").innerHTML = opts(esperadas, "A");
     document.getElementById("selB").innerHTML = opts(anomalas, "B");
-    const a = ok.find(o => chave(o.r) === urnaSel.A), b = ok.find(o => chave(o.r) === urnaSel.B);
-    document.getElementById("resumoUrnas").innerHTML = resumo(a, "A") + resumo(b, "B");
+    const a = porChave.get(urnaSel.A), b = porChave.get(urnaSel.B);
+    // qualquer urna: município e seção
+    const muns = Object.keys(ES.mun).sort((x, y) => ES.mun[x].localeCompare(ES.mun[y], "pt-BR"));
+    [["A", a], ["B", b]].forEach(([k, o]) => {
+      const tse = L[o.r[0]][0];
+      document.getElementById("mun" + k).innerHTML = muns.map(t => `<option value="${t}" ${t === tse ? "selected" : ""}>${esc(ES.mun[t])}</option>`).join("");
+      const doMun = todas.filter(x => L[x.r[0]][0] === tse).sort((x, y) => x.r[1] - y.r[1] || x.r[2] - y.r[2]);
+      document.getElementById("sec" + k).innerHTML = doMun.map(x => `<option value="${chave(x.r)}" ${chave(x.r) === urnaSel[k] ? "selected" : ""}>Zona ${x.r[1]} · seção ${x.r[2]} · ${esc(titulo(L[x.r[0]][2]))} · ${int(x.t[1])} votantes · ${fmt(100 * x.ind)} p.p.</option>`).join("");
+    });
+    document.getElementById("resumoUrnas").innerHTML = resumo(a, Q) + resumo(b, Q);
     if (!CT) CT = await fetch("data/es/secoes/cargos.json").then(r => r.json());
     const [ma, mb] = await Promise.all([munJSON(L[a.r[0]][0]), munJSON(L[b.r[0]][0])]);
     const secDe = (m, o) => m.secoes.find(s => s[0] === o.r[1] && s[1] === o.r[2]);
@@ -853,7 +891,7 @@
     const grade = document.getElementById("gradeUF"), tok = ++tokE;
     grade.innerHTML = stE.ufs.length ? stE.ufs.map(uf => `<section class="card" data-uf="${uf}">
         <div class="uf-top"><h2>${esc(nomeUF[uf])}</h2><button type="button" data-uf="${uf}" aria-label="Remover ${esc(nomeUF[uf])}" title="Remover">×</button></div>
-        <p class="desc">Carregando os dados do estado…</p><div class="cv"></div></section>`).join("")
+        <p class="desc">Carregando os dados do estado…</p><div class="cv"></div><ul class="concl"></ul></section>`).join("")
       : `<section class="card"><p class="desc" style="margin:0">Nenhum estado escolhido. Use "Adicionar estado".</p></section>`;
     grade.querySelectorAll(".uf-top button").forEach(b => b.addEventListener("click", () => {
       stE.ufs = stE.ufs.filter(u => u !== b.dataset.uf); gravarHashE(); tudo();
@@ -868,8 +906,53 @@
         diferença típica de <b>${fmt(100 * m.erro)} p.p.</b> por urna · ${int(ds.S.length)} urnas<br>
         Pesos: ${[1, 2, 3, 4].map(k => `${CARGOS[k]} <b>${fmt(m.b[k], 2)}</b>`).join(" · ")}`;
       dispersaoCanvas(card.querySelector(".cv"), us, stE.nivel, stE.g);
+      card.querySelector(".concl").innerHTML = conclusoes(ds, us, stE.nivel, stE.g);
     }));
   }
+  // conclusões rápidas do gráfico de um estado (texto gerado a partir dos números)
+  const LIMIAR = { s: 0.10, l: 0.05, m: 0.03 };   // ~3 desvios do acaso por tamanho de unidade
+  const UNID = { s: ["urnas", "urna"], l: ["locais de votação", "local"], m: ["municípios", "município"] };
+  function conclusoes(ds, us, nivel, g) {
+    const c = CAMPOS.find(x => x.g === g), m = ds.MOD[g], lim = LIMIAR[nivel], [unid] = UNID[nivel];
+    const tUF = somaLinhas(ds.S), yUF = parte(tUF, 0, g);
+    const tBR = new Array(NT).fill(0); Object.values(BR.T).forEach(u => u.forEach((v, i) => (tBR[i] += v)));
+    const yBR = parte(tBR, 0, g);
+    const pesoTot = d3.sum(us, u => u.comp);
+    const qw = q => { const arr = us.slice().sort((a, b) => a.y - b.y); let acc = 0; for (const u of arr) { acc += u.comp; if (acc >= q * pesoTot) return u.y; } return arr[arr.length - 1].y; };
+    const p10 = qw(.1), p25 = qw(.25), p75 = qw(.75), p90 = qw(.9);
+    const pA = d3.sum(us.filter(u => u.dif > lim), u => u.comp) / pesoTot, pB = d3.sum(us.filter(u => u.dif < -lim), u => u.comp) / pesoTot;
+    const li = [];
+    // 1. posição da nuvem na diagonal
+    const d = yUF - yBR;
+    li.push(`<b>Onde está a nuvem:</b> a ${c.txt} teve ${pct(yUF)} dos votos para presidente no estado (Brasil: ${pct(yBR)}). ` +
+      (d > .03 ? `A nuvem fica <b>mais acima e à direita</b> na diagonal: estado mais favorável a ${c.pres} que a média do país.`
+        : d < -.03 ? `A nuvem fica <b>mais abaixo e à esquerda</b> na diagonal: estado menos favorável a ${c.pres} que a média do país.`
+        : `Perto da média do país.`));
+    // 2. espalhamento ao longo da diagonal
+    li.push(`<b>Espalhamento:</b> metade dos votantes está em ${unid} com ${pct(p25)} a ${pct(p75)} para a ${c.txt}; 80% entre ${pct(p10)} e ${pct(p90)}. ` +
+      (p90 - p10 > .30 ? `Nuvem <b>comprida</b>: o estado tem regiões muito diferentes entre si.` : p90 - p10 < .15 ? `Nuvem <b>curta</b>: o estado é bem homogêneo.` : `Diferenças regionais moderadas.`));
+    // 3. quanto a nuvem cola na diagonal
+    li.push(`<b>Encaixe:</b> os outros cargos explicam ${fmt(100 * m.r2, 0)}% da variação (diferença típica de ${fmt(100 * m.erro)} p.p. por urna). ` +
+      (m.r2 >= .85 ? `Nuvem <b>estreita</b>, colada na diagonal: o voto para presidente segue de perto os outros cargos.`
+        : m.r2 >= .6 ? `Nuvem <b>moderadamente</b> espalhada em volta da diagonal.`
+        : `Nuvem <b>larga</b>: o voto para presidente se descola bastante dos outros cargos (vale comparar com a outra régua).`));
+    // 4. acima × abaixo
+    const fp = x => fmt(100 * x, x < .1 ? 1 : 0) + "%";
+    li.push(`<b>Acima × abaixo</b> (além de ±${fmt(100 * lim, 0)} p.p., o que dificilmente é acaso para ${unid}): ${fp(pA)} dos votantes estão em ${unid} <b>acima</b>
+      (presidente com mais voto da ${c.txt} do que os outros cargos indicam) e ${fp(pB)} <b>abaixo</b> (menos). ` +
+      (pA + pB < .03 ? `Quase nada foge do padrão.`
+        : pA > 2 * pB ? `Desequilíbrio <b>para cima</b>: há bolsões onde ${c.pres} teve mais voto que o resto da chapa do seu lado.`
+        : pB > 2 * pA ? `Desequilíbrio <b>para baixo</b>: há bolsões onde ${c.pres} teve menos voto que os aliados nos outros cargos.`
+        : `Os desvios para cima e para baixo se <b>equilibram</b>.`));
+    // 5. municípios que mais fogem
+    const ms = unidades(ds, "m", null, { g, comp: "m", M: ds.MOD }).filter(u => u.comp >= 2000);
+    if (ms.length > 2) {
+      const mx = ms.reduce((a, b) => (b.dif > a.dif ? b : a)), mn = ms.reduce((a, b) => (b.dif < a.dif ? b : a));
+      li.push(`<b>Municípios que mais fogem</b> (com 2 mil votantes ou mais): ${esc(mx.nome)} ${pp(mx.dif)} (acima) e ${esc(mn.nome)} ${pp(mn.dif)} (abaixo).`);
+    }
+    return li.map(x => `<li>${x}</li>`).join("");
+  }
+
   // dispersão em canvas (estados grandes têm dezenas de milhares de urnas)
   function dispersaoCanvas(div, us, nivel, g) {
     const W = Math.max(280, div.clientWidth), H = Math.round(W * .82), dpr = window.devicePixelRatio || 1;
@@ -1044,8 +1127,15 @@
     let redim; addEventListener("resize", () => { clearTimeout(redim); redim = setTimeout(() => { if (!document.getElementById("abaEstados").hidden) tudo(); }, 200); });
     document.getElementById("limpar").addEventListener("click", () => { st.mun = null; st.lim = 50; st.foco = null; tudo(); });
     document.getElementById("mais").addEventListener("click", () => { st.lim += 50; tudo(); });
-    document.getElementById("selA").addEventListener("change", e => { urnaSel.A = e.target.value; tudo(); });
-    document.getElementById("selB").addEventListener("change", e => { urnaSel.B = e.target.value; tudo(); });
+    ["A", "B"].forEach(k => {
+      document.getElementById("sel" + k).addEventListener("change", e => { if (e.target.value) { urnaSel[k] = e.target.value; tudo(); } });
+      document.getElementById("sec" + k).addEventListener("change", e => { urnaSel[k] = e.target.value; tudo(); });
+      document.getElementById("mun" + k).addEventListener("change", e => {   // primeira urna do município escolhido
+        const t = e.target.value;
+        const o = indices().filter(x => L[x.r[0]][0] === t).sort((x, y) => x.r[1] - y.r[1] || x.r[2] - y.r[2])[0];
+        if (o) { urnaSel[k] = chave(o.r); tudo(); }
+      });
+    });
     addEventListener("hashchange", tudo);
     tudo();
     window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", tudo);

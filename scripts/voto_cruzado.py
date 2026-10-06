@@ -74,7 +74,7 @@ def nomes_mun(uf):
         lista = json.loads(txt[txt.index("["):txt.rindex("]") + 1])
     else:
         lista = json.loads((RAIZ / "docs" / "data" / "uf" / uf.lower() / "municipios.json").read_text(encoding="utf-8"))
-    return {m["tse"]: m["nome"] for m in lista}
+    return {m["tse"].lstrip("0"): m["nome"] for m in lista}   # o CSV do TSE escreve o código sem zeros à esquerda
 
 
 def presidente():
@@ -162,7 +162,7 @@ def processar(uf, tab_pres, pres):
                 por_mun[k[0]][idx[e]] += q
         apt_mun[k[0]][0] += d[0]; apt_mun[k[0]][1] += d[1]
         secoes.append(lin)
-    saida = {"uf": uf, "mun": {t: mun.get(t, t) for t in sorted({l[0] for l in locais})}, "locais": locais, "ent": ent, "secoes": secoes}
+    saida = {"uf": uf, "mun": {t: mun.get(t.lstrip("0"), t) for t in sorted({l[0] for l in locais})}, "locais": locais, "ent": ent, "secoes": secoes}
     (SAIDA / f"{uf.lower()}.json").write_text(json.dumps(saida, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
     def linha(ap, pm):
