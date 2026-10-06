@@ -1,6 +1,6 @@
 # Voto cruzado (`voto-cruzado.html` + `scripts/voto_cruzado.py`)
 
-Página criada a pedido do usuário em 06/10/2026. Desde 06/10 é a seção **"Voto cruzado"** do switch de seções no topo do site. A aba "Análise por campo" é do Espírito Santo (com a unidade "Estados" para o Brasil); a subaba "Comparativo estados" mostra qualquer estado.
+Página criada a pedido do usuário em 06/10/2026. Desde 06/10 é a seção **"Voto cruzado"** do switch de seções no topo do site. As subabas "Análise por campo" e "Urna esperada × urna anômala" têm seletor de **estado** (os 27; padrão ES; lembrado no navegador em `vc-uf`; endereço `#uf=sp` e `#urnas=sp`). A unidade "Estados" mostra o Brasil. A subaba "Comparativo estados" mostra vários estados lado a lado.
 
 Base estatística, fórmulas, resultados de referência e plano da opção A: [voto-cruzado-estatistica.md](voto-cruzado-estatistica.md).
 
@@ -42,11 +42,17 @@ Ao gravar no Windows com o servidor local aberto, a escrita pode falhar ("Invali
 - Dispersão (presidente × comparação, linha de igualdade), mapa dos municípios pela diferença (±10 p.p.) e tabela das unidades com maior diferença, ordenável.
 - Limites matemáticos para comparação com um cargo de 1 voto (não Senado): voto dividido mínimo = metade da soma das diferenças entre os 3 campos; núcleo mínimo do campo = máx(0, a + b − 1).
 
-## Subaba "Urna esperada × urna anômala" (`voto-cruzado.html#urnas`)
+## Estado escolhido (análise e urnas)
+
+O seletor carrega `docs/data/voto-cruzado/<uf>.json` e a malha `docs/data/uf/<uf>/municipios.geojson` + `municipios.json` (ES: `docs/data/es/municipios.geojson` e `municipios.js`);
+o código TSE da malha vem com zero à esquerda e é normalizado. Com mais de 6 mil pontos (urnas de estados grandes), a dispersão da análise é desenhada em canvas, sem clique para destacar.
+Nada precisou ser baixado: os dados por urna dos 27 estados já estavam processados.
+
+## Subaba "Urna esperada × urna anômala" (`voto-cruzado.html#urnas=es`)
 
 - **Índice de anomalia** de uma urna = raiz da média dos quadrados dos dois erros da previsão (% da esquerda e % da direita para presidente, real − previsto), em p.p. Zero = votou para presidente exatamente como o padrão do estado indica dado o voto nos outros 4 cargos. No ES (06/10): mediana 3,6 p.p.; 90% abaixo de 7,5.
 - Começa com a urna de menor e a de maior índice entre as com 200+ votantes. Cada lado tem um atalho (as 15 mais esperadas / as 15 mais anômalas) e a escolha de **qualquer urna** do ES por município e seção (todas, inclusive as pequenas). Selo pelo índice: "Esperada" = 25% menores; "Anômala" = 10% maiores; "Intermediária" = o resto; a frase diz o percentil e avisa urna com menos de 200 votantes. Em 06/10: esperada = Vitória, zona 52, seção 407 (0,0); anômala = Pinheiros, zona 39, seção 111 (26,1: Lula 74%, previsto 49%; a anomalia vem de votos locais, como 84% em um deputado federal do PSB e 79% no centro para deputado estadual, e do governador do MDB contado como centro).
-- Lado a lado: resumo (índice, real × previsto, campos em cada cargo) e, por cargo, todos os votos da urna (deputados: por partido, com a lista completa de candidatos em "Todos os candidatos"). Lê `docs/data/es/secoes/cargos.json` e `m/<tse>.json`.
+- Lado a lado: resumo (índice, real × previsto, campos em cada cargo) e, por cargo, os votos da urna. **No ES**: lista completa (deputados por partido e cada candidato em "Todos os candidatos", brancos e nulos), de `docs/data/es/secoes/cargos.json` e `m/<tse>.json`. **Outros estados**: votos por entidade do `<uf>.json` (candidatos a presidente, governador e senador; deputados por partido, nominais + legenda), sem brancos e nulos. Ter a lista por candidato a deputado no Brasil exigiria só processar os arquivos já baixados em `apuracao-bruto/secoes-br/`, mas somaria centenas de MB ao site.
 
 ## Subaba "Classificação" (`voto-cruzado.html#classificacao`)
 

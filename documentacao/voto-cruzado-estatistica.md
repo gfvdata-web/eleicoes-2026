@@ -110,10 +110,10 @@ Urnas com V = 0 em algum cargo ficam fora do ajuste.
 
 | Onde | Ajustado em | Calculado |
 |---|---|---|
-| Aba "Análise por campo", unidades Urnas / Locais / Municípios | todas as urnas do **ES** | no navegador |
+| Aba "Análise por campo", unidades Urnas / Locais / Municípios | todas as urnas do **estado escolhido** (padrão ES) | no navegador |
 | Aba "Análise por campo", unidade **Estados** | os **5.570 municípios** do Brasil (pesos = comparecimento) | no navegador |
 | Subaba "Comparativo estados", cada gráfico | todas as urnas **daquele estado** | no navegador |
-| Subaba "Urna esperada × anômala" | urnas do **ES** | no navegador |
+| Subaba "Urna esperada × anômala" | urnas do **estado escolhido** | no navegador |
 
 Consequências:
 - O **filtro de município não muda o modelo**. O padrão é sempre o do estado inteiro, e o filtro só escolhe quais unidades aparecem.
