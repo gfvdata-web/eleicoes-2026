@@ -3,6 +3,12 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-06
+- **Voto cruzado, régua "aliança presidencial":** seletor de régua no topo: além do campo do partido (esquerda / centro / direita), a aliança presidencial (aliança de Lula / neutros / aliança de Flávio).
+  Governador e senador classificados pela coligação registrada no TSE (com o PT ou com o PL) e, quando ela não decide, pelo apoio declarado (com fonte); deputados pelo partido da coligação presidencial.
+  Classificação feita sem olhar o resultado das urnas. Todas as abas (análise, unidade Estados, urna esperada × anômala, comparativo) usam a régua escolhida.
+- **Voto cruzado, nova subaba "Classificação" (`#classificacao`):** lista de candidatos e partidos com grupo, critério e fonte; busca e filtros por estado, cargo e "só os que mudei"; o leitor pode
+  mudar o grupo de qualquer um, e todas as abas passam a usar a mudança (guardada no navegador; exportar e importar em JSON).
+- **Voto cruzado, unidade Estados:** o modelo nacional passa a ser ajustado nos municípios do país (no navegador), para acompanhar a régua e as reclassificações.
 - **Navegação:** o switch de seções no topo de todas as páginas ganhou **Urnas ES** (`es-secoes.html`) e **Voto cruzado** (`voto-cruzado.html`), que até agora não tinham link. No celular, o switch quebra em duas linhas.
 - **Voto cruzado, "Quanto é muito?":** nota abaixo do gráfico da análise e no comparativo explicando que o percentual de uma urna oscila ~3 p.p. por acaso: até ±5 p.p. não é anomalia; a partir de ±10 p.p. fica difícil atribuir ao acaso.
 - **Voto cruzado, todos os estados:** nova subaba "Comparativo estados" (`voto-cruzado.html#estados=es,sp`) com o gráfico presidente × previsto de cada estado escolhido, lado a lado, cada um com o padrão do próprio estado (quanto explica, diferença típica e pesos). Na "Análise por campo", a unidade "Estados" mostra o Brasil: um ponto por estado, modelo nacional, mapa dos estados e tabela por UF. Dados de votação por seção dos 27 estados gerados por `scripts/voto_cruzado.py` (substitui `voto_cruzado_es.py`).

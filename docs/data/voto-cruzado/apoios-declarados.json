@@ -1,0 +1,146 @@
+[
+ {
+  "uf": "ES",
+  "cargo": 2,
+  "numero": "400",
+  "nome": "RENATO CASAGRANDE",
+  "g": 0,
+  "fonte": "https://www.folhavitoria.com.br/politica/em-convencao-casagrande-defende-reforma-do-judiciario-e-declara-voto-em-lula/",
+  "nota": "declarou voto em Lula na convenção"
+ },
+ {
+  "uf": "ES",
+  "cargo": 1,
+  "numero": "15",
+  "nome": "RICARDO FERRAÇO",
+  "g": 1,
+  "fonte": "https://www.folhavitoria.com.br/politica/quem-ricardo-ferraco-vai-apoiar-para-presidente-da-republica/",
+  "nota": "declarou que não apoia nenhum presidenciável"
+ },
+ {
+  "uf": "MA",
+  "cargo": 1,
+  "numero": "55",
+  "nome": "EDUARDO BRAIDE",
+  "g": 1,
+  "fonte": "https://www.metropoles.com/brasil/psd-oficializa-candidatura-de-eduardo-braide-ao-governo-do-maranhao",
+  "nota": "sem apoio formal a Lula nem a Flávio"
+ },
+ {
+  "uf": "MA",
+  "cargo": 2,
+  "numero": "111",
+  "nome": "FUFUCA",
+  "g": 0,
+  "fonte": "https://www.poder360.com.br/poder-governo/estou-com-lula-diz-fufuca-e-resiste-a-ultimato-do-pp/",
+  "nota": "\"Estou com Lula\""
+ },
+ {
+  "uf": "MA",
+  "cargo": 2,
+  "numero": "300",
+  "nome": "LAHESIO BONFIM",
+  "g": 2,
+  "fonte": "https://m.imirante.com/noticias/sao-luis/2026/09/24/ipolitica-o-erro-de-lahesio-bonfim-na-reta-final-de-campanha",
+  "nota": "declara-se apoiador de Flávio Bolsonaro"
+ },
+ {
+  "uf": "MA",
+  "cargo": 2,
+  "numero": "123",
+  "nome": "WEVERTON ROCHA",
+  "g": 0,
+  "fonte": "https://www.tribunadosertao.com.br/politica/2026/07/20/943490-weverton-pdt-toma-decisao-estrategica-de-apoiar-lula-e-nao-abrira-mao-de-seus-projetos",
+  "nota": "defende o apoio do PDT à reeleição de Lula"
+ },
+ {
+  "uf": "AC",
+  "cargo": 1,
+  "numero": "10",
+  "nome": "ALAN RICK",
+  "g": 2,
+  "fonte": "https://www.metropoles.com/brasil/atlas-intel-mailza-assis-e-alan-rick-tem-empate-tecnico-no-acre",
+  "nota": "declarou apoio ao candidato do PL à Presidência"
+ },
+ {
+  "uf": "AM",
+  "cargo": 2,
+  "numero": "444",
+  "nome": "WILSON LIMA",
+  "g": 2,
+  "fonte": "https://revistacenarium.com.br/en/wilson-lima-confirms-support-for-flavio-bolsonaro-uniao-am-keeps-decision-open/",
+  "nota": "confirmou apoio pessoal a Flávio Bolsonaro"
+ },
+ {
+  "uf": "MG",
+  "cargo": 1,
+  "numero": "10",
+  "nome": "CLEITINHO AZEVEDO",
+  "g": 2,
+  "fonte": "https://www.em.com.br/politica/2026/08/7481194-cleitinho-meu-apoio-e-a-flavio-bolsonaro.html",
+  "nota": "\"Meu apoio é a Flávio Bolsonaro\""
+ },
+ {
+  "uf": "PB",
+  "cargo": 2,
+  "numero": "155",
+  "nome": "VENEZIANO",
+  "g": 0,
+  "fonte": "https://www.folhape.com.br/politica/lula-declara-apoio-a-adversario-de-pai-de-hugo-motta-em-disputa-pelo/494104/",
+  "nota": "Lula declarou apoio à sua reeleição; aliado do governo"
+ },
+ {
+  "uf": "PA",
+  "cargo": 2,
+  "numero": "123",
+  "nome": "CELSO SABINO",
+  "g": 0,
+  "fonte": "https://www.metropoles.com/brasil/video-ministro-do-turismo-aposta-em-vitoria-em-primeiro-turno-de-lula",
+  "nota": "ministro do governo Lula; apoio de Lula ao Senado"
+ },
+ {
+  "uf": "PR",
+  "cargo": 2,
+  "numero": "555",
+  "nome": "CRISTINA GRAEML",
+  "g": 2,
+  "fonte": "https://www.gazetadopovo.com.br/eleicoes/2026/parana-2026/cristina-graeml-aceita-dividir-palanque-com-caiado-mesmo-apoiando-flavio-bolsonaro/",
+  "nota": "mantém apoio a Flávio Bolsonaro"
+ },
+ {
+  "uf": "RN",
+  "cargo": 2,
+  "numero": "555",
+  "nome": "ZENAIDE MAIA",
+  "g": 0,
+  "fonte": "https://agorarn.com.br/coluna/rafael-critica-zenaide-por-apoiar-lula-em-brasilia-e-adversarios-do-pt-no-rn/",
+  "nota": "vice-líder do governo Lula no Senado"
+ },
+ {
+  "uf": "RJ",
+  "cargo": 2,
+  "numero": "500",
+  "nome": "MONICA BENICIO",
+  "g": 0,
+  "fonte": "https://www.cnnbrasil.com.br/eleicoes/psol-rede-oficializa-william-siri-ao-governo-do-rj/",
+  "nota": "convenção ratificou apoio a Lula"
+ },
+ {
+  "uf": "GO",
+  "cargo": 1,
+  "numero": "15",
+  "nome": "DANIEL VILELA",
+  "g": 1,
+  "fonte": "https://www.maisgoias.com.br/politica/gracinha-recebe-apoio-de-prefeitos-em-carreatas-no-oeste-goiano/",
+  "nota": "faz campanha para Ronaldo Caiado (outro presidenciável)"
+ },
+ {
+  "uf": "GO",
+  "cargo": 2,
+  "numero": "444",
+  "nome": "GRACINHA CAIADO",
+  "g": 1,
+  "fonte": "https://www.maisgoias.com.br/politica/gracinha-recebe-apoio-de-prefeitos-em-carreatas-no-oeste-goiano/",
+  "nota": "faz campanha para Ronaldo Caiado (outro presidenciável)"
+ }
+]

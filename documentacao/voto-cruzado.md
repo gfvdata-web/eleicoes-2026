@@ -13,21 +13,28 @@ Medir se o voto para presidente acompanha os outros cargos do 1º turno (governa
 Não há dado por eleitor. Testado em 06/10: o RDV (Registro Digital do Voto) de cada urna, publicado em
 `https://resultados.tse.jus.br/oficial/ele2026/arquivo-urna/3220/...` (pleito 3220; índice das seções em `config/es/es-p003220-cs.json`, arquivos de cada seção em `dados/es/<mun>/<zona>/<seção>/p003220-es-m<mun>-z<zona>-s<seção>-aux.json`), guarda **uma lista por cargo, em ordem de número**, sem ligação entre os cargos de um mesmo eleitor. Amostra de 145 urnas: todas assim; ~15 KB por urna (ES inteiro ≈ 150 MB, ~1h40 em sequência), sem limite 429. Algumas seções (agregadas) dão 404. Conclusão: o RDV não acrescenta nada à votação por seção e não foi baixado inteiro. A unidade da análise é a urna (~240 votantes).
 
-## Campos (opção B, combinada com o usuário)
+## Réguas
 
-Esquerda / centro / direita pelo partido do candidato, como em `camara.html`, mais os partidos do ES que faltavam lá (UP, PSTU, PCB, PCO na esquerda; Agir no centro; PRTB e Democrata na direita). A lista fica em `PARTIDOS` no script. Opção A guardada para depois: campo pelo alinhamento com os presidenciáveis (apoios e coligações em cada estado).
+Duas réguas, escolhidas no topo da página (guardadas em `localStorage` `vc-regua`): **B, campo do partido** (esquerda / centro / direita, como em `camara.html`, padrão)
+e **A, aliança presidencial** (aliança de Lula / neutros / aliança de Flávio: coligação no TSE → apoio declarado com fonte → neutro; deputados pelo partido da coligação presidencial).
+Critérios, resultados e comparação em [voto-cruzado-estatistica.md](voto-cruzado-estatistica.md) (seções 3 e 5.6).
 
 ## Dados
 
-`python scripts/voto_cruzado.py [UF ...]` (sem UF: os 27 estados, ~10 min) lê os arquivos do TSE em `apuracao-bruto/secoes-br/` (ver abaixo) e o partido/destino do voto de cada número em `apuracao-bruto/<cargo>/<UF>.json`. Grava em `docs/data/voto-cruzado/`:
-- `<uf>.json`: `uf`, `grupos`, `partidos` ({sigla: grupo}), `cargos`, `mun` ({código TSE: nome}), `locais` ([tse, zona, nome, bairro, lon, lat]) e `secoes`: [local, zona, seção, aptos, comparecimento, Lula, Flávio, e para cada cargo: válidos, esquerda, centro, direita]. Só seções instaladas e não anuladas; válidos = nominais + legenda sem sub judice; no Senado os 2 votos somam; no DF o "deputado estadual" é o distrital.
-- `brasil.json`: totais de cada UF (mesma ordem, a partir de aptos) e o modelo nacional (`modelo["0"|"2"]` = {b, r2, erro}), ajustado em todas as seções do país.
+1. `python scripts/voto_cruzado.py [UF ...]` (sem UF: os 27, ~12 min) lê os arquivos do TSE em `apuracao-bruto/secoes-br/` e o partido/destino de cada número em
+   `apuracao-bruto/<cargo>/<UF>.json`. Grava `docs/data/voto-cruzado/<uf>.json` (`uf`, `mun`, `locais`, `ent` = [cargo, número, nome, sigla], uma por candidato a presidente,
+   governador e senador e uma por partido nos deputados; `secoes` = [local, zona, seção, aptos, comparecimento, entidade, votos, ...], só pares com voto) e `brasil.json`
+   (por UF: `ent`, `tot` e `mun` no mesmo formato de pares). Só seções instaladas e não anuladas; só votos válidos (sem brancos, nulos e sub judice). ~141 MB no total (SP: 31 MB).
+2. `python scripts/alinhamento.py` lê `apuracao-bruto/candidatos/consulta_cand_2026.zip` (TSE, `consulta_cand/`) e `docs/data/voto-cruzado/apoios-declarados.json`
+   (editado à mão: `uf`, `cargo` 1 ou 2, `numero`, `nome`, `g` 0/1/2, `fonte`, `nota`) e grava `classificacao.json`: `b` {sigla: grupo} e `a` {`pres`, `dep`, `cand` {UF: [[cargo, número, nome, sigla,
+   coligação, votos, grupo, critério, fonte]]}, `coligacao_lula`, `coligacao_flavio`}.
 
-O antigo `voto_cruzado_es.py` (só ES, a partir de `docs/data/es/secoes/`) foi substituído; o `es.json` gerado pelo script novo é idêntico seção por seção.
+Ao gravar no Windows com o servidor local aberto, a escrita pode falhar ("Invalid argument"): pare o servidor e rode de novo.
 
 ## Página
 
-- Controles: campo (esquerda / direita), comparação (previsto, governador, Senado, dep. federal, dep. estadual), unidade (urnas, locais de votação, municípios do ES; **Estados** = Brasil, com o modelo nacional, mapa dos estados e tabela por UF) e filtro de município (clique no mapa).
+- Seletor de **régua** no topo (vale para todas as subabas). Todas as somas por grupo e os modelos são recalculados no navegador a partir dos votos por entidade.
+- Controles: campo (esquerda / direita, ou Lula / Flávio na régua A), comparação (previsto, governador, Senado, dep. federal, dep. estadual), unidade (urnas, locais de votação, municípios do ES; **Estados** = Brasil, com o modelo nacional, mapa dos estados e tabela por UF) e filtro de município (clique no mapa).
 - Barras: cada cargo por campo no estado ou no município.
 - Modelo: regressão linear ponderada pelo comparecimento, nas urnas do estado inteiro, do % do campo para presidente sobre o % do mesmo campo nos 4 outros cargos (calculada no navegador). Em 06/10: R² 0,74 (esquerda) e 0,82 (direita); o Senado tem o maior peso.
 - Dispersão (presidente × comparação, linha de igualdade), mapa dos municípios pela diferença (±10 p.p.) e tabela das unidades com maior diferença, ordenável.
@@ -38,6 +45,13 @@ O antigo `voto_cruzado_es.py` (só ES, a partir de `docs/data/es/secoes/`) foi s
 - **Índice de anomalia** de uma urna = raiz da média dos quadrados dos dois erros da previsão (% da esquerda e % da direita para presidente, real − previsto), em p.p. Zero = votou para presidente exatamente como o padrão do estado indica dado o voto nos outros 4 cargos. No ES (06/10): mediana 3,6 p.p.; 90% abaixo de 7,5.
 - Escolhe a urna de menor e a de maior índice entre as com 200+ votantes (menus com as 15 de cada ponta). Em 06/10: esperada = Vitória, zona 52, seção 407 (0,0); anômala = Pinheiros, zona 39, seção 111 (26,1: Lula 74%, previsto 49%; a anomalia vem de votos locais, como 84% em um deputado federal do PSB e 79% no centro para deputado estadual, e do governador do MDB contado como centro).
 - Lado a lado: resumo (índice, real × previsto, campos em cada cargo) e, por cargo, todos os votos da urna (deputados: por partido, com a lista completa de candidatos em "Todos os candidatos"). Lê `docs/data/es/secoes/cargos.json` e `m/<tse>.json`.
+
+## Subaba "Classificação" (`voto-cruzado.html#classificacao`)
+
+Tabela de todos os candidatos e partidos com o grupo de cada um (régua A: presidente, governador e senador por estado, deputados por partido, nacional ou por estado; régua B: partidos),
+o critério e a fonte. Filtros por busca, estado, cargo e "só os que mudei / só neutros". O menu da linha muda o grupo; as mudanças valem em todas as abas e ficam em
+`localStorage` (`vc-reclass`), só naquele navegador. "Exportar minhas mudanças" baixa um JSON (`{tipo, data, mudancas: {chave: grupo}}`); "Importar" lê esse JSON. Para tornar uma mudança padrão
+do site, grave-a em `apoios-declarados.json` (governador/senador) ou no script `alinhamento.py` (deputados, presidente, régua B) e rode `alinhamento.py`.
 
 ## Subaba "Comparativo estados" (`voto-cruzado.html#estados=es,sp`)
 

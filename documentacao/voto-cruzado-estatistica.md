@@ -31,21 +31,43 @@ Logo, toda a análise é **ecológica**: compara **grupos de eleitores** (urnas,
   No **Senado** cada eleitor tem 2 votos, então V ≈ 2 × votantes. No **DF**, "deputado estadual" = deputado distrital.
 - **Fontes:** dados abertos do TSE (votação por seção, detalhe por seção, locais de votação), mais a apuração do TSE para partido e destino de cada número. Script: `scripts/voto_cruzado.py`.
 
-## 3. Campos políticos (opção B, atual)
+## 3. Réguas: como cada voto vira um grupo
 
-Cada voto conta para o **campo do partido** do candidato (para legenda, o do partido):
+Toda a análise usa **3 grupos com índices 0, 1, 2**. O que eles significam depende da **régua** escolhida no topo da página (guardada no navegador):
 
-| Campo | Partidos |
+### Régua B: campo do partido (padrão da página)
+
+| Grupo | Partidos |
 |---|---|
-| Esquerda (g = 0) | PT, PSOL, PCdoB, Rede, PSB, PDT, PV, UP, PSTU, PCB, PCO |
-| Centro (g = 1) | MDB, PSD, PSDB, Podemos, Solidariedade, Avante, Cidadania, Agir, Mobiliza |
-| Direita (g = 2) | PL, Novo, PP, Republicanos, União, PRD, Missão, DC, PRTB, Democrata |
+| 0 Esquerda | PT, PSOL, PCdoB, Rede, PSB, PDT, PV, UP, PSTU, PCB, PCO |
+| 1 Centro | MDB, PSD, PSDB, Podemos, Solidariedade, Avante, Cidadania, Agir, Mobiliza |
+| 2 Direita | PL, Novo, PP, Republicanos, União, PRD, Missão, DC, PRTB, Democrata |
 
-Base: `camara.html` (uso comum na imprensa), mais os partidos que faltavam. Agir, Mobiliza, PRTB e Democrata foram classificados por Claude e o usuário ainda não confirmou.
-Na prática, **esquerda para presidente ≈ Lula** (no ES, 37,9% contra 37,8% do Lula) e **direita para presidente ≈ Flávio + Renan + Zema + DC + Democrata**.
-O centro para presidente é pequeno (Cury, Caiado).
+Base: `camara.html` (uso comum na imprensa), mais os partidos que faltavam (Agir, Mobiliza, PRTB e Democrata foram classificados por Claude; o usuário ainda não confirmou).
+Esquerda para presidente ≈ Lula; direita para presidente ≈ Flávio + Renan + Zema + DC + Democrata. Fraqueza: o campo é do *partido*, não da *aliança*
+(um governador do MDB ou PSD aliado ao Lula conta como "centro").
 
-**Fraqueza conhecida:** o campo é do *partido*, não da *aliança*. Um governador do MDB ou do PSD aliado ao Lula conta como "centro". Isso é o que a opção A (seção 10) resolve.
+### Régua A: aliança presidencial (implementada em 06/10)
+
+0 = aliança de Lula, 1 = neutros e outros, 2 = aliança de Flávio. Classificação **feita sem olhar o resultado das urnas** (evita circularidade), por `scripts/alinhamento.py`:
+1. **Presidente:** Lula = 0, Flávio = 2, os outros 10 candidatos = 1 ("outros", incluindo Caiado, Zema e Renan).
+2. **Governador e senador:** coligação registrada no TSE (`consulta_cand_2026`). Coligação, federação ou partido com o **PT** → 0; com o **PL** → 2; com os dois → 1 (conflito; não ocorreu).
+3. Se a coligação não decide: **apoio declarado**, com fonte, em `docs/data/voto-cruzado/apoios-declarados.json`. Pesquisado em 06/10 para os 70 neutros com ≥ 10% dos votos;
+   só vale **declaração explícita do próprio candidato** (ou apoio público de Lula a ele). "Quer o apoio" ou "o pai apoia" não contam.
+   Resultado: 7 → Lula (Casagrande, Fufuca, Weverton, Veneziano, Celso Sabino, Zenaide Maia, Mônica Benício), 5 → Flávio (Lahesio Bonfim, Alan Rick, Wilson Lima, Cleitinho,
+   Cristina Graeml), 4 neutros declarados (Ferraço, Braide, Daniel Vilela e Gracinha Caiado; os dois últimos apoiam Caiado). As fontes vieram de buscas na web e convém conferir.
+4. Sem nenhum dos dois: **neutro**.
+5. **Deputados (por partido):** partido da coligação presidencial de Lula (PT, PCdoB, PV, PSB, PDT, PSOL, Rede) → 0; da de Flávio (só o PL) → 2; os outros → 1.
+
+Totais (governador + senador, candidatos com voto): 83 aliança de Lula, 326 neutros, 76 aliança de Flávio.
+Consequência importante: o grupo 2 da régua A é **bem menor** que a direita da régua B, porque Republicanos, PP, União etc. não estão na coligação do Flávio
+(nos deputados do ES: aliança de Flávio 25% contra direita 57%).
+
+### Reclassificação pelo leitor
+
+Na subaba **Classificação** (`#classificacao`) o leitor muda o grupo de qualquer candidato ou partido. As mudanças ficam em `localStorage` (`vc-reclass`), **só naquele navegador**,
+e todas as abas passam a usá-las. Chaves: `B|SIGLA` (régua B), `P|número` (presidente), `UF|1|número` e `UF|2|número` (governador e senador), `D|SIGLA` (deputados, todos os estados)
+e `UF|D|SIGLA` (deputados num estado). Dá para exportar e importar um JSON com as mudanças. **Ao interpretar um print, pergunte se havia reclassificações**: elas mudam todos os números.
 
 ## 4. Notação
 
@@ -89,12 +111,15 @@ Urnas com V = 0 em algum cargo ficam fora do ajuste.
 | Onde | Ajustado em | Calculado |
 |---|---|---|
 | Aba "Análise por campo", unidades Urnas / Locais / Municípios | todas as urnas do **ES** | no navegador |
-| Aba "Análise por campo", unidade **Estados** | todas as urnas do **Brasil** (~470 mil) | no script → `brasil.json` |
+| Aba "Análise por campo", unidade **Estados** | os **5.570 municípios** do Brasil (pesos = comparecimento) | no navegador |
 | Subaba "Comparativo estados", cada gráfico | todas as urnas **daquele estado** | no navegador |
 | Subaba "Urna esperada × anômala" | urnas do **ES** | no navegador |
 
 Consequências:
 - O **filtro de município não muda o modelo**. O padrão é sempre o do estado inteiro, e o filtro só escolhe quais unidades aparecem.
+- Todos os modelos são recalculados no navegador para a **régua** e as **reclassificações** atuais.
+- O modelo nacional é ajustado em **municípios**, não em urnas (o navegador não carrega as 470 mil urnas do país). Municípios têm menos ruído, então o R² nacional não é comparável
+  ao de um estado ajustado por urna. Até 06/10 cedo ele era ajustado por urna em Python (R² esquerda 0,31, direita 0,70; ver 5.6).
 - Um estado no gráfico "Estados" é comparado ao **padrão nacional**. No comparativo, cada estado é comparado ao **próprio padrão**.
   O "+27,6 p.p." do Piauí na unidade Estados quer dizer "o Piauí deu ao Lula 27,6 p.p. a mais do que o padrão nacional preveria pelos outros cargos do Piauí".
 - Para unidades agregadas, o previsto é calculado **sobre as proporções agregadas** da unidade (soma os votos e depois aplica a equação).
@@ -126,14 +151,53 @@ ES (b para governador, Senado, dep. federal, dep. estadual):
 - Esquerda: b0 = 0,005; 0,18 / 0,86 / 0,08 / −0,03; R² 0,74; erro 5,2 p.p.
 - Direita: b0 = 0,096; 0,18 / 0,79 / 0,09 / −0,05; R² 0,82; erro 4,3 p.p.
 
-Brasil (modelo nacional, `brasil.json`):
+Brasil, modelo **por urna** (Python, antes da mudança para municípios; régua B):
 - Esquerda: b0 = 0,275; 0,09 / 0,30 / 0,02 / 0,19; **R² 0,31**; erro 14,4 p.p.
 - Direita: b0 = 0,023; 0,11 / 0,64 / 0,12 / 0,06; R² 0,70; erro 9,0 p.p.
 
 O R² nacional baixo da esquerda vem do Nordeste: Lula muito acima do que a esquerda nos outros cargos indicaria. Na unidade Estados: PI +27,6, AL +24,9, MA +23,9 e SE +21,4 p.p.
 A causa provável são governadores e senadores de partidos de "centro" aliados ao Lula, mais estados sem candidato de esquerda a governador.
 
-Por estado (R² e erro em p.p.; mediana e percentil 90 do índice de anomalia da seção 7):
+Brasil, modelo **por município** (o que a página mostra hoje na unidade Estados): régua B esquerda R² 0,28 (erro 13,3 p.p.); régua A Lula **R² 0,70** (8,6 p.p.); régua A Flávio R² 0,57 (9,4 p.p.).
+Na régua B, os estados mais acima do previsto são PI (+26,2), MA (+23,5), AL (+22,9) e SE (+21,4). Na régua A, TO (+21,8), SE (+18,3), PB (−13,2), AL (+13,0) e MA (+11,2).
+
+**Régua B × régua A por estado** (modelo por urna; R² e erro em p.p.):
+
+| UF | B esq. R² | B erro | A Lula R² | A erro | B dir. R² | A Flávio R² |
+|---|---|---|---|---|---|---|
+| AC | 0,62 | 6,1 | 0,63 | 6,0 | 0,38 | 0,34 |
+| AL | 0,20 | 12,6 | **0,63** | 8,5 | 0,18 | **0,66** |
+| AM | 0,37 | 13,3 | **0,78** | 7,9 | 0,68 | 0,80 |
+| AP | 0,36 | 8,3 | 0,33 | 8,4 | 0,19 | 0,32 |
+| BA | 0,77 | 5,8 | 0,76 | 5,9 | 0,74 | 0,75 |
+| CE | 0,85 | 4,5 | 0,86 | 4,5 | 0,84 | 0,87 |
+| DF | 0,87 | 2,2 | 0,88 | 2,2 | 0,85 | 0,88 |
+| ES | 0,74 | 5,2 | 0,76 | 5,0 | 0,82 | 0,81 |
+| GO | 0,39 | 6,3 | 0,41 | 6,3 | 0,57 | 0,65 |
+| MA | 0,19 | 13,2 | 0,28 | 12,4 | 0,53 | **0,78** |
+| MG | 0,51 | 8,3 | 0,56 | 7,9 | 0,61 | 0,75 |
+| MS | 0,82 | 4,8 | 0,83 | 4,8 | 0,80 | 0,74 |
+| MT | 0,52 | 8,6 | **0,78** | 5,8 | 0,77 | 0,54 |
+| PA | 0,22 | 14,7 | **0,87** | 5,9 | 0,46 | **0,89** |
+| PB | 0,27 | 11,1 | **0,81** | 5,7 | 0,36 | **0,87** |
+| PE | 0,49 | 8,1 | 0,50 | 8,1 | 0,65 | 0,66 |
+| PI | 0,63 | 6,9 | 0,67 | 6,6 | 0,63 | 0,71 |
+| PR | 0,77 | 4,5 | 0,77 | 4,5 | 0,82 | 0,79 |
+| RJ | 0,80 | 4,1 | 0,88 | 3,1 | 0,89 | 0,86 |
+| RN | 0,36 | 9,3 | **0,63** | 7,1 | 0,60 | 0,66 |
+| RO | 0,66 | 5,2 | 0,56 | 6,0 | 0,66 | 0,80 |
+| RR | 0,65 | 8,1 | 0,51 | 9,6 | 0,77 | 0,69 |
+| RS | 0,94 | 3,2 | 0,94 | 3,2 | 0,94 | 0,93 |
+| SC | 0,84 | 3,7 | 0,84 | 3,7 | 0,80 | 0,67 |
+| SE | 0,12 | 9,4 | **0,57** | 6,6 | 0,18 | 0,48 |
+| SP | 0,95 | 2,4 | 0,95 | 2,4 | 0,95 | 0,95 |
+| TO | 0,22 | 12,1 | 0,08 | 13,2 | 0,16 | 0,22 |
+
+Leitura: A melhora muito onde B falhava (AL, AM, PA, PB, SE, RN, MT para Lula; MA, PA, PB, AL para Flávio) e quase não muda onde B já funcionava (SP, RS, DF, CE, BA).
+Piora em alguns casos (RO e RR para Lula; MT e SC para Flávio): provavelmente porque a aliança de Flávio na régua A é só o PL, deixando de fora partidos de direita que apoiam
+Flávio informalmente. TO e MA (Lula) seguem mal explicados (candidatos relevantes neutros).
+
+Tabela da régua B (R² e erro em p.p.; mediana e percentil 90 do índice de anomalia da seção 7):
 
 | UF | R² esq | erro esq | R² dir | erro dir | % esq. gov. | índice med / p90 |
 |---|---|---|---|---|---|---|
@@ -226,68 +290,60 @@ Com V ≈ 230 e p ≈ 0,4, isso dá ≈ **3,2 p.p.** (média ponderada no ES: 3,
 - **Barras "Cada cargo por campo":** p_kg agregado do recorte (estado, município ou Brasil). No Senado, sobre os 2 votos.
 - **Comparativo estados:** um gráfico por UF, cada um com o modelo próprio (5.3); mesmo eixo 0–100% em todos. R², erro e pesos acima de cada gráfico.
 
-## 10. Opção A: alinhamento com os presidenciáveis (proposta de 06/10, ainda não implementada)
+## 10. Opção A: decisões do usuário e pendências (06/10)
 
-**Ideia:** trocar o campo do *partido* pelo **alinhamento na eleição presidencial**. Cada candidato a governador e senador é classificado como
-aliado de Lula (L), aliado de Flávio (F) ou outro/neutro (O). Nos deputados, cada partido é classificado **por estado**.
-O modelo da seção 5 continua igual; muda só o que é "o campo" em cada cargo.
-
-**Por que deve funcionar melhor:** os estados de R² baixo (tabela 5.6) são justamente aqueles em que a régua esquerda/centro/direita
-não descreve as alianças (governadores e senadores de MDB, PSD, PP etc. aliados ao Lula no Nordeste e no Norte) ou em que um campo não teve candidato a governador.
-
-### 10.1 Classificação (sem olhar o resultado)
-
-1. **Fonte objetiva:** a composição da coligação de cada candidato a governador e senador no registro do TSE
-   (arquivo de candidatos `consulta_cand_2026`, campo de composição da coligação). Coligação com o PT ou com a federação PT/PCdoB/PV → L; com o PL → F.
-2. **Apoio declarado** (para quem não está na mesma coligação): só com fonte verificável (site oficial, TSE, imprensa), anotada numa planilha de dados (`docs/data/`), com a fonte de cada linha.
-3. **Na dúvida → O** (neutro). Seguir a regra editorial do projeto: não chutar.
-4. **Deputados:** partido da coligação do governador aliado em cada estado, ou partido da coligação presidencial. Testar as duas regras.
-5. **Congelar a classificação antes de rodar o modelo.** Assim o critério não é ajustado para melhorar o resultado.
-
-### 10.2 Validação
-
-- **Comparar A e B nas mesmas urnas:** R², erro típico e índice de anomalia por estado. A deve melhorar justamente nos estados problemáticos
-  (AL, MA, PA, PB, SE, TO etc.) e quase não mudar onde B já funciona (SP, RS, DF).
-- **Validação fora da amostra** (contra sobreajuste): ajustar o modelo com metade dos **municípios** e medir o erro na outra metade, repetindo várias vezes
-  (validação cruzada por blocos). Dividir por município, e não por urna, porque urnas vizinhas são parecidas (autocorrelação espacial),
-  e isso tornaria o teste otimista demais.
-- **Teste de sensibilidade:** refazer com cada candidato duvidoso trocado de grupo (O→L, O→F). Uma conclusão que muda com uma única troca não é robusta.
-- **Resíduo espacial:** em B, o resíduo forma blocos regionais (Nordeste inteiro acima). Em A, ele deve ficar mais "salpicado".
-  Isso pode ser medido com a correlação do resíduo entre municípios vizinhos (I de Moran).
-- **Âncora externa (validação contra dados individuais):** pesquisas com cruzamento "voto para governador × voto para presidente" (Quaest, Datafolha, AtlasIntel)
-  são dados **individuais**. Por inferência ecológica (regressão de Goodman ou método de King), dá para estimar "% dos eleitores de Lula que votaram no governador X"
-  e comparar com o cruzamento da pesquisa. Se A chegar perto das pesquisas e B não, temos evidência independente.
-- **Teto de previsibilidade (modelo C, só para comparação):** regredir o % de Lula diretamente sobre o % de **cada candidato**, estado por estado, sem nenhuma classificação.
-  É o máximo de R² alcançável com esses dados; A deve chegar perto desse teto. Os coeficientes de C também sugerem alinhamentos,
-  mas **não** podem ser usados para classificar em A (seria circular: o resultado definiria a régua que depois o avalia).
+- **Implementada** como "régua A" (seção 3), com a subaba Classificação para recategorizar.
+- **Comparar A e B** nas mesmas urnas é parte natural da análise (o seletor de régua faz isso), e não um "teste" à parte.
+- **Não fazer:** validação cruzada por blocos de municípios e teste de sensibilidade trocando candidatos duvidosos de lado (itens 3 e 4 da proposta).
+- **Não fazer:** comparação com cruzamentos de pesquisas (não há acesso a pesquisas com cruzamento).
+- **Para retomar depois (o usuário quer questionar):**
+  - *Mapa dos resíduos.* O usuário não entendeu a proposta. Explicação a dar: o "resíduo" é a diferença real − previsto de cada município. Na régua B ele forma manchas
+    regionais (o Nordeste inteiro acima do previsto), sinal de que falta uma variável sistemática no modelo. Se a régua A captar a causa certa (alianças locais),
+    as manchas devem sumir, e o mapa da aba "Análise por campo" com "Previsto" fica sem blocos de uma cor só. É só olhar o mapa nas duas réguas; dá para medir com o I de Moran.
+  - *Teto de previsibilidade (modelo C):* regredir o % de Lula sobre o % de cada candidato, estado por estado, sem classificação. Serve só para medir quanto A ainda pode melhorar;
+    nunca para classificar (seria circular).
+  - *Urnas com mais de 10 p.p. de diferença:* analisar o que elas têm em comum (pedido do usuário para depois).
 
 ## 11. Como recalcular qualquer número
 
+Formato atual (desde 06/10): `docs/data/voto-cruzado/<uf>.json` traz votos **por entidade** (candidato a presidente, governador e senador; partido nos deputados),
+e a soma por grupo é feita na hora, conforme a régua. Exemplo em Python (régua A, sem reclassificações):
+
 ```python
 import json, numpy as np
-d = json.load(open('docs/data/voto-cruzado/es.json', encoding='utf-8'))   # ou sp.json, ba.json...
-S = np.array(d['secoes'], dtype=float)
-# colunas: 0 local, 1 zona, 2 seção, 3 aptos, 4 comparecimento, 5 lula, 6 flávio,
-#          depois para k = 0..4: 7+4k válidos, 8+4k esquerda, 9+4k centro, 10+4k direita
-p = lambda k, g: S[:, 8 + 4*k + g] / np.maximum(S[:, 7 + 4*k], 1)
-w = S[:, 4]
-g = 0                                                     # 0 esquerda, 2 direita
-y = p(0, g); X = np.column_stack([np.ones(len(S))] + [p(k, g) for k in range(1, 5)])
+cls = json.load(open('docs/data/voto-cruzado/classificacao.json', encoding='utf-8'))
+d = json.load(open('docs/data/voto-cruzado/es.json', encoding='utf-8'))
+uf = d['uf']; cand = {(r[0], r[1]): r[6] for r in cls['a']['cand'][uf]}
+def grupo(e, regua='a'):                  # e = [cargo, número, nome, sigla]
+    k, num, _, sg = e
+    if regua == 'b': return cls['b'].get(sg)
+    if k == 0: return cls['a']['pres'].get(num, 1)
+    if k <= 2: return cand.get((k, num), 1)
+    return cls['a']['dep'].get(sg, 1)
+gs = [grupo(e) for e in d['ent']]; ks = [e[0] for e in d['ent']]
+# S: colunas 0 aptos, 1 comparecimento, depois para k = 0..4: 2+4k válidos, 3+4k grupo 0, 4+4k grupo 1, 5+4k grupo 2
+S = np.zeros((len(d['secoes']), 22))
+for i, r in enumerate(d['secoes']):           # r = [local, zona, seção, aptos, comp, entidade, votos, ...]
+    S[i, 0], S[i, 1] = r[3], r[4]
+    for j in range(5, len(r), 2):
+        e, q = r[j], r[j + 1]; S[i, 2 + 4*ks[e]] += q
+        if gs[e] is not None: S[i, 3 + 4*ks[e] + gs[e]] += q
+g = 0; w = S[:, 1]; p = lambda k: S[:, 3 + 4*k + g] / np.maximum(S[:, 2 + 4*k], 1)
+y = p(0); X = np.column_stack([np.ones(len(S))] + [p(k) for k in range(1, 5)])
 b = np.linalg.lstsq(X * np.sqrt(w)[:, None], y * np.sqrt(w), rcond=None)[0]
-prev = np.clip(X @ b, 0, 1); r = y - prev
-R2 = 1 - np.sum(w * r**2) / np.sum(w * (y - np.average(y, weights=w))**2)
-erro = np.sqrt(np.average(r**2, weights=w))
+r = y - np.clip(X @ b, 0, 1)
+R2 = 1 - np.sum(w * r**2) / np.sum(w * (y - np.average(y, weights=w))**2); erro = np.sqrt(np.average(r**2, weights=w))
 ```
 
-- Achar uma urna: linha com `S[:,1] == zona` e `S[:,2] == seção`; o município está em `d['locais'][int(S[i,0])][0]` e o nome em `d['mun']`.
-- Unidade agregada: some as colunas 3 em diante das urnas da unidade **antes** de dividir.
-- Modelo nacional: `docs/data/voto-cruzado/brasil.json` → `modelo["0"]` / `modelo["2"]` (`b` = [b0, gov, Senado, dep. fed., dep. est.]); totais por UF em `ufs`.
-- Votos completos de uma urna do ES (candidato a candidato): `docs/data/es/secoes/m/<tse>.json` + `cargos.json` (ver [es-secoes.md](es-secoes.md)).
+- Achar uma urna: `d['secoes'][i][1]` = zona, `[2]` = seção; município em `d['locais'][r[0]][0]`, nome em `d['mun']`.
+- Unidade agregada: some os votos das urnas da unidade **antes** de dividir.
+- Brasil: `brasil.json` → `ufs[UF]` = `{ent, tot: [aptos, comp, entidade, votos, ...], mun: {tse: [aptos, comp, pares...]}}`; o modelo nacional é ajustado nas linhas de `mun`.
+- Votos completos de uma urna do ES, candidato a candidato: `docs/data/es/secoes/m/<tse>.json` + `cargos.json` (ver [es-secoes.md](es-secoes.md)).
 
 ## 12. Roteiro para responder perguntas sobre um print
 
-1. Identifique **a aba, o campo (esquerda/direita), a comparação (previsto/cargo) e a unidade**. Cada combinação muda o número.
-2. Identifique **qual modelo** está por trás (tabela 5.3): ES, Brasil ou o do próprio estado.
+1. Identifique **a régua (campo do partido ou aliança presidencial), se há reclassificações do leitor, a aba, o campo, a comparação (previsto/cargo) e a unidade**. Cada combinação muda o número.
+2. Identifique **qual modelo** está por trás (tabela 5.3): ES, Brasil (por município) ou o do próprio estado.
 3. Diferença = real − previsto (ou − cargo), em p.p.; positivo = presidente acima.
 4. Antes de chamar algo de anomalia, compare com o ruído (seção 8) e com a mediana/p90 do índice no estado (tabela 5.6).
 5. Se o número parecer estranho, verifique: estado sem candidato do campo a governador (5.5, item 2); centro grande para governador (classificação por partido);
