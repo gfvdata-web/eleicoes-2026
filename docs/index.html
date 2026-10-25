@@ -685,7 +685,7 @@
     setModo(b.dataset.modo);
   }));
 
-  // Busca os dois cargos a cada 60 s (?t= evita cache) e redesenha só se algo mudou
+  // Busca os dois cargos a cada 30 s (?t= evita cache) e redesenha só se algo mudou
   const versao = {};
   function carregar() {
     return Promise.all(Object.entries(ARQ).map(([m, arq]) =>
@@ -704,7 +704,7 @@
   setVista(vista);
   setModo(modo);
   carregar();
-  setInterval(carregar, 60000);
+  setInterval(carregar, 30000);
 })();
 </script>
 <script>

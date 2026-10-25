@@ -895,11 +895,11 @@
   document.querySelectorAll("[data-rec]").forEach(b => b.setAttribute("aria-pressed", b.dataset.rec === recorte));
   trocarUF(uf, true);
   addEventListener("hashchange", () => { const id = location.hash.slice(1); if (id !== cargo && CARGOS.some(c => c.id === id)) setCargo(id); });
-  // Relê o cargo aberto a cada 60 s (o parâmetro ?t= evita o cache do GitHub Pages) e só redesenha se mudou
+  // Relê o cargo aberto a cada 30 s (o parâmetro ?t= evita o cache do GitHub Pages) e só redesenha se mudou
   setInterval(() => {
     const id = cargo;
     Promise.all(CARGOS.map(c => carregar(c.id))).then(ms => { faixaApu(); if (ms[CARGOS.findIndex(c => c.id === id)] && cargo === id) { montarPartidos(); tudo(); } });
-  }, 60000);
+  }, 30000);
 })();
 </script>
 <script>

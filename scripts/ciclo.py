@@ -19,7 +19,7 @@ import time
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-INTERVALO_RODADA = 120    # segundos entre rodadas de geral + ES
+INTERVALO_RODADA = 60     # segundos entre rodadas de geral + ES
 INTERVALO_OUTROS = 600    # segundos entre duas coletas dos outros estados (contados do fim da anterior)
 
 try:
