@@ -40,8 +40,8 @@ RAIZ = Path(__file__).resolve().parent.parent
 SAIDA = RAIZ / "docs" / "data" / "apuracao"      # o que o site lê
 BRUTO = RAIZ / "apuracao-bruto"                  # cópia do que veio do TSE (fora do site, ignorado pelo git)
 
-INTERVALO_COLETA = 60        # segundos entre conferências no TSE
-INTERVALO_PUBLICACAO = 60    # segundos mínimos entre dois pushes
+INTERVALO_COLETA = 30        # segundos entre conferências no TSE
+INTERVALO_PUBLICACAO = 15    # segundos mínimos entre dois pushes
 TIMEOUT = 20                 # segundos por requisição
 PARALELO = 8                 # downloads simultâneos
 INTERVALO_MAX = 300          # recuo: com 429/503 o intervalo dobra até aqui; volta ao normal num ciclo limpo
@@ -493,7 +493,7 @@ def main():
     ap.add_argument("--publicar", action="store_true", help="faz commit e push dos dados")
     ap.add_argument("--uma-vez", action="store_true", help="roda um ciclo e sai")
     ap.add_argument("--limpar", action="store_true", help="zera os arquivos do site e sai")
-    ap.add_argument("--intervalo", type=int, default=INTERVALO_COLETA, help="segundos entre ciclos (padrão 60)")
+    ap.add_argument("--intervalo", type=int, default=INTERVALO_COLETA, help="segundos entre ciclos (padrão 30)")
     ap.add_argument("--tudo", action="store_true", help="consulta também os locais já concluídos")
     ap.add_argument("--cargos", help="só estes cargos, separados por vírgula (ex.: governador,senador)")
     ap.add_argument("--turno", type=int, choices=(1, 2), default=1, help="2 = 2º turno (presidente e governador, em docs/data/apuracao2t)")

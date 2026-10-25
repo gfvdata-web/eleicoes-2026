@@ -36,8 +36,8 @@ BRUTO = RAIZ / "apuracao-bruto" / "es"               # cópia do TSE (ignorada p
 MUNICIPIOS = RAIZ / "docs" / "data" / "es" / "municipios.js"
 CONFIG_MUN = "https://resultados.tse.jus.br/oficial/ele2026/6259/config/mun-e006259-cm.json"
 
-INTERVALO_COLETA = 60
-INTERVALO_PUBLICACAO = 60
+INTERVALO_COLETA = 30
+INTERVALO_PUBLICACAO = 15
 PARALELO = 8    # 24 levou a HTTP 429 no 1º turno (~28 mil arquivos por ciclo)
 INTERVALO_MAX = 300   # recuo: com 429/503 o intervalo dobra até aqui; volta ao normal num ciclo limpo
 REVARRER = 600        # segundos: varre de novo os municípios de um estado não concluído mesmo sem mudança no arquivo do estado
@@ -405,7 +405,7 @@ def main():
     ap.add_argument("--publicar", action="store_true", help="faz commit e push dos dados")
     ap.add_argument("--uma-vez", action="store_true", help="roda um ciclo e sai")
     ap.add_argument("--limpar", action="store_true", help="zera os arquivos do site e sai")
-    ap.add_argument("--intervalo", type=int, default=INTERVALO_COLETA, help="segundos entre ciclos (padrão 60)")
+    ap.add_argument("--intervalo", type=int, default=INTERVALO_COLETA, help="segundos entre ciclos (padrão 30)")
     ap.add_argument("--tudo", action="store_true", help="consulta também os municípios já com 100% apurado")
     ap.add_argument("--ufs", help="só estes estados, separados por vírgula (ex.: ES ou SP,RJ)")
     ap.add_argument("--exceto", help="todos os estados menos estes (ex.: ES)")
