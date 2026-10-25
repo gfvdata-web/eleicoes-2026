@@ -58,15 +58,12 @@ python scripts/apuracao_es.py --turno 2 --publicar --exceto ES
 ## Pendências
 
 ### Feito em 25/10 no computador oficial
-- Job `cloudflare` aplicado em `.github/workflows/pages.yml`; secret `CLOUDFLARE_ACCOUNT_ID` cadastrado.
+- Job `cloudflare` aplicado em `.github/workflows/pages.yml`; secrets `CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_API_TOKEN` cadastrados; o job publica a cada push em `main`.
 - Primeiro deploy feito à mão (`npx --yes wrangler@4.150.0 deploy --config worker/wrangler.jsonc`, login OAuth local): Worker, domínio e DNS criados.
 - **Limite de 25 MiB por arquivo do Worker:** `docs/data/voto-cruzado/sp.json` (30 MiB) fica de fora pelo `docs/.assetsignore` e o `docs/_redirects` manda esse caminho para a cópia do GitHub Pages (CORS liberado). Se outro arquivo passar de 25 MiB, o deploy falha com "Asset too large": repita o par `.assetsignore` + `_redirects`. Por isso o GitHub Pages não pode sair do ar enquanto o redirecionamento existir.
 - A Cloudflare responde `/2turno.html` com 307 para `/2turno` (padrão do Worker de estáticos); links e `?uf=` continuam funcionando.
 
-### 1. Secret `CLOUDFLARE_API_TOKEN` (falta)
-Sem ele o job `cloudflare` só avisa e o domínio fica parado no último deploy manual. O usuário cria o token (Cloudflare → My Profile → API Tokens → "Edit Cloudflare Workers") e cadastra: `gh secret set CLOUDFLARE_API_TOKEN --repo gfvdata-web/eleicoes-2026`. Enquanto isso, publicar à mão com o comando acima.
-
-### 2. Demais
+### Ainda pendente
 
 - Atualizar `Cloudfare/CLAUDE.md` (inventário: Worker `eleicoes2026`, domínio eleicoes2026.gfvdata.com, sem D1/KV/Cron).
 - Atualizar o mapa do `~/.claude/CLAUDE.md` (eleicoes-2026 passa a ter domínio próprio) e, se fizer sentido, o painel-status (`src/config.py`).
