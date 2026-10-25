@@ -47,11 +47,18 @@ UFs com 2º turno de governador: as que têm arquivo na eleição 6260 do TSE (l
 
 Eleições do TSE no 2º turno: **6258** (federal: presidente) e **6260** (estadual: governador). A lista de municípios vem do config da 6258 (a 6260 só traz os 6 estados com 2º turno).
 
+Dois terminais, dois processos contínuos (coleta a cada 60 s; **não** usar `ciclo.py` nem `--uma-vez`, que reiniciam o processo, perdem os ETags e releem `apuracao-bruto/` a cada rodada):
+
 ```
 python scripts/apuracao.py --turno 2 --publicar
-python scripts/apuracao_es.py --turno 2 --publicar --ufs ES
-python scripts/apuracao_es.py --turno 2 --publicar --exceto ES
+python scripts/apuracao_es.py --turno 2 --publicar
 ```
+
+- **Portão por estado** (`apuracao_es.py`): cada ciclo baixa primeiro só os 33 arquivos de estado (27 de presidente + 6 de governador). Os municípios de um (cargo, UF) só são pedidos se o arquivo do estado mudou desde a última varredura, ou a cada 10 min (`REVARRER`) enquanto o estado não chegou a 100%. Município com 100% não é mais consultado. Apuração parada = 33 pedidos por ciclo; a primeira rodada do processo pede tudo (~6 mil arquivos, ~1 min).
+- **Recuo** (nos dois scripts): se o TSE responder 429/503, o próximo ciclo espera o dobro (até 300 s, `INTERVALO_MAX`); um ciclo sem limite volta para 60 s. `PARALELO` = 8 nos dois (no 1º turno, 24 levou a bloqueio).
+- Log por ciclo: `N pedidos (X cargo/estado abertos) · novos · iguais · limitados`.
+- Cada processo publica no máximo a cada 120 s e cada push dispara o workflow (~1–2 min): o site anda a cada ~2–4 min.
+- Ensaio em 25/10 às 16h (TSE com 0%): 1º ciclo com 6.073 arquivos, os seguintes com 33, nenhum 429.
 
 - `--simular --turno 2` simula só os dois finalistas; nunca publica. Depois de simular, rode `--limpar --turno 2` (nacional) e uma coleta real `--uma-vez` (por município) antes de commitar.
 - Cada processo commita só a própria pasta (`docs/data/apuracao2t/` ou `docs/data/es/apuracao2t/...`).

@@ -38,7 +38,9 @@ CONFIG_MUN = "https://resultados.tse.jus.br/oficial/ele2026/6259/config/mun-e006
 
 INTERVALO_COLETA = 60
 INTERVALO_PUBLICACAO = 120
-PARALELO = 24   # são ~28 mil arquivos por ciclo (5 cargos × ~5.570 municípios + estados)
+PARALELO = 8    # 24 levou a HTTP 429 no 1º turno (~28 mil arquivos por ciclo)
+INTERVALO_MAX = 300   # recuo: com 429/503 o intervalo dobra até aqui; volta ao normal num ciclo limpo
+REVARRER = 600        # segundos: varre de novo os municípios de um estado não concluído mesmo sem mudança no arquivo do estado
 
 # Divulgação do TSE de 2026. Eleição 6257 = federal (presidente); 6259 = estadual.
 BASE = "https://resultados.tse.jus.br/oficial/ele2026"
@@ -453,6 +455,9 @@ def main():
     log(c("Apuração ES 2026" + (" (2º turno)" if a.turno == 2 else "") + " — por município", "negrito") + f" · {modo} · coleta a cada {a.intervalo}s")
 
     ciclo, ultima_pub, pendente_pub = 0, 0.0, False
+    intervalo = a.intervalo
+    # portão por estado: (cargo, UF) -> (hash do arquivo do estado na última varredura dos municípios, quando)
+    varrido = {}
     while True:
         ciclo += 1
         inicio = time.time()
@@ -467,14 +472,43 @@ def main():
                 locais[""].dado = somar_estado(locais, sims[cargo].base)
                 locais[""].status = "novo"
         else:
-            tarefas = [(uf, cargo, ele, cd, loc_id) for cargo, _, ele, cd in cargos
-                       for uf in estado[cargo] for loc_id in estado[cargo][uf]]
-            feitos = 0
-            with cf.ThreadPoolExecutor(PARALELO) as ex:
-                for _ in ex.map(lambda t: coletar_real(t[0], t[1], t[2], t[3], t[4], estado[t[1]][t[0]][t[4]], avisos), tarefas):
-                    feitos += 1
-                    if feitos % 100 == 0 or feitos == len(tarefas):
-                        print(f"\r\033[K  Baixando do TSE... {feitos}/{len(tarefas)} arquivos", end="", flush=True)
+            def baixar_lote(tarefas, rotulo):
+                feitos = 0
+                with cf.ThreadPoolExecutor(PARALELO) as ex:
+                    for _ in ex.map(lambda t: coletar_real(t[0], t[1], t[2], t[3], t[4], estado[t[1]][t[0]][t[4]], avisos), tarefas):
+                        feitos += 1
+                        if feitos % 100 == 0 or feitos == len(tarefas):
+                            print(f"\r\033[K  Baixando do TSE ({rotulo})... {feitos}/{len(tarefas)} arquivos", end="", flush=True)
+                return [estado[t[1]][t[0]][t[4]].status for t in tarefas]
+
+            # 1) só os arquivos de estado; 2) municípios só dos estados cujo arquivo mudou desde a última varredura
+            for cargo, _, _, _ in cargos:   # quem não for consultado neste ciclo conta como "igual" no resumo
+                for locais in estado[cargo].values():
+                    for loc in locais.values():
+                        loc.status = "igual" if loc.dado else "pendente"
+            status =baixar_lote([(uf, cargo, ele, cd, "") for cargo, _, ele, cd in cargos for uf in estado[cargo]], "estados")
+            agora_s = time.time()
+            abrir = []
+            for cargo, _, ele, cd in cargos:
+                for uf, locais in estado[cargo].items():
+                    h, quando = varrido.get((cargo, uf), ("nunca", 0))
+                    fim = locais[""].dado and locais[""].dado["pct"] >= 100
+                    if locais[""].hash != h or (not fim and agora_s - quando >= REVARRER):
+                        abrir.append((cargo, uf, ele, cd))
+            tarefas = [(uf, cargo, ele, cd, loc_id) for cargo, uf, ele, cd in abrir
+                       for loc_id in estado[cargo][uf] if loc_id]
+            st_mun = baixar_lote(tarefas, "municípios") if tarefas else []
+            status += st_mun
+            for cargo, uf, _, _ in abrir:
+                if all(estado[cargo][uf][m].status not in ("limitado", "erro") for m in estado[cargo][uf] if m):
+                    varrido[(cargo, uf)] = (estado[cargo][uf][""].hash, agora_s)
+            limitados = status.count("limitado")
+            print("\r\033[K", end="")
+            log(c(f"  {len(status)} pedidos ({len(abrir)} cargo/estado abertos) · {status.count('novo')} novos · "
+                  f"{status.count('igual')} iguais · {limitados} limitados", "cinza"))
+            intervalo = min(intervalo * 2, INTERVALO_MAX) if limitados else a.intervalo
+            if limitados:
+                log(c(f"  ⚠ TSE limitando (429/503): próximo ciclo em {intervalo}s", "amarelo"))
         for cargo, rotulo, _, _ in cargos:
             for uf, locais in estado[cargo].items():
                 if gravar(cargo, locais, a.simular, uf):
@@ -509,9 +543,9 @@ def main():
 
         if a.uma_vez:
             break
-        alvo = inicio + a.intervalo
+        alvo = inicio + intervalo
         while time.time() < alvo:
-            print(f"\r\033[K  {c(agora(), 'negrito')} · próximo ciclo em {int(alvo - time.time()):>2}s", end="", flush=True)
+            print(f"\r\033[K  {c(agora(), 'negrito')} · próximo ciclo em {int(alvo - time.time()):>3}s", end="", flush=True)
             time.sleep(1)
 
 
