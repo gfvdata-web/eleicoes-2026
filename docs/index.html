@@ -35,6 +35,8 @@
   header p { margin: 0; color: var(--muted); font-size: .95rem; }
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 20px; }
   .card h3 { margin: 0 0 4px; }
+  .prev-formula { font-size: clamp(1.25rem, 3.4vw, 2rem); line-height: 1.2; margin-bottom: 10px !important; }
+  .prev-formula span { letter-spacing: .02em; }
   .card .nota { margin: 0 0 12px; color: var(--muted); font-size: .85rem; }
   [hidden] { display: none !important; }
 
@@ -225,7 +227,7 @@
   </div>
 
   <div class="card so-prev" hidden>
-    <h3>Como funciona</h3>
+    <h3 class="prev-formula">Como funciona: <span>URNAS APURADAS + URNAS DO 1º&nbsp;TURNO</span></h3>
     <p class="nota" style="margin:0">Ponto de partida: os votos de cada município no 1º turno (4/10), contando só os dois finalistas. Conforme as urnas do 2º turno são apuradas, os votos reais de hoje substituem os do 1º turno, na proporção das urnas apuradas em cada município. Com 0% apurado, a previsão repete o 1º turno; com 100%, é o resultado oficial. É uma conta simples: não estima para onde vão os eleitores dos candidatos eliminados nem mudanças no comparecimento, e não inclui os votos do exterior.</p>
     <p class="nota" id="prevStatus" style="margin:8px 0 0"></p>
   </div>
