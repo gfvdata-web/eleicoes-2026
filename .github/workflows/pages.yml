@@ -54,10 +54,12 @@ jobs:
           fi
       - uses: actions/checkout@v4
         if: steps.conf.outputs.ok == 'true'
-      - uses: cloudflare/wrangler-action@v3
+      - uses: actions/setup-node@v4
         if: steps.conf.outputs.ok == 'true'
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: worker
-          command: deploy
+          node-version: 22
+      # Versão fixa: o wrangler-action instala o wrangler 3, que não aceita Worker só de assets.
+      - name: Publicar na Cloudflare
+        if: steps.conf.outputs.ok == 'true'
+        working-directory: worker
+        run: npx --yes wrangler@4.150.0 deploy

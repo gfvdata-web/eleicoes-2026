@@ -6,7 +6,7 @@ Páginas do 2º turno de 25/10/2026, criadas a pedido do usuário "começando do
 
 - **Principal:** https://eleicoes2026.gfvdata.com/ (Cloudflare, Worker de estáticos `eleicoes2026`, config em [worker/wrangler.jsonc](../worker/wrangler.jsonc)).
 - **Reserva:** https://gfvdata-web.github.io/eleicoes-2026/ (GitHub Pages, mesma pasta `docs/`). Desligar só com OK do usuário.
-- Os dois são publicados pelo mesmo workflow ([.github/workflows/pages.yml](../.github/workflows/pages.yml)) a cada push em `main`: job `deploy` (Pages) e job `cloudflare` (`wrangler deploy` via `cloudflare/wrangler-action`).
+- Os dois são publicados pelo mesmo workflow ([.github/workflows/pages.yml](../.github/workflows/pages.yml)) a cada push em `main`: job `deploy` (Pages) e job `cloudflare` (`npx --yes wrangler@4.150.0 deploy`; o `cloudflare/wrangler-action` instala o wrangler 3, que não aceita Worker só de assets).
 - O job `cloudflare` precisa dos secrets do repositório `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE_ACCOUNT_ID`. Sem eles, só avisa e o Pages segue publicando.
   - Token: Cloudflare → My Profile → API Tokens → modelo "Edit Cloudflare Workers", conta gfvdata, zona gfvdata.com. O usuário cria e cadastra (`gh secret set CLOUDFLARE_API_TOKEN`); nunca digitar token por ele.
   - O primeiro deploy cria o domínio personalizado e o DNS (`custom_domain: true`).
