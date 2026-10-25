@@ -375,13 +375,37 @@ def gravar(cargo, locais, simulacao):
     doc = {"cargo": cargo, "simulacao": simulacao, "atualizado": max(horas)[:5] if horas else "", "ufs": ufs}
     if not simulacao:
         doc.pop("simulacao")
-    texto = json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + "\n"
     arq = SAIDA / f"{cargo}.json"
+    if SAIDA == SAIDA_2T:
+        doc["serie"] = serie(cargo, arq, ufs, doc["atualizado"], simulacao)
+    texto = json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + "\n"
     if arq.exists() and arq.read_text(encoding="utf-8") == texto:
         return False
     SAIDA.mkdir(parents=True, exist_ok=True)
     arq.write_text(texto, encoding="utf-8", newline="\n")
     return True
+
+
+def serie(cargo, arq, ufs, hora, simulacao):
+    """2º turno: histórico [["HH:MM", %], ...] do % apurado, para o gráfico "No tempo" de 2turno.html.
+    Presidente = % do BR; governador = média das UFS_GOV_2T. Parte da série já gravada no arquivo
+    (sobrevive a reinício) e só acrescenta ponto quando o % muda. Sem UFs (--limpar) = série vazia."""
+    if not ufs:
+        return []
+    try:
+        ant = json.loads(arq.read_text(encoding="utf-8"))
+        pontos = ant.get("serie", []) if bool(ant.get("simulacao")) == bool(simulacao) else []
+    except Exception:
+        pontos = []
+    if cargo == "presidente":
+        pct = float(ufs.get("BR", {}).get("pct") or 0)
+    else:
+        pct = round(sum(float(ufs.get(uf, {}).get("pct") or 0) for uf in UFS_GOV_2T) / len(UFS_GOV_2T), 2)
+    if not hora or (pontos and pontos[-1][1] == pct):
+        return pontos
+    if pontos and pontos[-1][0] == hora:
+        pontos = pontos[:-1]
+    return pontos + [[hora, pct]]
 
 
 def git(*args):

@@ -14,11 +14,13 @@ Páginas do 2º turno de 25/10/2026, criadas a pedido do usuário "começando do
 
 ## Estrutura das páginas
 
-Switch próprio do 2º turno (igual nas duas): **Nacional e bancadas** (`2turno.html`) | **Estados** (`2turno-es.html`) | **← 1º turno**.
+Switch próprio do 2º turno (igual nas duas): **Brasil** (`2turno.html`; antes "Nacional e bancadas") | **Estados** (`2turno-es.html`) | **← 1º turno**.
 
-### `2turno.html` (Nacional e bancadas)
+### `2turno.html` (Brasil)
 - **Card do topo "Apuração do 2º turno":** % apurado por cargo. Presidente = `BR` do TSE; Governador = média do % nos 6 estados com 2º turno, com quantos já têm apuração e quantos terminaram.
-- **Subabas** Presidente (`#presidente`, padrão) e Governador (`#governador`).
+  - Switch **Cargos | No tempo** no canto superior direito (escolha guardada no navegador, chave `apuVista2t`). "No tempo" troca os dois subcards por um gráfico do % apurado das 17h até a última atualização, com a `serie` dos JSONs (ver Dados). Se o JSON não tiver `serie`, usa os pontos vistos desde que a página foi aberta.
+- **Subabas** Presidente (`#presidente`, padrão), Governador (`#governador`) e Previsão simples (`#previsao`, sem mapa).
+- **Previsão simples:** por município, `previsão = votos do 2º turno + (1 − % apurado do município) × votos do 1º turno`, só com os dois finalistas (casados pela sigla em `cand[]`; `v[]` segue a ordem de `cand[]`). Soma por estado e, no presidente, pelo Brasil. Com 0% apurado repete o 1º turno entre os dois (Flávio 51,0 × Lula 49,0); com 100% é o resultado oficial. Não considera para onde vão os votos dos eliminados, mudança de comparecimento nem o exterior (ZZ). Lê `data/es/apuracao/<UF>/<cargo>.json` (1º turno, uma vez) e `data/es/apuracao2t/<UF>/<cargo>.json` (a cada minuto, só com a aba aberta); ES fica na raiz das pastas. Mostra o placar do Brasil, as 6 disputas de governador e a tabela das 27 UFs.
 - **Presidente:** placar nacional Flávio × Lula (barra com linha de 50%), mapa dos 27 estados na cor do partido de quem lidera (cinza sem apuração), rótulo com % de urnas e % de Flávio / Lula, pop-up com o % do 1º turno e o atual.
 - **Governador:** o mapa mostra as duas situações:
   - **2º turno hoje** (AC, AM, DF, ES, RN, TO): contorno grosso; âmbar (`--disputa`) até a apuração começar, depois a cor do partido de quem lidera; % de urnas no rótulo.
@@ -36,7 +38,7 @@ Switch próprio do 2º turno (igual nas duas): **Nacional e bancadas** (`2turno.
 | Arquivo | O que é | Gerado por |
 |---|---|---|
 | `docs/data/2turno/disputas.js` (`window.SEGUNDO_TURNO`) | finalistas de presidente (com % do 1º turno por UF) e, por UF, governador `definido` (eleito) ou `2turno` (os dois candidatos) | resultado final do 1º turno (`docs/data/apuracao/*.json`), gerado uma vez em 25/10 |
-| `docs/data/apuracao2t/presidente.json`, `governador.json` | apuração por UF (mesmo formato de [apuracao.md](apuracao.md)); `"ufs": {}` = 0% | `python scripts/apuracao.py --turno 2` |
+| `docs/data/apuracao2t/presidente.json`, `governador.json` | apuração por UF (mesmo formato de [apuracao.md](apuracao.md)); `"ufs": {}` = 0%. Só no 2º turno: `serie: [["HH:MM", %], ...]` com o histórico do % apurado (presidente = BR; governador = média das 6 UFs), um ponto por mudança, preservado entre reinícios do coletor (função `serie()`); `--limpar` zera | `python scripts/apuracao.py --turno 2` |
 | `docs/data/es/apuracao2t/<cargo>.json` e `<UF>/<cargo>.json` | apuração por município (mesmo formato de [es.md](es.md)) | `python scripts/apuracao_es.py --turno 2` |
 
 UFs com 2º turno de governador: as que têm arquivo na eleição 6260 do TSE (lista `UFS_GOV_2T` em `scripts/apuracao.py`, conferida em 25/10).

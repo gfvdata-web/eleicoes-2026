@@ -57,6 +57,28 @@
   .apu-bar { height: 8px; background: var(--bar-bg); border-radius: 4px; overflow: hidden; margin: 6px 0 4px; }
   .apu-bar i { display: block; height: 100%; width: 0; background: var(--ao-vivo); border-radius: 4px; transition: width .4s; }
   .sim { background: #f2c94c; color: #1d1d1b; padding: 1px 6px; border-radius: 4px; }
+  /* Switch Cargos | No tempo e gráfico do % apurado ao longo da noite */
+  .apu { position: relative; }
+  .apu-top { padding-right: 150px; }
+  .apu-vista { position: absolute; top: 10px; right: 12px; display: inline-flex; padding: 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+  .apu-vista button { font: inherit; font-size: .72rem; font-weight: 600; padding: 3px 9px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
+  .apu-vista button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+  @media (max-width: 560px) { .apu-top { padding-right: 0; } .apu-vista { position: static; margin-left: auto; } }
+  .apu-tempo small { display: block; color: var(--muted); font-size: .78rem; margin-top: 4px; }
+  #apuSerie { width: 100%; height: 200px; display: block; }
+  #apuSerie .eixo text { font-size: 11px; fill: var(--muted); }
+  #apuSerie .eixo line, #apuSerie .grade line { stroke: var(--border); }
+  #apuSerie .eixo path { stroke: var(--border); }
+  #apuSerie .ponta { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .apu-leg { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: .78rem; color: var(--muted); margin-bottom: 4px; }
+  .apu-leg span { white-space: nowrap; }
+  .apu-leg span::before { content: ""; display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; background: var(--c); }
+
+  /* Previsão simples */
+  .prev-uf td .duelo-mini { display: flex; height: 6px; width: 120px; border-radius: 3px; overflow: hidden; background: var(--bar-bg); margin-top: 4px; }
+  .prev-uf td .duelo-mini i { display: block; height: 100%; }
+  .prev-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+  .prev-grid .disp-item { cursor: default; }
 
   .modo { display: inline-flex; margin-top: 14px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
   .modo button { font: inherit; font-size: .9rem; font-weight: 600; padding: 6px 16px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
@@ -133,8 +155,8 @@
   .tema-switch__btn + .tema-switch__btn { border-left: 1px solid var(--border); }
   .tema-switch__btn--ativo { background: var(--accent); color: var(--surface); }
   @media (max-width: 480px) { .tema-switch__label { display: none; } .tema-switch__btn { padding: .32rem .6rem; font-size: .85rem; } }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) :is(#mapa path, .sw, .duelo i, .pdot) { filter: saturate(.62) brightness(.82); } }
-  :root[data-theme="dark"] :is(#mapa path, .sw, .duelo i, .pdot) { filter: saturate(.62) brightness(.82); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) :is(#mapa path, .sw, .duelo i, .duelo-mini i, .pdot) { filter: saturate(.62) brightness(.82); } }
+  :root[data-theme="dark"] :is(#mapa path, .sw, .duelo i, .duelo-mini i, .pdot) { filter: saturate(.62) brightness(.82); }
   /* Switch de seções do 2º turno (igual em 2turno.html e 2turno-es.html) */
   .secoes { display: inline-grid; grid-auto-flow: column; grid-auto-columns: auto; margin: 0 0 16px; padding: 3px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); }
   .secoes a { display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.15; font-size: .85rem; font-weight: 600; padding: 6px 16px; border-radius: 999px; color: var(--muted); text-decoration: none; }
@@ -152,15 +174,24 @@
     <button type="button" class="tema-switch__btn" data-tema="light" aria-pressed="false"><span aria-hidden="true">☀️</span><span class="tema-switch__label">Claro</span></button>
     <button type="button" class="tema-switch__btn" data-tema="dark" aria-pressed="false"><span aria-hidden="true">🌙</span><span class="tema-switch__label">Escuro</span></button>
   </div>
-  <nav class="secoes" id="secoes" aria-label="Seção do 2º turno"><a href="2turno.html" aria-current="page">Nacional e bancadas</a><a href="2turno-es.html">Estados</a><a href="index.html" class="volta">← 1º turno</a></nav>
+  <nav class="secoes" id="secoes" aria-label="Seção do 2º turno"><a href="2turno.html" aria-current="page">Brasil</a><a href="2turno-es.html">Estados</a><a href="index.html" class="volta">← 1º turno</a></nav>
 
   <section class="apu" id="apu" aria-live="polite">
     <div class="apu-top">
       <strong>Apuração do 2º turno</strong>
       <span id="apuStatus"></span>
       <span id="apuHora"></span>
+      <div class="apu-vista" role="group" aria-label="Forma de mostrar a apuração">
+        <button type="button" data-vista="cargos" aria-pressed="true">Cargos</button>
+        <button type="button" data-vista="tempo" aria-pressed="false">No tempo</button>
+      </div>
     </div>
-    <div class="apu-cargos">
+    <div class="apu-tempo" id="apuTempo" hidden>
+      <div class="apu-leg"><span style="--c:var(--ao-vivo)">Presidente</span><span style="--c:var(--accent)">Governador (média dos 6 estados)</span></div>
+      <svg id="apuSerie" role="img" aria-label="Percentual de urnas apuradas ao longo do tempo"></svg>
+      <small id="apuTempoNota"></small>
+    </div>
+    <div class="apu-cargos" id="apuCargos">
       <div class="apu-cargo">
         <span class="rot">Presidente</span>
         <strong id="apuPres">0%</strong>
@@ -183,6 +214,7 @@
     <div class="modo" role="group" aria-label="Cargo">
       <button type="button" data-modo="pres" aria-pressed="true">Presidente</button>
       <button type="button" data-modo="gov" aria-pressed="false">Governador</button>
+      <button type="button" data-modo="prev" aria-pressed="false">Previsão simples</button>
     </div>
   </header>
 
@@ -192,7 +224,35 @@
     <div class="placar-sub" id="placarSub"></div>
   </div>
 
-  <div class="card map-grid">
+  <div class="card so-prev" hidden>
+    <h3>Como funciona</h3>
+    <p class="nota" style="margin:0">Ponto de partida: os votos de cada município no 1º turno (4/10), contando só os dois finalistas. Conforme as urnas do 2º turno são apuradas, os votos reais de hoje substituem os do 1º turno, na proporção das urnas apuradas em cada município. Com 0% apurado, a previsão repete o 1º turno; com 100%, é o resultado oficial. É uma conta simples: não estima para onde vão os eleitores dos candidatos eliminados nem mudanças no comparecimento, e não inclui os votos do exterior.</p>
+    <p class="nota" id="prevStatus" style="margin:8px 0 0"></p>
+  </div>
+
+  <div class="card so-prev" hidden>
+    <h3>Presidente — previsão</h3>
+    <p class="nota" id="prevPresNota"></p>
+    <div class="placar" id="prevPlacar"></div>
+    <div class="duelo" id="prevDuelo" aria-hidden="true"></div>
+    <div class="placar-sub" id="prevPlacarSub"></div>
+  </div>
+
+  <div class="card so-prev" hidden>
+    <h3>Governador — previsão nos estados com 2º turno</h3>
+    <p class="nota">Ao lado de cada nome: a previsão e, em cinza, o resultado entre os dois no 1º turno.</p>
+    <div class="prev-grid" id="prevGov"></div>
+  </div>
+
+  <div class="card so-prev" hidden>
+    <h3>Presidente — previsão por estado</h3>
+    <div class="tbl-wrap"><table class="prev-uf">
+      <thead><tr><th>UF</th><th style="text-align:right">Urnas apuradas</th><th id="prevThA" style="text-align:right"></th><th id="prevThB" style="text-align:right"></th><th>Lidera na previsão</th></tr></thead>
+      <tbody id="prevUfBody"></tbody>
+    </table></div>
+  </div>
+
+  <div class="card map-grid so-mapa">
     <svg id="mapa" viewBox="0 0 800 780" role="img" aria-label="Mapa do Brasil por estado"></svg>
     <div class="side">
       <div class="so-gov" hidden>
@@ -245,7 +305,7 @@
   // Formato igual ao do 1º turno: { cargo, atualizado, simulacao?, ufs: { UF: { pct, hora, res: [[nome, %válidos, sigla, votos], ...], situacao? } } }
   let APU = { pres: { ufs: {} }, gov: { ufs: {} } };
   const ARQ = { pres: "presidente", gov: "governador" };
-  let modo = location.hash === "#governador" ? "gov" : "pres";
+  let modo = location.hash === "#governador" ? "gov" : location.hash === "#previsao" ? "prev" : "pres";
 
   // Casa uma linha da apuração com um candidato de disputas.js: pela sigla do partido (os dois finalistas
   // são sempre de partidos diferentes) e, se não bater, pelo nome sem acentos.
@@ -286,7 +346,68 @@
       (algum ? "Atualiza sozinho a cada minuto." : "Aguardando o início da apuração. O TSE começa a divulgar os resultados às 17h (horário de Brasília).");
     const h = [APU.pres.atualizado, APU.gov.atualizado].filter(Boolean).sort().pop();
     document.getElementById("apuHora").textContent = h ? "Dados do TSE de " + h : "";
+    // ponto visto pela página (usado se o JSON ainda não traz a série gravada pelo coletor)
+    const agora = h || "";
+    [["pres", pPres], ["gov", pGov]].forEach(([m, p]) => {
+      const s = VISTOS[m], ult = s[s.length - 1];
+      if (agora && (!ult || ult[1] !== p)) { if (ult && ult[0] === agora) s.pop(); s.push([agora, p]); }
+    });
+    if (vista === "tempo") grafTempo();
   }
+
+  // ---------- Card do topo: % apurado ao longo do tempo ----------
+  const VISTOS = { pres: [], gov: [] };
+  let vista = "cargos";
+  try { if (localStorage.getItem("apuVista2t") === "tempo") vista = "tempo"; } catch (e) {}
+  const minutos = hm => { const [h, m] = String(hm).split(":").map(Number); return h * 60 + (m || 0); };
+  function grafTempo() {
+    const el = document.getElementById("apuSerie");
+    const temSerie = APU.pres.serie || APU.gov.serie;
+    const S = { pres: APU.pres.serie || VISTOS.pres, gov: APU.gov.serie || VISTOS.gov };
+    const algum = S.pres.some(p => p[1] > 0) || S.gov.some(p => p[1] > 0);
+    document.getElementById("apuTempoNota").textContent = !algum
+      ? "Aguardando o início da apuração (17h, horário de Brasília)."
+      : temSerie ? "Horário de Brasília. Cada ponto é uma atualização do TSE em que o percentual mudou."
+      : "Horário de Brasília. Histórico desde que a página foi aberta.";
+    const w = el.clientWidth || 600, h = 200, mg = { t: 12, r: 52, b: 24, l: 38 };
+    const svgT = d3.select(el).attr("viewBox", `0 0 ${w} ${h}`);
+    svgT.selectAll("*").remove();
+    const todos = [...S.pres, ...S.gov].map(p => minutos(p[0]));
+    const fim = Math.max(18 * 60, ...todos);
+    const x = d3.scaleLinear().domain([17 * 60, fim]).range([mg.l, w - mg.r]);
+    const y = d3.scaleLinear().domain([0, 100]).range([h - mg.b, mg.t]);
+    const hh = v => String(Math.floor(v / 60)).padStart(2, "0") + ":" + String(v % 60).padStart(2, "0");
+    const passo = fim - 17 * 60 > 240 ? 60 : 30;
+    const ticks = d3.range(17 * 60, fim + 1, passo);
+    svgT.append("g").attr("class", "grade").selectAll("line").data([25, 50, 75, 100]).join("line")
+      .attr("x1", mg.l).attr("x2", w - mg.r).attr("y1", y).attr("y2", y);
+    svgT.append("g").attr("class", "eixo").attr("transform", `translate(0,${h - mg.b})`)
+      .call(d3.axisBottom(x).tickValues(ticks).tickFormat(hh).tickSizeOuter(0));
+    svgT.append("g").attr("class", "eixo").attr("transform", `translate(${mg.l},0)`)
+      .call(d3.axisLeft(y).tickValues([0, 50, 100]).tickFormat(v => v + "%").tickSizeOuter(0));
+    const linha = d3.line().x(p => x(minutos(p[0]))).y(p => y(p[1])).curve(d3.curveMonotoneX);
+    [["pres", "var(--ao-vivo)"], ["gov", "var(--accent)"]].forEach(([m, cor], i) => {
+      const s = S[m];
+      if (!s.length) return;
+      // começa em 17:00 com 0% para a linha não "nascer" no meio do gráfico
+      const pts = minutos(s[0][0]) > 17 * 60 ? [["17:00", 0], ...s] : s;
+      svgT.append("path").attr("d", linha(pts)).attr("fill", "none").attr("stroke", cor).attr("stroke-width", 2.2);
+      const u = pts[pts.length - 1];
+      svgT.append("circle").attr("cx", x(minutos(u[0]))).attr("cy", y(u[1])).attr("r", 3.5).attr("fill", cor);
+      svgT.append("text").attr("class", "ponta").attr("x", x(minutos(u[0])) + 6).attr("y", y(u[1]) + 4 + (i ? 12 : -4))
+        .attr("fill", cor).text(fmtPct(u[1]).replace(/,(\d)\d%/, ",$1%"));
+    });
+  }
+  function setVista(v) {
+    vista = v;
+    try { localStorage.setItem("apuVista2t", v); } catch (e) {}
+    document.querySelectorAll(".apu-vista button").forEach(b => b.setAttribute("aria-pressed", b.dataset.vista === v));
+    document.getElementById("apuCargos").hidden = v === "tempo";
+    document.getElementById("apuTempo").hidden = v !== "tempo";
+    if (v === "tempo") grafTempo();
+  }
+  document.querySelectorAll(".apu-vista button").forEach(b => b.addEventListener("click", () => setVista(b.dataset.vista)));
+  addEventListener("resize", () => { if (vista === "tempo") grafTempo(); });
 
   // ---------- Placar nacional (Presidente) ----------
   function placar() {
@@ -431,14 +552,110 @@
     .sort((a, b) => GOV[a].nome.localeCompare(GOV[b].nome))
     .map(uf => { const [n, p, v] = GOV[uf].eleito; return `<tr><td class="uf">${uf}</td><td>${esc(n)}</td><td><span class="party"><span class="pdot" style="background:${corP(p)}"></span>${esc(p)}</span></td><td class="num">${fmt(v)}</td></tr>`; }).join("");
 
+  // ---------- Previsão simples ----------
+  // Por município: votos do 1º turno dos dois finalistas (data/es/apuracao/) e, na proporção das urnas
+  // já apuradas no 2º turno (data/es/apuracao2t/), troca o 1º turno pelos votos reais:
+  //   previsão = votos 2º turno + (1 − % apurado do município) × votos 1º turno
+  const arqMun = (pasta, uf, cargo) => `data/es/${pasta}/${uf === "ES" ? "" : uf + "/"}${cargo}.json`;
+  const T1 = {};          // "cargo/UF" -> promessa do JSON do 1º turno (baixado uma vez)
+  const T2 = {};          // "cargo/UF" -> último JSON do 2º turno
+  const ALVOS = [...UFS.map(uf => ["presidente", uf]), ...DISP.map(uf => ["governador", uf])];
+  // posição em v[] de cada finalista: v[] segue a ordem de cand = [[número, nome, partido, lista, ...], ...]
+  function indices(j, cands) {
+    if (!j || !Array.isArray(j.cand)) return null;
+    const ix = cands.map(([nome, partido]) => {
+      const sg = norm(SIGLA[partido] || partido), nn = norm(nome);
+      const k = j.cand.findIndex(c => norm(c[2] || "") === sg);
+      return k >= 0 ? k : j.cand.findIndex(c => norm(c[1]).includes(nn) || nn.includes(norm(c[1])));
+    });
+    return ix.every(i => i >= 0) ? ix : null;
+  }
+  function projetar(cargo, uf, cands) {
+    const j1 = T1[cargo + "/" + uf + "/ok"], j2 = T2[cargo + "/" + uf];
+    const i1 = indices(j1, cands), i2 = indices(j2, cands);
+    if (!i1) return null;
+    const p = [0, 0], novos = [0, 0], base = [0, 0];
+    Object.entries(j1.mun || {}).forEach(([cod, m1]) => {
+      const m2 = i2 && j2.mun ? j2.mun[cod] : null;
+      const f = m2 ? Math.min(1, Math.max(0, (+m2.pct || 0) / 100)) : 0;
+      for (let k = 0; k < 2; k++) {
+        const v1 = +(m1.v || [])[i1[k]] || 0, v2 = m2 ? +(m2.v || [])[i2[k]] || 0 : 0;
+        p[k] += v2 + (1 - f) * v1; novos[k] += v2; base[k] += v1;
+      }
+    });
+    const pct = j2 && j2.es ? +j2.es.pct || 0 : 0;
+    return { p, novos, base, pct };
+  }
+  const somaP = rs => rs.filter(Boolean).reduce((s, r) => ({ p: [s.p[0] + r.p[0], s.p[1] + r.p[1]], novos: [s.novos[0] + r.novos[0], s.novos[1] + r.novos[1]], base: [s.base[0] + r.base[0], s.base[1] + r.base[1]] }), { p: [0, 0], novos: [0, 0], base: [0, 0] });
+  const parte = (v, i) => (v[0] + v[1] > 0 ? v[i] * 100 / (v[0] + v[1]) : 0);
+  let prevCarregando = null;
+  function carregarPrev() {
+    if (prevCarregando) return prevCarregando;
+    prevCarregando = Promise.all(ALVOS.map(([cargo, uf]) => {
+      const k = cargo + "/" + uf;
+      const p1 = T1[k] || (T1[k] = fetch(arqMun("apuracao", uf, cargo)).then(r => (r.ok ? r.json() : null)).catch(() => null)
+        .then(j => { T1[k + "/ok"] = j; return j; }));
+      const p2 = fetch(arqMun("apuracao2t", uf, cargo) + "?t=" + Date.now(), { cache: "no-store" })
+        .then(r => (r.ok ? r.json() : null)).then(j => { if (j) T2[k] = j; }).catch(() => {});
+      return Promise.all([p1, p2]);
+    })).then(() => { prevCarregando = null; if (modo === "prev") prever(); });
+    return prevCarregando;
+  }
+  function prever() {
+    const carregados = ALVOS.filter(([c, uf]) => T1[c + "/" + uf + "/ok"]).length;
+    document.getElementById("prevStatus").textContent = carregados < ALVOS.length
+      ? `Carregando os dados por município (${carregados} de ${ALVOS.length})…`
+      : "Recalculada a cada minuto com os dados do TSE por município.";
+    // Presidente
+    const PC = ST.presidente.map(c => [c.nome, c.partido]);
+    const porUF = {};
+    UFS.forEach(uf => { porUF[uf] = projetar("presidente", uf, PC); });
+    const br = somaP(UFS.map(uf => porUF[uf]));
+    const pa = parte(br.p, 0), pb = parte(br.p, 1);
+    const totP = br.p[0] + br.p[1], totN = br.novos[0] + br.novos[1];
+    const pctBR = APU.pres.ufs.BR ? +APU.pres.ufs.BR.pct || 0 : 0;
+    document.getElementById("prevPresNota").textContent = totP > 0
+      ? `${fmtPct(pctBR)} das urnas apuradas no Brasil · ${fmt(totN * 100 / totP)} dos votos da previsão já são do 2º turno; o resto vem do 1º turno.`
+      : "Aguardando os dados.";
+    document.getElementById("prevPlacar").innerHTML = ST.presidente.map((c, i) => `
+      <div class="lado">
+        <div class="nm"><span class="pdot" style="background:${corP(c.partido)}"></span>${esc(c.nome)} <span class="pt">(${esc(c.partido)})</span></div>
+        <div class="pc">${totP > 0 ? fmt(i ? pb : pa) : "—"}</div>
+        <div class="vt">${totP > 0 ? "1º turno entre os dois: " + fmt(parte(br.base, i)) : ""}</div>
+      </div>${i === 0 ? '<div class="x">×</div>' : ""}`).join("");
+    document.getElementById("prevDuelo").innerHTML = totP > 0
+      ? `<i style="width:${pa}%;background:${corP(ST.presidente[0].partido)}"></i><i style="width:${pb}%;margin-left:auto;background:${corP(ST.presidente[1].partido)}"></i>` : "";
+    document.getElementById("prevPlacarSub").innerHTML = totP > 0
+      ? `<span>Votos válidos previstos: ${vt(Math.round(br.p[0]))} × ${vt(Math.round(br.p[1]))}</span><span>Linha tracejada = 50%</span>` : "";
+    document.getElementById("prevThA").textContent = ST.presidente[0].nome;
+    document.getElementById("prevThB").textContent = ST.presidente[1].nome;
+    document.getElementById("prevUfBody").innerHTML = UFS.slice().sort((a, b) => GOV[a].nome.localeCompare(GOV[b].nome)).map(uf => {
+      const r = porUF[uf];
+      if (!r) return `<tr><td class="uf">${uf}</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td></td></tr>`;
+      const a = parte(r.p, 0), b = parte(r.p, 1), l = a >= b ? ST.presidente[0] : ST.presidente[1];
+      return `<tr><td class="uf">${uf}</td><td class="num">${fmtPct(r.pct)}</td><td class="num">${fmt(a)}</td><td class="num">${fmt(b)}</td>
+        <td><span class="party"><span class="pdot" style="background:${corP(l.partido)}"></span>${esc(l.nome)}</span>
+        <div class="duelo-mini"><i style="width:${a}%;background:${corP(ST.presidente[0].partido)}"></i><i style="width:${b}%;margin-left:auto;background:${corP(ST.presidente[1].partido)}"></i></div></td></tr>`;
+    }).join("");
+    // Governador
+    document.getElementById("prevGov").innerHTML = DISP.map(uf => {
+      const cs = GOV[uf].cand, r = projetar("governador", uf, cs);
+      return `<div class="disp-item"><div class="cab"><span><b>${uf}</b> · ${esc(GOV[uf].nome)}</span><span>${r ? fmtPct(r.pct) : "0%"} apurado</span></div>` +
+        cs.map(([nome, partido], i) => `<div class="cl"><span><span class="pdot" style="background:${corP(partido)}"></span>${esc(nome)}</span><span class="v">${r ? fmt(parte(r.p, i)) : "—"} <span class="t1">1º t. ${r ? fmt(parte(r.base, i)) : "—"}</span></span></div>`).join("") +
+        `</div>`;
+    }).join("");
+  }
+
   // ---------- Abas e atualização ----------
   const TXT = {
     pres: { t: "Presidente — 2º turno", s: `${ST.presidente[0].nome} × ${ST.presidente[1].nome}, nos 27 estados.`, doc: "Presidente 2º turno 2026 — Apuração" },
-    gov: { t: "Governadores — 2º turno", s: `${DISP.length} estados escolhem o governador hoje; nos outros ${UFS.length - DISP.length}, o eleito saiu no 1º turno.`, doc: "Governadores 2º turno 2026 — Apuração" }
+    gov: { t: "Governadores — 2º turno", s: `${DISP.length} estados escolhem o governador hoje; nos outros ${UFS.length - DISP.length}, o eleito saiu no 1º turno.`, doc: "Governadores 2º turno 2026 — Apuração" },
+    prev: { t: "Previsão simples — 2º turno", s: "Resultado do 1º turno entre os dois finalistas, trocado pelos votos reais conforme as urnas são apuradas.", doc: "Previsão simples do 2º turno 2026" }
   };
   function desenhar() {
     topo();
     placar();
+    if (modo === "prev") return prever();
     disputas();
     if (!pronto) return;
     pintar();
@@ -450,6 +667,9 @@
     document.querySelectorAll(".modo button").forEach(b => b.setAttribute("aria-pressed", b.dataset.modo === m));
     document.querySelectorAll(".so-pres").forEach(el => { el.hidden = m !== "pres"; });
     document.querySelectorAll(".so-gov").forEach(el => { el.hidden = m !== "gov"; });
+    document.querySelectorAll(".so-prev").forEach(el => { el.hidden = m !== "prev"; });
+    document.querySelectorAll(".so-mapa").forEach(el => { el.hidden = m === "prev"; });
+    if (m === "prev") { prever(); carregarPrev(); }
     document.getElementById("titulo").textContent = TXT[m].t;
     document.getElementById("subtitulo").textContent = TXT[m].s;
     document.title = TXT[m].doc;
@@ -457,7 +677,7 @@
     desenhar();
   }
   document.querySelectorAll(".modo button").forEach(b => b.addEventListener("click", () => {
-    history.replaceState(null, "", b.dataset.modo === "gov" ? "#governador" : "#presidente");
+    history.replaceState(null, "", { gov: "#governador", prev: "#previsao" }[b.dataset.modo] || "#presidente");
     setModo(b.dataset.modo);
   }));
 
@@ -471,12 +691,13 @@
           if (!t || t === versao[m]) return false;
           versao[m] = t;
           const j = JSON.parse(t);
-          APU[m] = { ufs: j.ufs || {}, atualizado: j.atualizado || "", simulacao: !!j.simulacao };
+          APU[m] = { ufs: j.ufs || {}, atualizado: j.atualizado || "", simulacao: !!j.simulacao, serie: Array.isArray(j.serie) ? j.serie : null };
           return true;
         })
         .catch(() => false)))
-      .then(mudou => { if (mudou.some(Boolean)) desenhar(); });
+      .then(mudou => { if (mudou.some(Boolean)) desenhar(); if (modo === "prev") carregarPrev(); });
   }
+  setVista(vista);
   setModo(modo);
   carregar();
   setInterval(carregar, 60000);
