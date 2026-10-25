@@ -684,7 +684,7 @@
       const d = duelo(uf), a = d.a;
       return `<button type="button" class="disp-item" data-uf="${uf}" aria-pressed="${uf === sel}">
         <div class="cab"><span><b>${uf}</b> · ${esc(GOV[uf].nome)}</span><span>${a && a.pct > 0 ? fmtPct(a.pct) : "0%"} apurado</span></div>` +
-        d.cs.map(c => `<div class="cl"><span><span class="pdot" style="background:${corP(c.partido)}"></span>${esc(c.nome)}</span><span class="v">${c.atual ? fmt(c.atual.pct) : `<span class="t1">1º t. ${fmt(c.p1)}</span>`}</span></div>`).join("") +
+        d.cs.map(c => `<div class="cl"><span><span class="pdot" style="background:${corP(c.partido)}"></span>${esc(c.nome)} <span class="pt">(${esc(c.partido)})</span></span><span class="v">${c.atual ? fmt(c.atual.pct) : `<span class="t1">1º t. ${fmt(c.p1)}</span>`}</span></div>`).join("") +
         `</button>`;
     }).join("");
   }
