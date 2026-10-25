@@ -12,6 +12,7 @@ Uso:
   python scripts/apuracao_es.py --publicar    # coleta real e publica no GitHub
   python scripts/apuracao_es.py --uma-vez     # roda um ciclo e sai
   python scripts/apuracao_es.py --limpar      # zera os arquivos do site
+  python scripts/apuracao_es.py --turno 2 ... # 2º turno (25/10): presidente e governador em docs/data/es/apuracao2t
 
 Usa as funções de terminal e git de apuracao.py. Só biblioteca padrão. Ctrl+C encerra.
 """
@@ -28,7 +29,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from apuracao import RAIZ, UFS, Local, agora, baixar, c, git, log, pct_br, variacao, ANTERIOR  # noqa: E402
+from apuracao import RAIZ, UFS, UFS_GOV_2T, Local, agora, baixar, c, git, log, pct_br, variacao, ANTERIOR  # noqa: E402
 
 SAIDA = RAIZ / "docs" / "data" / "es" / "apuracao"   # o que es.html lê
 BRUTO = RAIZ / "apuracao-bruto" / "es"               # cópia do TSE (ignorada pelo git)
@@ -48,6 +49,17 @@ CARGOS = [
     ("senador", "Senador", 6259, 5),
     ("deputado-federal", "Dep. federal", 6259, 6),
     ("deputado-estadual", "Dep. estadual", 6259, 7),
+]
+
+# 2º turno (25/10/2026), com --turno 2: presidente (6258) em todos os estados e governador (6260)
+# só nas UFs com 2º turno (UFS_GOV_2T, de apuracao.py). Grava em docs/data/es/apuracao2t/ (lido por 2turno-es.html).
+SAIDA_2T = RAIZ / "docs" / "data" / "es" / "apuracao2t"
+BRUTO_2T = RAIZ / "apuracao-bruto" / "es2t"
+# lista de municípios da eleição federal (6258): a estadual (6260) só traz os 6 estados com 2º turno
+CONFIG_MUN_2T = "https://resultados.tse.jus.br/oficial/ele2026/6258/config/mun-e006258-cm.json"
+CARGOS_2T = [
+    ("presidente", "Presidente", 6258, 1),
+    ("governador", "Governador", 6260, 3),
 ]
 
 
@@ -339,10 +351,12 @@ def publicar(caminhos, rotulo):
     return True, f"commit {sha}"
 
 
-def limpar():
+def limpar(turno=1):
     for cargo, _, _, _ in CARGOS:
         for uf in UFS:
-            if uf == "ES" or arq_saida(uf, cargo).exists():
+            if turno == 2 and cargo == "governador" and uf not in UFS_GOV_2T:
+                continue
+            if uf == "ES" or turno == 2 or arq_saida(uf, cargo).exists():
                 gravar(cargo, {"": Local()}, False, uf)
     print("Arquivos zerados em", SAIDA)
 
@@ -394,12 +408,15 @@ def main():
     ap.add_argument("--ufs", help="só estes estados, separados por vírgula (ex.: ES ou SP,RJ)")
     ap.add_argument("--exceto", help="todos os estados menos estes (ex.: ES)")
     ap.add_argument("--cargos", help="só estes cargos, separados por vírgula (ex.: deputado-federal,deputado-estadual)")
+    ap.add_argument("--turno", type=int, choices=(1, 2), default=1, help="2 = 2º turno (presidente e governador, em docs/data/es/apuracao2t)")
     a = ap.parse_args()
-    global PULAR_CONCLUIDOS
+    global PULAR_CONCLUIDOS, SAIDA, BRUTO, CONFIG_MUN, CARGOS
     PULAR_CONCLUIDOS = not a.tudo
+    if a.turno == 2:
+        SAIDA, BRUTO, CONFIG_MUN, CARGOS = SAIDA_2T, BRUTO_2T, CONFIG_MUN_2T, CARGOS_2T
 
     if a.limpar:
-        return limpar()
+        return limpar(a.turno)
     if a.simular and a.publicar:
         sys.exit("--simular nunca publica. Rode sem --publicar.")
 
@@ -414,7 +431,9 @@ def main():
     rotulo_pub = "ES" if list(muns) == ["ES"] else "demais estados" if "ES" not in muns else "estados"
     cargos = [x for x in CARGOS if not a.cargos or x[0] in a.cargos.split(",")]
     # estado[cargo][UF] = {"" (estado) ou código do município: Local}
-    estado = {cargo: {uf: {loc: Local() for loc in [""] + lista} for uf, lista in muns.items()}
+    # no 2º turno, governador só nos estados que têm 2º turno
+    estado = {cargo: {uf: {loc: Local() for loc in [""] + lista} for uf, lista in muns.items()
+                      if not (a.turno == 2 and cargo == "governador" and uf not in UFS_GOV_2T)}
               for cargo, _, _, _ in cargos}
     avisos = []
     sims = {}
@@ -422,7 +441,7 @@ def main():
         sims = {cargo: Simulador(cargo, ele, cd, muns["ES"], avisos) for cargo, _, ele, cd in cargos}
     else:
         log(c("Relendo os arquivos já baixados (pode levar 1 a 2 minutos)...", "cinza"))
-        n = sum(retomar(uf, cargo, estado[cargo][uf]) for cargo, _, _, _ in cargos for uf in muns)
+        n = sum(retomar(uf, cargo, estado[cargo][uf]) for cargo, _, _, _ in cargos for uf in estado[cargo])
         if n:
             log(c(f"Retomando {n} arquivos já baixados em {BRUTO.relative_to(RAIZ)}", "cinza"))
     for cargo, rotulo, _, _ in cargos:
@@ -431,7 +450,7 @@ def main():
             ANTERIOR[rotulo + "/ES"] = estado[cargo]["ES"][""].dado["pct"] if estado[cargo]["ES"][""].dado else 0.0
     modo = c("SIMULAÇÃO (só local)", "amarelo", "negrito") if a.simular else (
         c("PUBLICANDO no GitHub", "vermelho", "negrito") if a.publicar else c("coleta sem publicar", "ciano"))
-    log(c("Apuração ES 2026 — por município", "negrito") + f" · {modo} · coleta a cada {a.intervalo}s")
+    log(c("Apuração ES 2026" + (" (2º turno)" if a.turno == 2 else "") + " — por município", "negrito") + f" · {modo} · coleta a cada {a.intervalo}s")
 
     ciclo, ultima_pub, pendente_pub = 0, 0.0, False
     while True:
@@ -470,9 +489,10 @@ def main():
         pendente_pub = pendente_pub or mudou_algo
         if a.publicar and pendente_pub:
             if time.time() - ultima_pub >= INTERVALO_PUBLICACAO:
-                caminhos = [f"docs/data/es/apuracao/{uf}" for uf in muns if uf != "ES"]
+                pasta = SAIDA.relative_to(RAIZ).as_posix()
+                caminhos = [f"{pasta}/{uf}" for uf in muns if uf != "ES"]
                 if "ES" in muns:
-                    caminhos += [f"docs/data/es/apuracao/{cargo}.json" for cargo, _, _, _ in cargos]
+                    caminhos += [f"{pasta}/{cargo}.json" for cargo, _, _, _ in cargos]
                 ok, msg = publicar(caminhos, rotulo_pub)
                 if ok:
                     ultima_pub, pendente_pub = time.time(), False

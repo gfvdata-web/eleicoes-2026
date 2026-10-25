@@ -2,6 +2,11 @@
 
 Status: 🟢 feito · 🟡 em andamento / próximo · ⚪ futuro (ainda não detalhado)
 
+## 🟢 2º turno e domínio próprio (25/10/2026)
+
+- Site também em https://eleicoes2026.gfvdata.com (Cloudflare), publicado pelo mesmo workflow; GitHub Pages fica de reserva.
+- `2turno.html` (Nacional e bancadas) e `2turno-es.html` (Estados por município), só presidente e governador, com card de % apurado por cargo e mapa que separa estados definidos no 1º turno dos que votam hoje. Ver [segundo-turno.md](segundo-turno.md).
+
 ## 🟢 v1 — Pesquisas para governador (04/10/2026)
 
 - Mapa com os 27 estados coloridos por margem do líder.

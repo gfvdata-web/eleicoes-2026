@@ -1,0 +1,15 @@
+// Worker de estáticos da Cloudflare: serve a pasta docs/ em eleicoes2026.gfvdata.com.
+// Sem código próprio (só assets). Publicado pelo GitHub Actions (.github/workflows/pages.yml, job "cloudflare")
+// a cada push em main; o GitHub Pages continua publicando a mesma pasta como reserva.
+{
+  "name": "eleicoes2026",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "../docs"
+  },
+  "routes": [
+    { "pattern": "eleicoes2026.gfvdata.com", "custom_domain": true }
+  ],
+  "workers_dev": false,
+  "observability": { "enabled": false }
+}

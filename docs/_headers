@@ -1,0 +1,10 @@
+# Cabeçalhos da Cloudflare (Worker de estáticos). O GitHub Pages ignora este arquivo.
+# Dados da apuração mudam a cada 1–2 minutos: o navegador sempre revalida.
+/data/apuracao/*
+  Cache-Control: no-cache
+/data/apuracao2t/*
+  Cache-Control: no-cache
+/data/es/apuracao/*
+  Cache-Control: no-cache
+/data/es/apuracao2t/*
+  Cache-Control: no-cache

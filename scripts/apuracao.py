@@ -11,6 +11,7 @@ Uso:
   python scripts/apuracao.py --publicar       # coleta real e publica no GitHub
   python scripts/apuracao.py --uma-vez        # roda um ciclo e sai
   python scripts/apuracao.py --limpar         # zera os arquivos do site
+  python scripts/apuracao.py --turno 2 ...    # 2º turno (25/10): presidente e governador em docs/data/apuracao2t
 
 Só usa a biblioteca padrão do Python. Ctrl+C encerra.
 """
@@ -67,6 +68,28 @@ URLS = {
     "deputado-estadual": _BASE + "/6259/dados/{uf}/{uf}-c0007-e006259-u.json",   # DF: c0008 (distrital)
 }
 
+# 2º turno (25/10/2026), com --turno 2: só presidente e governador, em outra pasta do site.
+# Eleições do TSE: 6258 = federal 2º turno, 6260 = estadual 2º turno.
+# UFs com 2º turno de governador: as que têm arquivo em 6260 (conferido no TSE em 25/10).
+UFS_GOV_2T = ["AC", "AM", "DF", "ES", "RN", "TO"]
+SAIDA_2T = RAIZ / "docs" / "data" / "apuracao2t"
+CARGOS_2T = [
+    ("presidente", "Presidente", ["BR"] + UFS + ["ZZ"]),
+    ("governador", "Governador", UFS_GOV_2T),
+]
+URLS_2T = {
+    "presidente": _BASE + "/6258/dados/{uf}/{uf}-c0001-e006258-u.json",
+    "governador": _BASE + "/6260/dados/{uf}/{uf}-c0003-e006260-u.json",
+}
+FINALISTAS = {}   # --simular --turno 2: {(cargo, UF ou None): [(nome, sigla), (nome, sigla)]}, de docs/data/2turno/disputas.js
+
+
+def carregar_finalistas():
+    texto = (RAIZ / "docs" / "data" / "2turno" / "disputas.js").read_text(encoding="utf-8")
+    FINALISTAS[("presidente", None)] = [("FLAVIO BOLSONARO", "PL"), ("LULA", "PT")]
+    for uf, cand in re.findall(r'(\w\w): \{[^\n]*sit: "2turno", cand: \[(.*)\] \}', texto):
+        FINALISTAS[("governador", uf)] = re.findall(r'\["([^"]+)", "([^"]+)"', cand)
+
 # Correções manuais de nome: (cargo, UF, nome no TSE) -> nome igual ao de dados.js / senado.js
 APELIDOS = {
     # ("governador", "GO", "ZE DA SILVA"): "José da Silva",
@@ -87,10 +110,12 @@ def converter(cargo, uf, bruto):
             for cd in par.get("cand", []):
                 vap = int(cd.get("vap") or 0)
                 res.append((vap, [cd.get("nmu") or cd["nm"], float(str(cd.get("pvapn") or cd.get("pvap") or 0).replace(",", ".")), par["sg"], vap]))
-                eleito |= cd.get("e") == "s"
-                if cd.get("e") == "s":
+                # o TSE marca e="s" também em quem vai ao 2º turno (st = "2º turno"): isso não é eleito
+                vai_2t = "turno" in (cd.get("st") or "").lower()
+                turno2 |= vai_2t
+                if cd.get("e") == "s" and not vai_2t:
+                    eleito = True
                     eleitos.append((vap, [cd.get("nmu") or cd["nm"], float(str(cd.get("pvapn") or cd.get("pvap") or 0).replace(",", ".")), par["sg"], vap, 1]))
-                turno2 |= "2" in (cd.get("st") or "")
     if not res or pct <= 0:
         return None
     if cargo.startswith("deputado"):
@@ -324,12 +349,14 @@ def coletar_simulado(cargo, uf, loc, conhecidos, avisos):
         loc.status = "igual"
         return False
     pct = min(100.0, round(ant + random.uniform(2, 15), 2))
-    nomes = conhecidos.get((cargo, uf)) or [f"Candidato {l}" for l in "ABCDE"]
+    fin = FINALISTAS.get((cargo, uf)) or FINALISTAS.get((cargo, None))
+    nomes = [n for n, _ in fin] if fin else conhecidos.get((cargo, uf)) or [f"Candidato {l}" for l in "ABCDE"]
+    siglas = dict(fin or [])
     base = random.Random(cargo + uf)
     pesos = [base.uniform(5, 50) * random.uniform(0.95, 1.05) for _ in nomes]
     tot = sum(pesos)
     res = sorted(([n, round(p * 100 / tot, 2), None] for n, p in zip(nomes, pesos)), key=lambda r: -r[1])
-    res = [[n, v] for n, v, _ in res]
+    res = [[n, v, siglas[n]] if n in siglas else [n, v] for n, v, _ in res]
     sit = None
     if pct >= 100:
         sit = "eleito" if cargo == "senador" or res[0][1] > 50 else "2turno" if cargo in ("governador", "presidente") else None
@@ -363,8 +390,8 @@ def git(*args):
 
 
 def publicar():
-    """Commit e push só de docs/data/apuracao/. Retorna (ok, mensagem)."""
-    caminho = "docs/data/apuracao"
+    """Commit e push só da pasta de saída (docs/data/apuracao/ ou apuracao2t/). Retorna (ok, mensagem)."""
+    caminho = SAIDA.relative_to(RAIZ).as_posix()
     git("add", caminho)
     cod, saida = git("commit", "-m", f"Apuração: atualização {agora()[:5]}", "--", caminho)
     if cod != 0:
@@ -444,9 +471,14 @@ def main():
     ap.add_argument("--intervalo", type=int, default=INTERVALO_COLETA, help="segundos entre ciclos (padrão 60)")
     ap.add_argument("--tudo", action="store_true", help="consulta também os locais já concluídos")
     ap.add_argument("--cargos", help="só estes cargos, separados por vírgula (ex.: governador,senador)")
+    ap.add_argument("--turno", type=int, choices=(1, 2), default=1, help="2 = 2º turno (presidente e governador, em docs/data/apuracao2t)")
     a = ap.parse_args()
-    global PULAR_CONCLUIDOS
+    global PULAR_CONCLUIDOS, SAIDA, BRUTO, CARGOS, URLS
     PULAR_CONCLUIDOS = not a.tudo
+    if a.turno == 2:
+        SAIDA, BRUTO, CARGOS, URLS = SAIDA_2T, BRUTO / "2t", CARGOS_2T, URLS_2T
+        if a.simular:
+            carregar_finalistas()
 
     if a.limpar:
         return limpar()
@@ -465,7 +497,7 @@ def main():
     coletar = coletar_simulado if a.simular else coletar_real
     modo = c("SIMULAÇÃO (só local)", "amarelo", "negrito") if a.simular else (
         c("PUBLICANDO no GitHub", "vermelho", "negrito") if a.publicar else c("coleta sem publicar", "ciano"))
-    log(c("Apuração 2026 — coleta do TSE", "negrito") + f" · {modo} · coleta a cada {a.intervalo}s"
+    log(c("Apuração 2026" + (" (2º turno)" if a.turno == 2 else "") + " — coleta do TSE", "negrito") + f" · {modo} · coleta a cada {a.intervalo}s"
         + (f", publicação a cada {INTERVALO_PUBLICACAO}s" if a.publicar else ""))
 
     ciclo, ultima_pub, pendente_pub = 0, 0.0, False
