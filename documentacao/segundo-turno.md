@@ -65,6 +65,5 @@ python scripts/apuracao_es.py --turno 2 --publicar --exceto ES
 
 ### Ainda pendente
 
-- Atualizar `Cloudfare/CLAUDE.md` (inventário: Worker `eleicoes2026`, domínio eleicoes2026.gfvdata.com, sem D1/KV/Cron).
-- Atualizar o mapa do `~/.claude/CLAUDE.md` (eleicoes-2026 passa a ter domínio próprio) e, se fizer sentido, o painel-status (`src/config.py`).
+- painel-status (`src/config.py`) ainda monitora o endereço do GitHub Pages; trocar para o domínio só se o Pages sair do ar. (`Cloudfare/CLAUDE.md` e o mapa do `~/.claude/CLAUDE.md` já foram atualizados em 25/10.)
 - Depois da apuração: decidir se o GitHub Pages sai do ar (com OK do usuário).
