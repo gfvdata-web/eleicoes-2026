@@ -55,64 +55,16 @@ python scripts/apuracao_es.py --turno 2 --publicar --exceto ES
 - Cada processo commita só a própria pasta (`docs/data/apuracao2t/` ou `docs/data/es/apuracao2t/...`).
 - Correção feita junto: o TSE marca `e="s"` também em quem vai ao 2º turno (`st = "2º turno"`); `converter` agora grava `situacao: "2turno"` nesses casos (antes saía "eleito"). Os JSONs do 1º turno foram regravados com o resultado final.
 
-## Pendências para o computador oficial
+## Pendências
 
-### 1. Job da Cloudflare no workflow (não foi enviado em 25/10)
+### Feito em 25/10 no computador oficial
+- Job `cloudflare` aplicado em `.github/workflows/pages.yml`; secret `CLOUDFLARE_ACCOUNT_ID` cadastrado.
+- Primeiro deploy feito à mão (`npx --yes wrangler@4.150.0 deploy --config worker/wrangler.jsonc`, login OAuth local): Worker, domínio e DNS criados.
+- **Limite de 25 MiB por arquivo do Worker:** `docs/data/voto-cruzado/sp.json` (30 MiB) fica de fora pelo `docs/.assetsignore` e o `docs/_redirects` manda esse caminho para a cópia do GitHub Pages (CORS liberado). Se outro arquivo passar de 25 MiB, o deploy falha com "Asset too large": repita o par `.assetsignore` + `_redirects`. Por isso o GitHub Pages não pode sair do ar enquanto o redirecionamento existir.
+- A Cloudflare responde `/2turno.html` com 307 para `/2turno` (padrão do Worker de estáticos); links e `?uf=` continuam funcionando.
 
-O push de 25/10 foi recusado para `.github/workflows/pages.yml` porque a credencial do outro computador não tinha a permissão `workflow`. Aplique a mudança abaixo no computador oficial (salve o bloco em `cf.patch` e rode `git apply cf.patch`, ou cole o job à mão), cadastre os secrets e faça push. Se o push recusar de novo: `gh auth refresh -h github.com -s workflow`.
-
-```bash
-gh secret set CLOUDFLARE_API_TOKEN --repo gfvdata-web/eleicoes-2026
-gh secret set CLOUDFLARE_ACCOUNT_ID --repo gfvdata-web/eleicoes-2026
-```
-
-```diff
-diff --git a/.github/workflows/pages.yml b/.github/workflows/pages.yml
-index 484fae1..e087fb9 100644
---- a/.github/workflows/pages.yml
-+++ b/.github/workflows/pages.yml
-@@ -1,4 +1,8 @@
--# Publica a pasta docs/ no GitHub Pages a cada push em main.
-+# Publica a pasta docs/ a cada push em main, em dois lugares:
-+#  - Cloudflare (eleicoes2026.gfvdata.com), Worker de estáticos em worker/wrangler.jsonc — endereço principal;
-+#  - GitHub Pages (gfvdata-web.github.io/eleicoes-2026) — reserva.
-+# A Cloudflare precisa dos secrets CLOUDFLARE_API_TOKEN e CLOUDFLARE_ACCOUNT_ID no repositório;
-+# sem eles o job só avisa e o Pages segue publicando.
- # Requer Settings → Pages → Source: "GitHub Actions". Sem o limite de ~10 publicações/hora
- # do modo "Deploy from a branch", o que permite atualizar a apuração a cada 1–2 minutos.
- name: Publicar site
-@@ -32,3 +36,28 @@ jobs:
-           path: docs
-       - id: deployment
-         uses: actions/deploy-pages@v4
-+
-+  cloudflare:
-+    runs-on: ubuntu-latest
-+    env:
-+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-+    steps:
-+      - name: Conferir secrets
-+        id: conf
-+        run: |
-+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-+            echo "::warning::Secrets CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID ausentes: Cloudflare não publicada."
-+            echo "ok=false" >> "$GITHUB_OUTPUT"
-+          else
-+            echo "ok=true" >> "$GITHUB_OUTPUT"
-+          fi
-+      - uses: actions/checkout@v4
-+        if: steps.conf.outputs.ok == 'true'
-+      - uses: cloudflare/wrangler-action@v3
-+        if: steps.conf.outputs.ok == 'true'
-+        with:
-+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-+          workingDirectory: worker
-+          command: deploy
-```
-
-Depois do push: conferir no Actions que o job `cloudflare` passou e abrir https://eleicoes2026.gfvdata.com/2turno.html.
+### 1. Secret `CLOUDFLARE_API_TOKEN` (falta)
+Sem ele o job `cloudflare` só avisa e o domínio fica parado no último deploy manual. O usuário cria o token (Cloudflare → My Profile → API Tokens → "Edit Cloudflare Workers") e cadastra: `gh secret set CLOUDFLARE_API_TOKEN --repo gfvdata-web/eleicoes-2026`. Enquanto isso, publicar à mão com o comando acima.
 
 ### 2. Demais
 

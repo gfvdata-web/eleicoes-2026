@@ -1,0 +1,3 @@
+# Redirecionamentos da Cloudflare (Worker de estáticos). O GitHub Pages ignora este arquivo.
+# sp.json passa do limite de 25 MiB por arquivo do Worker (ver docs/.assetsignore): serve a cópia do GitHub Pages, que tem CORS liberado.
+/data/voto-cruzado/sp.json https://gfvdata-web.github.io/eleicoes-2026/data/voto-cruzado/sp.json 302

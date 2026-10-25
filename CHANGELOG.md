@@ -3,6 +3,7 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-25
+- **eleicoes2026.gfvdata.com no ar:** primeiro deploy na Cloudflare e job `cloudflare` no workflow. O `sp.json` do voto cruzado (30 MiB, acima do limite de 25 MiB do Worker) é servido pela cópia do GitHub Pages.
 - **Domínio próprio:** o site passa a ser publicado também em **eleicoes2026.gfvdata.com** (Cloudflare, Worker de estáticos), pelo mesmo workflow do GitHub Pages, que continua no ar como reserva.
 - **2º turno, nova página `2turno.html` (Nacional e bancadas):** card no topo com o % apurado por cargo (presidente no Brasil; governador na média dos 6 estados com 2º turno), subabas Presidente e Governador. Presidente: placar nacional Flávio × Lula e mapa por estado. Governador: o mapa separa os 6 estados que votam hoje (AC, AM, DF, ES, RN, TO; contorno grosso) dos 21 definidos no 1º turno (listrados, na cor clara do partido do eleito), com lista das disputas e tabela dos eleitos em 4/10.
 - **2º turno, nova página `2turno-es.html` (Estados):** apuração por município e região em qualquer estado, só presidente e governador; nos estados sem 2º turno de governador, a aba fica desativada e aparece o eleito no 1º turno.

@@ -1,3 +1,4 @@
 .claude/
 apuracao-bruto/
 __pycache__/
+.wrangler/

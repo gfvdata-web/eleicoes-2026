@@ -1,0 +1,3 @@
+# Arquivos que o Worker da Cloudflare não publica (limite de 25 MiB por arquivo). O GitHub Pages ignora este arquivo.
+# sp.json (30 MiB) vem da reserva no GitHub Pages via docs/_redirects.
+data/voto-cruzado/sp.json
