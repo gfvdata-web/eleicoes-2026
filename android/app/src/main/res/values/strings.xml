@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="pt">
+    <!-- Nome no ícone do celular (o debug troca em src/debug). -->
+    <string name="app_name">Apuração 2026</string>
+</resources>

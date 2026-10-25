@@ -10,6 +10,10 @@ name: Publicar site
 on:
   push:
     branches: [main]
+    # O app Android (android/, android.yml) não muda o site
+    paths-ignore:
+      - "android/**"
+      - ".github/workflows/android.yml"
   workflow_dispatch:
 
 permissions:

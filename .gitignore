@@ -2,3 +2,8 @@
 apuracao-bruto/
 __pycache__/
 .wrangler/
+
+# App Android
+android/.gradle/
+android/**/build/
+android/local.properties

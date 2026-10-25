@@ -1,0 +1,80 @@
+name: Android — app
+
+# APK de debug do app "Apuração 2026" (molde: painel-status). Só roda quando o
+# app ou este workflow mudam; os pushes de dados da apuração não geram build.
+# Não há publicação: o APK fica como artefato da run, para instalar no celular.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "android/**"
+      - ".github/workflows/android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Testes e APK de debug
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: android
+    env:
+      ORG_GRADLE_PROJECT_eleicoesVersionCode: ${{ github.run_number }}
+      APK: eleicoes2026-debug-build${{ github.run_number }}.apk
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+
+      - name: Versão
+        run: echo "ORG_GRADLE_PROJECT_eleicoesVersionName=dev-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+      - name: Testes (JVM)
+        run: ./gradlew testDebugUnitTest
+
+      - name: Monta APK de debug
+        run: |
+          ./gradlew assembleDebug
+          mkdir -p ../saida
+          cp app/build/outputs/apk/debug/app-debug.apk "../saida/$APK"
+
+      # archive: false → o artefato é o próprio .apk (sem .zip), baixável
+      # direto pelo celular na página da run.
+      - name: Publica APK como artefato
+        uses: actions/upload-artifact@v7
+        with:
+          path: saida/${{ env.APK }}
+          archive: false
+          retention-days: 30
+
+      - name: Resumo
+        run: |
+          {
+            echo "### Apuração 2026 — APK de debug"
+            echo ""
+            echo "- Arquivo: \`$APK\`"
+            echo "- Baixe em **Artifacts**, no fim desta página."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Relatórios de testes (só se falhar)
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: relatorios-build${{ github.run_number }}
+          path: android/app/build/reports/
+          retention-days: 14

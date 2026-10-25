@@ -3,6 +3,7 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-25
+- **App Android "Apuração 2026" (`android/`):** APK de debug, gerado no GitHub Actions, que lê a apuração do 2º turno direto do TSE (presidente no Brasil, nos 27 estados e no exterior; governador em AC, AM, DF, ES, RN e TO) e se atualiza a cada minuto enquanto está aberto. Não muda o site.
 - **2º turno, Previsão simples:** a tabela "Presidente — previsão por estado" virou o mapa do Brasil (o mesmo da aba Presidente): cada estado tem a cor de quem lidera a previsão, e a cor fica mais forte conforme as urnas são apuradas; abaixo da sigla, % apurado e previsão de cada candidato.
 - **2º turno, Previsão simples:** o título do card passa a ser "Como funciona: URNAS APURADAS + URNAS DO 1º TURNO", em letra grande, resumindo a conta de uma vez.
 - **Endereços:** a raiz do site (https://eleicoes2026.gfvdata.com/) passa a abrir o **2º turno** (página Brasil, antes `2turno.html`); as pesquisas do 1º turno passam para **/primeiro-turno** (antes a raiz). O link "← 1º turno" e o item "Pesquisas e análises" do switch apontam para o novo endereço; links antigos para `/2turno.html` redirecionam para a raiz.
