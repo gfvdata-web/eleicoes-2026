@@ -1,6 +1,6 @@
 # Página de bancadas do Senado (`docs/senado.html`)
 
-Simula a composição do Senado a partir de 01/02/2027. É uma página separada, criada a pedido do usuário, e aparece como a aba **Bancada Senado** no seletor do topo (Governador | Senado | Bancada Senado). No `index.html` a aba é um link (`<a>`) dentro de `.modo`; no `senado.html` as abas Governador e Senado apontam para `./` e `./#senado`.
+Simula a composição do Senado a partir de 01/02/2027. É uma página separada, criada a pedido do usuário, e aparece como a aba **Bancada Senado** no seletor do topo (Governador | Senado | Bancada Senado). No `primeiro-turno.html` a aba é um link (`<a>`) dentro de `.modo`; no `senado.html` as abas Governador e Senado apontam para `primeiro-turno.html` e `primeiro-turno.html#senado`.
 
 ## Dados
 

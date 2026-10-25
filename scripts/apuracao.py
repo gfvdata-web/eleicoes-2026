@@ -44,6 +44,7 @@ INTERVALO_COLETA = 60        # segundos entre conferências no TSE
 INTERVALO_PUBLICACAO = 120   # segundos mínimos entre dois pushes
 TIMEOUT = 20                 # segundos por requisição
 PARALELO = 8                 # downloads simultâneos
+INTERVALO_MAX = 300          # recuo: com 429/503 o intervalo dobra até aqui; volta ao normal num ciclo limpo
 
 UFS = ["AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA", "PB",
        "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO"]
@@ -387,7 +388,7 @@ def gravar(cargo, locais, simulacao):
 
 
 def serie(cargo, arq, ufs, hora, simulacao):
-    """2º turno: histórico [["HH:MM", %], ...] do % apurado, para o gráfico "No tempo" de 2turno.html.
+    """2º turno: histórico [["HH:MM", %], ...] do % apurado, para o gráfico "No tempo" de index.html (raiz do site).
     Presidente = % do BR; governador = média das UFS_GOV_2T. Parte da série já gravada no arquivo
     (sobrevive a reinício) e só acrescenta ponto quando o % muda. Sem UFs (--limpar) = série vazia."""
     if not ufs:
@@ -525,6 +526,7 @@ def main():
         + (f", publicação a cada {INTERVALO_PUBLICACAO}s" if a.publicar else ""))
 
     ciclo, ultima_pub, pendente_pub = 0, 0.0, False
+    intervalo = a.intervalo
     while True:
         ciclo += 1
         inicio = time.time()
@@ -538,6 +540,10 @@ def main():
             if gravar(cargo, estado[cargo], a.simular):
                 mudou_algo = True
             log(resumo(cargo, rotulo, estado[cargo]))
+        limitados = sum(loc.status == "limitado" for cargo, _, _ in cargos for loc in estado[cargo].values())
+        intervalo = min(intervalo * 2, INTERVALO_MAX) if limitados else a.intervalo
+        if limitados:
+            log(c(f"  ⚠ TSE limitando (429/503) em {limitados} arquivos: próximo ciclo em {intervalo}s", "amarelo"))
         for av in sorted(set(avisos))[:15]:
             log(c("  ⚠ " + av, "amarelo"))
         if len(set(avisos)) > 15:
@@ -562,9 +568,9 @@ def main():
 
         if a.uma_vez:
             break
-        alvo = inicio + a.intervalo
+        alvo = inicio + intervalo
         while time.time() < alvo:  # relógio ao vivo até o próximo ciclo
-            print(f"\r\033[K  {c(agora(), 'negrito')} · próximo ciclo em {int(alvo - time.time()):>2}s", end="", flush=True)
+            print(f"\r\033[K  {c(agora(), 'negrito')} · próximo ciclo em {int(alvo - time.time()):>3}s", end="", flush=True)
             time.sleep(1)
 
 

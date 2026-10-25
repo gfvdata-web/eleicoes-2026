@@ -11,7 +11,7 @@ Os dois seguem o mesmo formato por estado; as diferenças do Senado estão na se
 
 # Presidente (`presidente.js`)
 
-Usado só nas abas Comparativo de `index.html`. `window.PRESIDENTE` é um array com um único item, `uf: "BR"`, no formato de estado (`pesquisas[]`, uma por instituto), **sem** `candidatos[]`; partidos e nomes de quem não está na pesquisa vêm do resultado do TSE (`presidente.json`, local `BR`).
+Usado só nas abas Comparativo de `primeiro-turno.html`. `window.PRESIDENTE` é um array com um único item, `uf: "BR"`, no formato de estado (`pesquisas[]`, uma por instituto), **sem** `candidatos[]`; partidos e nomes de quem não está na pesquisa vêm do resultado do TSE (`presidente.json`, local `BR`).
 
 `window.APELIDOS_TSE` (`"UF|nome na pesquisa": "NOME NO TSE"`) resolve, nos três cargos, nomes de pesquisa que não batem com o nome de urna nem por aproximação. Fora isso, o casamento ignora acentos e maiúsculas e aceita um nome contido no outro ("Augusto Cury" = "ESCRITOR AUGUSTO CURY").
 

@@ -1,5 +1,5 @@
 // Pesquisas de intenção de voto para presidente — eleição 2026, 1º turno (04/10/2026).
-// Usadas só na aba "Comparativo presidente" de index.html (pesquisa nacional × resultado oficial do Brasil).
+// Usadas só na aba "Comparativo presidente" de primeiro-turno.html (pesquisa nacional × resultado oficial do Brasil).
 // tipo "V" = votos válidos; tipo "T" = votos totais (estimulada).
 // Só pesquisas nacionais (uf "BR"); a aba não tem mapa.
 // Os nomes são casados com os do TSE ignorando acentos e maiúsculas ("Augusto Cury" = "ESCRITOR AUGUSTO CURY").

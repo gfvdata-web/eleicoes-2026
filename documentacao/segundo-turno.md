@@ -1,4 +1,4 @@
-# 2º turno (`2turno.html`, `2turno-es.html`) e domínio eleicoes2026.gfvdata.com
+# 2º turno (`index.html`, `2turno-es.html`) e domínio eleicoes2026.gfvdata.com
 
 Páginas do 2º turno de 25/10/2026, criadas a pedido do usuário "começando do zero": só o que foi escolhido para espelhar do 1º turno. As páginas do 1º turno continuam como estão e ganharam o item **2º turno** no switch de seções.
 
@@ -14,9 +14,9 @@ Páginas do 2º turno de 25/10/2026, criadas a pedido do usuário "começando do
 
 ## Estrutura das páginas
 
-Switch próprio do 2º turno (igual nas duas): **Brasil** (`2turno.html`; antes "Nacional e bancadas") | **Estados** (`2turno-es.html`) | **← 1º turno**.
+Switch próprio do 2º turno (igual nas duas): **Brasil** (`index.html`, raiz do site; antes `2turno.html` e "Nacional e bancadas") | **Estados** (`2turno-es.html`) | **← 1º turno**.
 
-### `2turno.html` (Brasil)
+### `index.html` (Brasil)
 - **Card do topo "Apuração do 2º turno":** % apurado por cargo. Presidente = `BR` do TSE; Governador = média do % nos 6 estados com 2º turno, com quantos já têm apuração e quantos terminaram.
   - Switch **Cargos | No tempo** no canto superior direito (escolha guardada no navegador, chave `apuVista2t`). "No tempo" troca os dois subcards por um gráfico do % apurado das 17h até a última atualização, com a `serie` dos JSONs (ver Dados). Se o JSON não tiver `serie`, usa os pontos vistos desde que a página foi aberta.
 - **Subabas** Presidente (`#presidente`, padrão), Governador (`#governador`) e Previsão simples (`#previsao`, sem mapa).
@@ -63,7 +63,7 @@ python scripts/apuracao_es.py --turno 2 --publicar --exceto ES
 - Job `cloudflare` aplicado em `.github/workflows/pages.yml`; secrets `CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_API_TOKEN` cadastrados; o job publica a cada push em `main`.
 - Primeiro deploy feito à mão (`npx --yes wrangler@4.150.0 deploy --config worker/wrangler.jsonc`, login OAuth local): Worker, domínio e DNS criados.
 - **Limite de 25 MiB por arquivo do Worker:** `docs/data/voto-cruzado/sp.json` (30 MiB) fica de fora pelo `docs/.assetsignore` e o `docs/_redirects` manda esse caminho para a cópia do GitHub Pages (CORS liberado). Se outro arquivo passar de 25 MiB, o deploy falha com "Asset too large": repita o par `.assetsignore` + `_redirects`. Por isso o GitHub Pages não pode sair do ar enquanto o redirecionamento existir.
-- A Cloudflare responde `/2turno.html` com 307 para `/2turno` (padrão do Worker de estáticos); links e `?uf=` continuam funcionando.
+- Desde 25/10/2026 o 2º turno é a **raiz** do site e o 1º turno fica em `/primeiro-turno` (`primeiro-turno.html`; a Cloudflare responde `.html` com 307 para o endereço sem extensão). O endereço antigo `/2turno.html` redireciona para `/`: na Cloudflare por `docs/_redirects` (301) e no GitHub Pages pelo próprio `docs/2turno.html`, que só tem o redirecionamento (preserva `?` e `#`).
 
 ### Ainda pendente
 

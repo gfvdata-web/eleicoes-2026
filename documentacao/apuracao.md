@@ -1,6 +1,6 @@
 # Apuração (`apuracao.html` + `scripts/apuracao.py`)
 
-Réplica de `index.html` preparada para a apuração do 1º turno (04/10/2026), criada a pedido do usuário. **Não substitui** `index.html`: as duas páginas convivem. Mudanças de layout feitas em `index.html` depois de 04/10 não são copiadas automaticamente para cá.
+Réplica de `primeiro-turno.html` (antigo `index.html`) preparada para a apuração do 1º turno (04/10/2026), criada a pedido do usuário. **Não substitui** `primeiro-turno.html`: as duas páginas convivem. Mudanças de layout feitas em `primeiro-turno.html` depois de 04/10 não são copiadas automaticamente para cá.
 
 ## Arquitetura
 

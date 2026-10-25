@@ -3,7 +3,7 @@
 Mapa interativo com as últimas pesquisas de intenção de voto para **governador** e **Senado** nas eleições de 2026 (1º turno em 04/10/2026), estado por estado.
 
 - **Site:** https://eleicoes2026.gfvdata.com/ (Cloudflare) · reserva: https://gfvdata-web.github.io/eleicoes-2026/
-- **2º turno (25/10/2026):** https://eleicoes2026.gfvdata.com/2turno.html (presidente e governador, apuração do TSE) — ver [documentacao/segundo-turno.md](documentacao/segundo-turno.md)
+- **2º turno (25/10/2026):** https://eleicoes2026.gfvdata.com/ (raiz do site; presidente e governador, apuração do TSE) — ver [documentacao/segundo-turno.md](documentacao/segundo-turno.md)
 - **Repositório:** https://github.com/gfvdata-web/eleicoes-2026 (público)
 
 ## O que a página mostra
@@ -26,7 +26,8 @@ Uma única página, com um seletor de cargo no topo (**Governador** | **Senado**
 │   ├── senado.md          ← página de bancadas do Senado
 │   └── roadmap.md         ← próximos passos (senadores, apuração, ajustes)
 └── docs/                  ← pasta publicada pelo GitHub Pages
-    ├── index.html         ← página única (HTML + CSS + JS inline), com seletor Governador/Senado
+    ├── index.html         ← 2º turno, página Brasil (raiz do site)
+    ├── primeiro-turno.html ← pesquisas do 1º turno (HTML + CSS + JS inline), com seletor Governador/Senado
     ├── senado.html        ← simulação das bancadas do Senado a partir de 2027
     └── data/
         ├── dados.js           ← pesquisas e candidatos a governador
@@ -39,7 +40,7 @@ Uma única página, com um seletor de cargo no topo (**Governador** | **Senado**
 
 ## Rodar localmente
 
-A página usa `fetch` para carregar o GeoJSON, então precisa de um servidor (abrir o `index.html` direto do disco não funciona):
+A página usa `fetch` para carregar o GeoJSON, então precisa de um servidor (abrir os HTML direto do disco não funciona):
 
 ```bash
 python -m http.server 8765 --directory docs

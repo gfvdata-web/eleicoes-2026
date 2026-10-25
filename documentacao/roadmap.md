@@ -5,7 +5,7 @@ Status: 🟢 feito · 🟡 em andamento / próximo · ⚪ futuro (ainda não det
 ## 🟢 2º turno e domínio próprio (25/10/2026)
 
 - Site também em https://eleicoes2026.gfvdata.com (Cloudflare), publicado pelo mesmo workflow; GitHub Pages fica de reserva.
-- `2turno.html` (Nacional e bancadas) e `2turno-es.html` (Estados por município), só presidente e governador, com card de % apurado por cargo e mapa que separa estados definidos no 1º turno dos que votam hoje. Ver [segundo-turno.md](segundo-turno.md).
+- `index.html` (Brasil, raiz do site; antes `2turno.html`) e `2turno-es.html` (Estados por município), só presidente e governador, com card de % apurado por cargo e mapa que separa estados definidos no 1º turno dos que votam hoje. Ver [segundo-turno.md](segundo-turno.md).
 
 ## 🟢 v1 — Pesquisas para governador (04/10/2026)
 
@@ -26,7 +26,7 @@ Status: 🟢 feito · 🟡 em andamento / próximo · ⚪ futuro (ainda não det
 - Troca básica dos eleitos por estado (menu com todos os candidatos da pesquisa).
 - Grupos de partidos criados pelo leitor, com exemplo pronto e linhas de maioria (41) e de 3/5 (49).
 - Switch "Substitutos": senadores que disputam o governo dão lugar ao 1º suplente.
-- Aba no seletor do topo (`index.html` → `senado.html`).
+- Aba no seletor do topo (`primeiro-turno.html` → `senado.html`).
 - Partido atual dos suplentes conferido na imprensa (04/10/2026); lista de bancadas com %.
 - Próximos ajustes (a combinar): apuração.
 
@@ -37,7 +37,7 @@ Status: 🟢 feito · 🟡 em andamento / próximo · ⚪ futuro (ainda não det
 
 ## 🟡 Página de apuração — `apuracao.html` (04/10/2026)
 
-- 🟢 Réplica de `index.html` com faixa "Apuração oficial" e % de urnas apuradas no mapa; lê `docs/data/apuracao/<cargo>.json` a cada 60 s. Ver [apuracao.md](apuracao.md).
+- 🟢 Réplica de `primeiro-turno.html` com faixa "Apuração oficial" e % de urnas apuradas no mapa; lê `docs/data/apuracao/<cargo>.json` a cada 60 s. Ver [apuracao.md](apuracao.md).
 - 🟢 Script de coleta `scripts/apuracao.py` (5 cargos, terminal com andamento, modo simulação) e publicação via GitHub Actions.
 - 🟡 Às 17h: preencher endereços do TSE e `converter()`; trocar Settings → Pages para "GitHub Actions".
 - ⚪ Páginas para presidente e deputados.

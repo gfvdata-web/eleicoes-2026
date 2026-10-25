@@ -1,3 +1,6 @@
 # Redirecionamentos da Cloudflare (Worker de estáticos). O GitHub Pages ignora este arquivo.
 # sp.json passa do limite de 25 MiB por arquivo do Worker (ver docs/.assetsignore): serve a cópia do GitHub Pages, que tem CORS liberado.
 /data/voto-cruzado/sp.json https://gfvdata-web.github.io/eleicoes-2026/data/voto-cruzado/sp.json 302
+# O 2º turno passou a ser a raiz do site (25/10/2026); o 1º turno está em /primeiro-turno.
+/2turno.html / 301
+/2turno / 301

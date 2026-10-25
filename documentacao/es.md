@@ -1,6 +1,6 @@
 # Espírito Santo (`es.html` + `scripts/apuracao_es.py`)
 
-Página dedicada ao Espírito Santo, criada a pedido do usuário em 04/10/2026. **Só usa a apuração oficial do TSE** (sem pesquisas), com detalhe por município e região. Convive com `index.html` e `apuracao.html`; o link fica na barra de cargos da `apuracao.html`.
+Página dedicada ao Espírito Santo, criada a pedido do usuário em 04/10/2026. **Só usa a apuração oficial do TSE** (sem pesquisas), com detalhe por município e região. Convive com `primeiro-turno.html` e `apuracao.html`; o link fica na barra de cargos da `apuracao.html`.
 
 ## Arquitetura
 

@@ -1,6 +1,6 @@
 # Página
 
-Tudo está em [`docs/index.html`](../docs/index.html): HTML, CSS e JavaScript inline, sem build.
+Tudo está em [`docs/primeiro-turno.html`](../docs/primeiro-turno.html) (endereço `/primeiro-turno`; até 25/10/2026 era `index.html`, hoje a raiz é o 2º turno): HTML, CSS e JavaScript inline, sem build.
 
 ## Dependências
 
@@ -13,7 +13,7 @@ Tudo está em [`docs/index.html`](../docs/index.html): HTML, CSS e JavaScript in
 
 ## Switch de seções (todas as páginas)
 
-`<nav class="secoes" id="secoes">` no topo de cada página, com 3 links: **Pesquisas e análises** (`index.html`), **Nacional e bancadas** (`apuracao.html`) e **Estados** (`es.html`). O item da página atual tem `aria-current="page"` (em `senado.html?apuracao` o script troca para "Nacional e bancadas"). O HTML e o CSS (`.secoes`) são copiados iguais nas 5 páginas; ao mudar, mude em todas.
+`<nav class="secoes" id="secoes">` no topo de cada página, com 3 links: **Pesquisas e análises** (`primeiro-turno.html`), **Nacional e bancadas** (`apuracao.html`) e **Estados** (`es.html`). O item da página atual tem `aria-current="page"` (em `senado.html?apuracao` o script troca para "Nacional e bancadas"). O HTML e o CSS (`.secoes`) são copiados iguais nas 5 páginas; ao mudar, mude em todas.
 
 ## Seletor de cargo
 
