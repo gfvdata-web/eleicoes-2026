@@ -3,7 +3,7 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-25
-- **Apuração do 2º turno mais rápida:** as páginas Brasil e Estados buscam os dados a cada 30 s (antes 60 s) e a coleta do TSE roda a cada 60 s (antes 120 s).
+- **Apuração do 2º turno mais rápida:** as páginas Brasil e Estados buscam os dados a cada 30 s (antes 60 s) e os coletores publicam no máximo a cada 60 s (antes 120 s).
 - **App Android "Apuração 2026" (`android/`):** APK de debug, gerado no GitHub Actions, que lê a apuração do 2º turno direto do TSE (presidente no Brasil, nos 27 estados e no exterior; governador em AC, AM, DF, ES, RN e TO) e se atualiza a cada minuto enquanto está aberto. Não muda o site.
 - **2º turno, Previsão simples:** a tabela "Presidente — previsão por estado" virou o mapa do Brasil (o mesmo da aba Presidente): cada estado tem a cor de quem lidera a previsão, e a cor fica mais forte conforme as urnas são apuradas; abaixo da sigla, % apurado e previsão de cada candidato.
 - **2º turno, Previsão simples:** o título do card passa a ser "Como funciona: URNAS APURADAS + URNAS DO 1º TURNO", em letra grande, resumindo a conta de uma vez.

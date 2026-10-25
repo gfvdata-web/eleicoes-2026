@@ -37,7 +37,7 @@ MUNICIPIOS = RAIZ / "docs" / "data" / "es" / "municipios.js"
 CONFIG_MUN = "https://resultados.tse.jus.br/oficial/ele2026/6259/config/mun-e006259-cm.json"
 
 INTERVALO_COLETA = 60
-INTERVALO_PUBLICACAO = 120
+INTERVALO_PUBLICACAO = 60
 PARALELO = 8    # 24 levou a HTTP 429 no 1º turno (~28 mil arquivos por ciclo)
 INTERVALO_MAX = 300   # recuo: com 429/503 o intervalo dobra até aqui; volta ao normal num ciclo limpo
 REVARRER = 600        # segundos: varre de novo os municípios de um estado não concluído mesmo sem mudança no arquivo do estado

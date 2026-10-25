@@ -41,7 +41,7 @@ SAIDA = RAIZ / "docs" / "data" / "apuracao"      # o que o site lê
 BRUTO = RAIZ / "apuracao-bruto"                  # cópia do que veio do TSE (fora do site, ignorado pelo git)
 
 INTERVALO_COLETA = 60        # segundos entre conferências no TSE
-INTERVALO_PUBLICACAO = 120   # segundos mínimos entre dois pushes
+INTERVALO_PUBLICACAO = 60    # segundos mínimos entre dois pushes
 TIMEOUT = 20                 # segundos por requisição
 PARALELO = 8                 # downloads simultâneos
 INTERVALO_MAX = 300          # recuo: com 429/503 o intervalo dobra até aqui; volta ao normal num ciclo limpo
