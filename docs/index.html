@@ -583,13 +583,16 @@
       return vDe(du, 0) + " / " + vDe(du, 1);
     });
     // Votos válidos já apurados / total estimado (apurados ÷ % de urnas apuradas)
-    svg.selectAll("text.vol").text(d => {
-      const uf = d.properties.sigla, a = APU[modo === "prev" ? "pres" : modo].ufs[uf];
-      if (def(uf) || !a || !(a.pct > 0) || !Array.isArray(a.res)) return "";
-      const v = a.res.reduce((s, r) => s + (+r[3] || 0), 0);
-      return v > 0 ? mm(v) + "/" + mm(v * 100 / Math.min(100, a.pct)) : "";
-    });
+    svg.selectAll("text.vol").text(d => { const uf = d.properties.sigla, v = def(uf) ? null : volUF(uf); return v ? mm(v[0]) + "/" + mm(v[1]) : ""; });
   }
+  // [válidos apurados, total estimado] do cargo do modo atual (previsão usa presidente), ou null
+  function volUF(uf) {
+    const a = APU[modo === "prev" ? "pres" : modo].ufs[uf];
+    if (!a || !(a.pct > 0) || !Array.isArray(a.res)) return null;
+    const v = a.res.reduce((s, r) => s + (+r[3] || 0), 0);
+    return v > 0 ? [v, v * 100 / Math.min(100, a.pct)] : null;
+  }
+  const volTag = uf => { const v = volUF(uf); return v ? ` <span class="tag">${mm(v[0])} de ~${mm(v[1])} votos válidos</span>` : ""; };
   const mm = n => n >= 1e6 ? (n / 1e6).toFixed(n < 1e7 ? 1 : 0).replace(".", ",") + "MM" : Math.round(n / 1e3) + "mil";
   function legenda() {
     const ul = document.getElementById("legenda");
@@ -615,7 +618,7 @@
       const r = PREV_UF[uf];
       if (!r) return `<h4>${esc(g.nome)}</h4><div class="sub">Carregando os dados por município…</div>`;
       return `<h4>${esc(g.nome)}</h4>
-        <div class="sub"><span class="tag">${fmtPct(r.pct)} das urnas apuradas</span></div>
+        <div class="sub"><span class="tag">${fmtPct(r.pct)} das urnas apuradas</span>${volTag(uf)}</div>
         <div class="row" style="color:var(--muted);font-size:.72rem"><span></span><span>1º turno</span><span>previsão</span></div>` +
         ST.presidente.map((c, i) => `<div class="row"><span><span class="pdot" style="background:${corP(c.partido)}"></span>${esc(c.nome)} <span class="pt">(${esc(c.partido)})</span></span><span class="t1">${fmt(parte(r.base, i))}</span><span class="v">${fmt(parte(r.p, i))}</span></div>`).join("") +
         `<div class="sub" style="margin:6px 0 0">1º turno: só entre os dois finalistas.</div>`;
@@ -631,7 +634,7 @@
     const ord = d.cs.slice().sort((x, y) => (y.atual ? y.atual.pct : -1) - (x.atual ? x.atual.pct : -1));
     const selo = sit ? '<span class="selo">Eleito</span>' : modo === "gov" ? '<span class="selo t2">2º turno hoje</span>' : "";
     return `<h4>${esc(g.nome)} ${selo}</h4>
-      <div class="sub"><span class="tag">${a && a.pct > 0 ? fmtPct(a.pct) : "0%"} das urnas apuradas</span></div>
+      <div class="sub"><span class="tag">${a && a.pct > 0 ? fmtPct(a.pct) : "0%"} das urnas apuradas</span>${volTag(uf)}</div>
       <div class="row" style="color:var(--muted);font-size:.72rem"><span></span><span>1º turno</span><span>agora</span></div>` +
       ord.map(c => `<div class="row"><span><span class="pdot" style="background:${corP(c.partido)}"></span>${esc(c.nome)} <span class="pt">(${esc(c.partido)})</span></span><span class="t1">${fmt(c.p1)}</span><span class="v">${c.atual ? fmt(c.atual.pct) : "—"}</span></div>`).join("");
   }
