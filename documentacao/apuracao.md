@@ -25,6 +25,7 @@ Para voltar ao modo antigo, basta trocar a opção de novo; o workflow pode fica
 - **% apurado no mapa:** abaixo de cada sigla (arredondado para baixo; `<1%` entre 0 e 1; `100%` só quando completo).
 - **Apuração como pesquisa principal:** com `pct > 0`, a apuração vira a "pesquisa principal" (`apuracao(e)` dentro de `principal(e)`). Cor, líder, margem, pop-up e tabela passam a usá-la, com selo "TSE"/"oficial". Com 0%, o estado segue com a pesquisa. As pesquisas continuam no pop-up para comparação.
 - **Aba Presidente** (`#presidente`): mesmo mapa, lendo `presidente.json`. Não há lista própria de candidatos: os estados vêm de `dados.js` e os candidatos, da própria apuração. O número no mapa é o % de votos válidos do líder (nos outros cargos é o % de urnas); a faixa do topo mostra o total `BR`.
+- **Como a apuração andou — Brasil** (só na aba Presidente, embaixo do mapa): linha do % de votos válidos dos 5 mais votados conforme a apuração avançou em 4/10, com eixo X em % apurado ou horário (escolha guardada no navegador, chave `evoEixo`). Lê `data/apuracao/evolucao-presidente.json`.
 - **Aba Partidos** (`#partidos`): lê os cinco JSONs, filtra por partido e cargo e lista eleitos (campo `eleitos`) e, em presidente/governador/Senado, quem lidera. Deputados só aparecem quando o TSE os marca como eleitos.
 - Lê `data/apuracao/governador.json` e `data/apuracao/senador.json` com `?t=<timestamp>` (evita o cache do Pages) e repinta só se algo mudou.
 
@@ -50,6 +51,10 @@ Um arquivo por cargo: `presidente`, `governador`, `senador`, `deputado-federal`,
 - `simulacao: true` só aparece em dados gerados por `--simular`.
 - Local ausente = 0% apurado.
 
+## `docs/data/apuracao/evolucao-presidente.json`
+
+Arquivo fixo, gerado uma vez por `python scripts/apuracao.py --evolucao` a partir dos commits de `presidente.json` da noite de 4/10 (cada atualização publicada virou um commit): `{"candidatos": [[nome, partido], ...os 5 mais votados], "pontos": [["HH:MM", % apurado, [% de cada candidato]], ...]}`, um ponto por % apurado distinto, em ordem crescente (de 1,42% a 100%).
+
 ## Script `scripts/apuracao.py`
 
 Só biblioteca padrão do Python. Comandos:
@@ -61,6 +66,7 @@ Só biblioteca padrão do Python. Comandos:
 | `python scripts/apuracao.py --publicar` | Coleta real e publica (commit + push só de `docs/data/apuracao/`). |
 | `--uma-vez` | Roda um ciclo e sai. |
 | `--cargos governador,senador` | Limita os cargos. |
+| `--evolucao` | Não coleta: gera `evolucao-presidente.json` (1º turno) pelos commits e completa com o % dos candidatos os pontos antigos da `serie` do 2º turno. |
 | `--limpar` | Zera os arquivos do site. Rodar antes de commitar se tiver usado `--simular`. |
 
 O terminal mostra, a cada ciclo, a hora atual e, por cargo: novos / iguais / pendentes / erros, andamento (média ou BR), concluídos e a hora do último dado do TSE. Entre ciclos, um relógio conta até o próximo. Avisos em amarelo: nome sem correspondência na lista do site, % apurado que diminuiu, erro de rede ou arquivo inválido.

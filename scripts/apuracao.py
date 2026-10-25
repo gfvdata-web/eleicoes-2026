@@ -406,7 +406,59 @@ def serie(cargo, arq, ufs, hora, simulacao):
         return pontos
     if pontos and pontos[-1][0] == hora:
         pontos = pontos[:-1]
-    return pontos + [[hora, pct]]
+    ponto = [hora, pct]
+    if cargo == "presidente":  # % de cada candidato no BR, para o gráfico "Como a apuração andou"
+        ponto.append([[r[0], r[1]] for r in ufs.get("BR", {}).get("res", [])])
+    return pontos + [ponto]
+
+
+def versoes_br(caminho):
+    """[(hora, pct, res)] do BR em cada commit de `caminho` (do mais antigo ao mais novo)."""
+    _, shas = git("log", "--reverse", "--format=%H", "--", caminho)
+    out = []
+    for sha in shas.split():
+        cod, txt = git("show", f"{sha}:{caminho}")
+        try:
+            br = json.loads(txt)["ufs"]["BR"] if cod == 0 else None
+        except Exception:
+            br = None
+        if br and br.get("pct") and br.get("res"):
+            out.append((str(br.get("hora", ""))[:5], float(br["pct"]), br["res"]))
+    return out
+
+
+def evolucao():
+    """Gera docs/data/apuracao/evolucao-presidente.json (1º turno, a partir dos commits) e completa
+    com o % dos candidatos os pontos antigos da `serie` do 2º turno. Roda uma vez, sem coletar."""
+    v1 = versoes_br("docs/data/apuracao/presidente.json")
+    final = json.loads((SAIDA / "presidente.json").read_text(encoding="utf-8"))["ufs"]["BR"]
+    v1.append((str(final.get("hora", ""))[:5], float(final["pct"]), final["res"]))
+    cand = [[r[0], r[2]] for r in final["res"][:5]]
+    por_pct = {}
+    for hora, pct, res in v1:
+        if pct not in por_pct:  # o primeiro commit com esse % (os seguintes só repetem)
+            d = {r[0]: r[1] for r in res}
+            por_pct[pct] = [hora, pct, [d.get(n) for n, _ in cand]]
+    pontos = sorted(por_pct.values(), key=lambda p: p[1])
+    arq = SAIDA / "evolucao-presidente.json"
+    arq.write_text(json.dumps({"candidatos": cand, "pontos": pontos}, ensure_ascii=False, separators=(",", ":")) + "\n",
+                   encoding="utf-8", newline="\n")
+    log(f"1º turno: {len(pontos)} pontos ({pontos[0][1]}% a {pontos[-1][1]}%) em {arq.relative_to(RAIZ)}")
+
+    arq2 = SAIDA_2T / "presidente.json"
+    doc = json.loads(arq2.read_text(encoding="utf-8"))
+    res_por_pct = {pct: res for _, pct, res in versoes_br("docs/data/apuracao2t/presidente.json")}
+    br = doc.get("ufs", {}).get("BR")
+    if br and br.get("pct"):
+        res_por_pct[float(br["pct"])] = br["res"]
+    completos = 0
+    for p in doc.get("serie", []):
+        if len(p) < 3 and float(p[1]) in res_por_pct:
+            p.append([[r[0], r[1]] for r in res_por_pct[float(p[1])]])
+            completos += 1
+    arq2.write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8", newline="\n")
+    sem = sum(len(p) < 3 for p in doc.get("serie", []))
+    log(f"2º turno: {completos} pontos da série completados, {sem} sem dados dos candidatos")
 
 
 def git(*args):
@@ -497,7 +549,10 @@ def main():
     ap.add_argument("--tudo", action="store_true", help="consulta também os locais já concluídos")
     ap.add_argument("--cargos", help="só estes cargos, separados por vírgula (ex.: governador,senador)")
     ap.add_argument("--turno", type=int, choices=(1, 2), default=1, help="2 = 2º turno (presidente e governador, em docs/data/apuracao2t)")
+    ap.add_argument("--evolucao", action="store_true", help="gera evolucao-presidente.json do 1º turno pelos commits e completa a série do 2º turno; não coleta")
     a = ap.parse_args()
+    if a.evolucao:
+        return evolucao()
     global PULAR_CONCLUIDOS, SAIDA, BRUTO, CARGOS, URLS
     PULAR_CONCLUIDOS = not a.tudo
     if a.turno == 2:

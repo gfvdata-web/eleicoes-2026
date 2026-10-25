@@ -72,6 +72,22 @@
   #apuSerie .eixo line, #apuSerie .grade line { stroke: var(--border); }
   #apuSerie .eixo path { stroke: var(--border); }
   #apuSerie .ponta { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  /* Card "Como a apuração andou — Brasil" */
+  .evo-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin-bottom: 8px; }
+  .evo-top h3 { margin: 0; }
+  .evo-eixo { display: inline-flex; padding: 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+  .evo-eixo button { font: inherit; font-size: .72rem; font-weight: 600; padding: 3px 9px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
+  .evo-eixo button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+  .evo-wrap { position: relative; }
+  #evoSvg { width: 100%; height: 260px; display: block; }
+  #evoSvg .eixo text { font-size: 11px; fill: var(--muted); }
+  #evoSvg .eixo line, #evoSvg .grade line { stroke: var(--border); }
+  #evoSvg .eixo path { stroke: var(--border); }
+  #evoSvg .ponta { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  #evoSvg .guia { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; pointer-events: none; }
+  .evo-tip { position: absolute; top: 6px; left: 0; z-index: 5; pointer-events: none; opacity: 0; transition: opacity .1s; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: .78rem; box-shadow: 0 2px 8px rgba(0,0,0,.15); white-space: nowrap; }
+  .evo-tip div { font-variant-numeric: tabular-nums; }
+
   .apu-leg { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: .78rem; color: var(--muted); margin-bottom: 4px; }
   .apu-leg span { white-space: nowrap; }
   .apu-leg span::before { content: ""; display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; background: var(--c); }
@@ -265,6 +281,18 @@
     </div>
   </div>
 
+  <div class="card so-pres" id="cardEvo">
+    <div class="evo-top">
+      <h3>Como a apuração andou — Brasil</h3>
+      <div class="evo-eixo" id="evoEixo" role="group" aria-label="Eixo horizontal do gráfico">
+        <button type="button" data-eixo="pct" aria-pressed="true">% apurado</button>
+        <button type="button" data-eixo="hora" aria-pressed="false">Horário</button>
+      </div>
+    </div>
+    <div class="evo-wrap"><svg id="evoSvg" role="img" aria-label="Percentual de cada candidato a presidente conforme a apuração avança"></svg><div class="evo-tip" id="evoTip"></div></div>
+    <p class="nota" id="evoNota" style="margin:6px 0 0">Cada ponto é uma atualização do TSE. Horário de Brasília.</p>
+  </div>
+
   <div class="card so-gov" hidden>
     <h3>Definidos no 1º turno</h3>
     <p class="nota">Estados em que o governador foi eleito em 4/10, com mais da metade dos votos válidos.</p>
@@ -404,6 +432,94 @@
   }
   document.querySelectorAll(".apu-vista button").forEach(b => b.addEventListener("click", () => setVista(b.dataset.vista)));
   addEventListener("resize", () => { if (vista === "tempo") grafTempo(); });
+
+  // ---------- Card "Como a apuração andou — Brasil": % de cada candidato conforme as urnas são apuradas ----------
+  // (mesma função em apuracao.html e index.html) cands = [{ nome, cor }]; pts = [{ h: "HH:MM", p: % apurado, v: [% por candidato] }]
+  let evoEixo = "pct";
+  try { if (localStorage.getItem("evoEixo") === "hora") evoEixo = "hora"; } catch (e) {}
+  function grafEvolucao(el, tipEl, cands, pts, eixo) {
+    const minutos = hm => { const [h, m] = String(hm).split(":").map(Number); return h * 60 + (m || 0); };
+    const hh = v => String(Math.floor(v / 60)).padStart(2, "0") + ":" + String(v % 60).padStart(2, "0");
+    const pc = (v, d) => v.toFixed(d).replace(".", ",") + "%";
+    const curto = n => { const p = String(n).trim().split(/\s+/), u = p[p.length - 1].toLowerCase(); return u.charAt(0).toUpperCase() + u.slice(1); };
+    const w = el.parentNode.clientWidth || 600, h = 260, mg = { t: 12, r: 92, b: 26, l: 38 };
+    const svgE = d3.select(el).attr("viewBox", `0 0 ${w} ${h}`);
+    svgE.selectAll("*").remove();
+    tipEl.style.opacity = 0;
+    if (!pts.length) return;
+    const fim = Math.max(18 * 60, ...pts.map(p => minutos(p.h)));
+    const xv = p => (eixo === "hora" ? minutos(p.h) : p.p);
+    const x = d3.scaleLinear().domain(eixo === "hora" ? [17 * 60, fim] : [0, 100]).range([mg.l, w - mg.r]);
+    const vals = pts.flatMap(p => p.v).filter(v => v != null);
+    const pad = Math.max(1, (d3.max(vals) - d3.min(vals)) * 0.06);
+    const y = d3.scaleLinear().domain([Math.max(0, d3.min(vals) - pad), Math.min(100, d3.max(vals) + pad)]).nice().range([h - mg.b, mg.t]);
+    const passo = fim - 17 * 60 > 240 ? 60 : 30;
+    const ticksX = eixo === "hora" ? d3.range(17 * 60, fim + 1, passo) : [0, 25, 50, 75, 100];
+    svgE.append("g").attr("class", "grade").selectAll("line").data(y.ticks(5)).join("line")
+      .attr("x1", mg.l).attr("x2", w - mg.r).attr("y1", y).attr("y2", y);
+    svgE.append("g").attr("class", "eixo").attr("transform", `translate(0,${h - mg.b})`)
+      .call(d3.axisBottom(x).tickValues(ticksX).tickFormat(eixo === "hora" ? hh : v => v + "%").tickSizeOuter(0));
+    svgE.append("g").attr("class", "eixo").attr("transform", `translate(${mg.l},0)`)
+      .call(d3.axisLeft(y).ticks(5).tickFormat(v => v + "%").tickSizeOuter(0));
+    // uma linha por candidato + rótulo na ponta (nome curto e %), empurrado na vertical para não sobrepor
+    const rot = [];
+    cands.forEach((c, i) => {
+      const s = pts.filter(p => p.v[i] != null);
+      if (!s.length) return;
+      svgE.append("path").attr("d", d3.line().x(p => x(xv(p))).y(p => y(p.v[i]))(s))
+        .attr("fill", "none").attr("stroke", c.cor).attr("stroke-width", 2.2).attr("stroke-linejoin", "round");
+      const u = s[s.length - 1];
+      svgE.append("circle").attr("cx", x(xv(u))).attr("cy", y(u.v[i])).attr("r", 3).attr("fill", c.cor);
+      rot.push({ cor: c.cor, y: y(u.v[i]), t: `${curto(c.nome)} ${pc(u.v[i], 1)}`, x: x(xv(u)) });
+    });
+    rot.sort((a, b) => a.y - b.y);
+    const gap = 13;
+    rot.forEach((r, i) => { if (i && r.y < rot[i - 1].y + gap) r.y = rot[i - 1].y + gap; });
+    for (let i = rot.length - 1; i >= 0; i--) { const lim = i === rot.length - 1 ? h - mg.b : rot[i + 1].y - gap; if (rot[i].y > lim) rot[i].y = lim; }
+    rot.forEach(r => svgE.append("text").attr("class", "ponta").attr("x", r.x + 6).attr("y", r.y + 4).attr("fill", r.cor).text(r.t));
+    // dica: linha vertical guia + valores do ponto mais próximo (mouse ou toque)
+    const guia = svgE.append("line").attr("class", "guia").attr("y1", mg.t).attr("y2", h - mg.b).style("opacity", 0);
+    const ordenados = [...pts].sort((a, b) => xv(a) - xv(b));
+    const bis = d3.bisector(xv).center;
+    function mostrar(ev) {
+      const r = el.getBoundingClientRect(), px = (ev.clientX - r.left) * (w / r.width);
+      const p = ordenados[bis(ordenados, x.invert(Math.max(mg.l, Math.min(w - mg.r, px))))];
+      guia.attr("x1", x(xv(p))).attr("x2", x(xv(p))).style("opacity", 1);
+      tipEl.innerHTML = `<strong>${esc(p.h)}</strong> · ${pc(p.p, 2)} apurado` + cands.map((c, i) => p.v[i] == null ? "" :
+        `<div><span class="pdot" style="background:${c.cor}"></span>${esc(curto(c.nome))} <b>${pc(p.v[i], 2)}</b></div>`).join("");
+      tipEl.style.opacity = 1;
+      const tw = tipEl.offsetWidth, cx = x(xv(p)) * (r.width / w);
+      tipEl.style.left = Math.max(0, Math.min(r.width - tw, cx + 10 > r.width - tw ? cx - tw - 10 : cx + 10)) + "px";
+    }
+    svgE.append("rect").attr("x", mg.l).attr("y", mg.t).attr("width", w - mg.l - mg.r).attr("height", h - mg.t - mg.b)
+      .attr("fill", "transparent").style("touch-action", "pan-y")
+      .on("pointermove pointerdown", mostrar)
+      .on("pointerleave", () => { guia.style("opacity", 0); tipEl.style.opacity = 0; });
+  }
+  function setEixo(v) {
+    evoEixo = v;
+    try { localStorage.setItem("evoEixo", v); } catch (e) {}
+    document.querySelectorAll("#evoEixo button").forEach(b => b.setAttribute("aria-pressed", b.dataset.eixo === v));
+    evolucao();
+  }
+  document.querySelectorAll("#evoEixo button").forEach(b => b.addEventListener("click", () => setEixo(b.dataset.eixo)));
+  addEventListener("resize", () => evolucao());
+  const evoSerie = () => (APU.pres.serie || []).filter(p => Array.isArray(p[2]) && p[2].length);
+  function evolucao() {
+    const card = document.getElementById("cardEvo"), el = document.getElementById("evoSvg"), tp = document.getElementById("evoTip");
+    if (card.hidden) return;
+    const s = evoSerie();
+    document.getElementById("evoNota").textContent = s.length ? "Cada ponto é uma atualização do TSE. Horário de Brasília." : "Aguardando o início da apuração (17h, horário de Brasília).";
+    const ult = s.length ? s[s.length - 1][2] : [];
+    const br = (APU.pres.ufs.BR || {}).res || [];
+    const cands = ult.map(([nome]) => {
+      const c = ST.presidente.find(c => norm(c.nome).includes(norm(nome)) || norm(nome).includes(norm(c.nome)));
+      const r = br.find(r => r[0] === nome);
+      return { nome, cor: corP(c ? c.partido : (r && r[2]) || "—") };
+    });
+    const pts = s.map(p => ({ h: p[0], p: +p[1], v: cands.map(c => { const r = p[2].find(r => r[0] === c.nome); return r ? +r[1] : null; }) }));
+    grafEvolucao(el, tp, cands, pts, evoEixo);
+  }
 
   // ---------- Placar nacional (Presidente) ----------
   function placar() {
@@ -661,6 +777,7 @@
   function desenhar() {
     topo();
     placar();
+    evolucao();
     if (modo === "prev") prever(); else disputas();
     if (!pronto) return;
     pintar();
@@ -702,6 +819,7 @@
       .then(mudou => { if (mudou.some(Boolean)) desenhar(); if (modo === "prev") carregarPrev(); });
   }
   setVista(vista);
+  setEixo(evoEixo);
   setModo(modo);
   carregar();
   setInterval(carregar, 15000);

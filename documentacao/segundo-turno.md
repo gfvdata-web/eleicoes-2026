@@ -38,7 +38,7 @@ Switch próprio do 2º turno (igual nas duas): **Brasil** (`index.html`, raiz do
 | Arquivo | O que é | Gerado por |
 |---|---|---|
 | `docs/data/2turno/disputas.js` (`window.SEGUNDO_TURNO`) | finalistas de presidente (com % do 1º turno por UF) e, por UF, governador `definido` (eleito) ou `2turno` (os dois candidatos) | resultado final do 1º turno (`docs/data/apuracao/*.json`), gerado uma vez em 25/10 |
-| `docs/data/apuracao2t/presidente.json`, `governador.json` | apuração por UF (mesmo formato de [apuracao.md](apuracao.md)); `"ufs": {}` = 0%. Só no 2º turno: `serie: [["HH:MM", %], ...]` com o histórico do % apurado (presidente = BR; governador = média das 6 UFs), um ponto por mudança, preservado entre reinícios do coletor (função `serie()`); `--limpar` zera | `python scripts/apuracao.py --turno 2` |
+| `docs/data/apuracao2t/presidente.json`, `governador.json` | apuração por UF (mesmo formato de [apuracao.md](apuracao.md)); `"ufs": {}` = 0%. Só no 2º turno: `serie: [["HH:MM", %], ...]` com o histórico do % apurado (presidente = BR; governador = média das 6 UFs; em presidente cada ponto tem um 3º elemento `[[nome, % válidos], ...]` do BR, usado pelo card "Como a apuração andou"), um ponto por mudança, preservado entre reinícios do coletor (função `serie()`); `--limpar` zera | `python scripts/apuracao.py --turno 2` |
 | `docs/data/es/apuracao2t/<cargo>.json` e `<UF>/<cargo>.json` | apuração por município (mesmo formato de [es.md](es.md)) | `python scripts/apuracao_es.py --turno 2` |
 
 UFs com 2º turno de governador: as que têm arquivo na eleição 6260 do TSE (lista `UFS_GOV_2T` em `scripts/apuracao.py`, conferida em 25/10).
