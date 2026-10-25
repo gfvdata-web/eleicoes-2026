@@ -73,6 +73,31 @@ def url(ele, cargo, local, uf="ES"):
     return f"{BASE}/{ele}/dados/{u}/{u}{local}-c{cargo:04d}-e{ele:06d}-u.json"
 
 
+# Abrangência ("-ab.json"): um arquivo por estado e eleição com o % apurado de cada município (sem votos).
+# Serve de filtro: só baixa o "-u.json" do município cujo % mudou. Chave: (ele, UF).
+AB_LOC, AB_PCT = {}, {}
+
+
+def abrangencia(ele, uf):
+    """Atualiza AB_PCT[(ele, uf)] = {município: %}. Devolve o status (novo | igual | limitado | erro)."""
+    loc = AB_LOC.setdefault((ele, uf), Local())
+    u = uf.lower()
+    cod, corpo, cab = baixar(f"{BASE}/{ele}/dados/{u}/{u}-e{ele:06d}-ab.json", loc)
+    if cod == 304:
+        return "igual"
+    if cod in (429, 503):
+        return "limitado"
+    if cod != 200:
+        return "erro"
+    try:
+        pcts = {a["cdabr"]: num(a["s"]["pst"]) for a in json.loads(corpo)["abr"] if a.get("tpabr") == "mun"}
+    except Exception:
+        return "erro"
+    loc.etag, loc.modificado = cab.get("ETag"), cab.get("Last-Modified")
+    AB_PCT[(ele, uf)] = pcts
+    return "novo"
+
+
 def pasta_bruta(uf, cargo):
     return BRUTO / cargo if uf == "ES" else BRUTO / "outros" / uf / cargo
 
@@ -185,11 +210,13 @@ def coletar_real(uf, cargo, ele, cd, local, loc, avisos):
         loc.status = "erro"
         avisos.append(f"{nome}: arquivo inválido ({ex})")
         return False
+    if loc.dado and dado["pct"] < loc.dado["pct"]:   # cópia antiga servida pelo cache do TSE: mantém o dado mais novo
+        avisos.append(f"{nome}: % apurado diminuiu ({pct_br(loc.dado['pct'])} → {pct_br(dado['pct'])}); mantido o anterior")
+        loc.status = "igual"
+        return False
     pasta = pasta_bruta(uf, cargo)
     pasta.mkdir(parents=True, exist_ok=True)
     (pasta / f"{local or uf}.json").write_bytes(corpo)
-    if loc.dado and dado["pct"] < loc.dado["pct"]:
-        avisos.append(f"{nome}: % apurado diminuiu ({pct_br(loc.dado['pct'])} → {pct_br(dado['pct'])})")
     if dado["vl"] and sum(x[1] for x in dado["leg"].values()) != dado["vl"]:
         avisos.append(f"{nome}: votos de legenda por partido não batem com o total (conferir campo tvtl)")
     loc.hash, loc.dado, loc.status = h, dado, "novo"
@@ -481,31 +508,40 @@ def main():
                             print(f"\r\033[K  Baixando do TSE ({rotulo})... {feitos}/{len(tarefas)} arquivos", end="", flush=True)
                 return [estado[t[1]][t[0]][t[4]].status for t in tarefas]
 
-            # 1) só os arquivos de estado; 2) municípios só dos estados cujo arquivo mudou desde a última varredura
+            # 1) arquivos de estado e abrangências (% por município); 2) só os municípios cujo % mudou.
+            # Sem abrangência de um estado, volta ao portão por estado (arquivo do estado mudou ou REVARRER).
             for cargo, _, _, _ in cargos:   # quem não for consultado neste ciclo conta como "igual" no resumo
                 for locais in estado[cargo].values():
                     for loc in locais.values():
                         loc.status = "igual" if loc.dado else "pendente"
-            status =baixar_lote([(uf, cargo, ele, cd, "") for cargo, _, ele, cd in cargos for uf in estado[cargo]], "estados")
+            status = baixar_lote([(uf, cargo, ele, cd, "") for cargo, _, ele, cd in cargos for uf in estado[cargo]], "estados")
+            pares_ab = sorted({(ele, uf) for cargo, _, ele, _ in cargos for uf in estado[cargo]})
+            with cf.ThreadPoolExecutor(PARALELO) as ex:
+                st_ab = dict(zip(pares_ab, ex.map(lambda p: abrangencia(*p), pares_ab)))
+            status += list(st_ab.values())
             agora_s = time.time()
-            abrir = []
+            tarefas, sem_ab = [], 0
             for cargo, _, ele, cd in cargos:
                 for uf, locais in estado[cargo].items():
+                    pcts = AB_PCT.get((ele, uf)) if st_ab[(ele, uf)] in ("novo", "igual") else None
+                    if pcts is not None:
+                        for m, loc in locais.items():
+                            p = pcts.get(m)
+                            if m and p is not None and (loc.dado["pct"] != p if loc.dado else p > 0):
+                                tarefas.append((uf, cargo, ele, cd, m))
+                        continue
+                    sem_ab += 1
                     h, quando = varrido.get((cargo, uf), ("nunca", 0))
                     fim = locais[""].dado and locais[""].dado["pct"] >= 100
                     if locais[""].hash != h or (not fim and agora_s - quando >= REVARRER):
-                        abrir.append((cargo, uf, ele, cd))
-            tarefas = [(uf, cargo, ele, cd, loc_id) for cargo, uf, ele, cd in abrir
-                       for loc_id in estado[cargo][uf] if loc_id]
-            st_mun = baixar_lote(tarefas, "municípios") if tarefas else []
-            status += st_mun
-            for cargo, uf, _, _ in abrir:
-                if all(estado[cargo][uf][m].status not in ("limitado", "erro") for m in estado[cargo][uf] if m):
-                    varrido[(cargo, uf)] = (estado[cargo][uf][""].hash, agora_s)
+                        tarefas += [(uf, cargo, ele, cd, m) for m in locais if m]
+                        varrido[(cargo, uf)] = (locais[""].hash, agora_s)
+            status += baixar_lote(tarefas, "municípios") if tarefas else []
             limitados = status.count("limitado")
             print("\r\033[K", end="")
-            log(c(f"  {len(status)} pedidos ({len(abrir)} cargo/estado abertos) · {status.count('novo')} novos · "
-                  f"{status.count('igual')} iguais · {limitados} limitados", "cinza"))
+            log(c(f"  {len(status)} pedidos ({len(tarefas)} municípios" + (f", {sem_ab} cargo/estado sem abrangência" if sem_ab else "")
+                  + f") · {status.count('novo')} novos · {status.count('igual')} iguais · {limitados} limitados"
+                  + f" · {int(time.time() - inicio)}s", "cinza"))
             intervalo = min(intervalo * 2, INTERVALO_MAX) if limitados else a.intervalo
             if limitados:
                 log(c(f"  ⚠ TSE limitando (429/503): próximo ciclo em {intervalo}s", "amarelo"))

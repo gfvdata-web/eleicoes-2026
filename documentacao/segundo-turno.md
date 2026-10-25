@@ -54,11 +54,15 @@ python scripts/apuracao.py --turno 2 --publicar
 python scripts/apuracao_es.py --turno 2 --publicar
 ```
 
-- **Portão por estado** (`apuracao_es.py`): cada ciclo baixa primeiro só os 33 arquivos de estado (27 de presidente + 6 de governador). Os municípios de um (cargo, UF) só são pedidos se o arquivo do estado mudou desde a última varredura, ou a cada 10 min (`REVARRER`) enquanto o estado não chegou a 100%. Município com 100% não é mais consultado. Apuração parada = 33 pedidos por ciclo; a primeira rodada do processo pede tudo (~6 mil arquivos, ~1 min).
+- **Filtro por município** (`apuracao_es.py`): cada ciclo baixa os 33 arquivos de estado (27 de presidente + 6 de governador) e os 33 de **abrangência** do TSE (`{uf}-e{eleição}-ab.json`, um por estado e eleição, com o % apurado de cada município, sem votos; o de SP tem ~490 KB). Só pede o `-u.json` do município cujo % na abrangência difere do último guardado; se o arquivo do município ainda vier atrasado (cache do TSE de 58 s), é pedido de novo no ciclo seguinte. Município com 100% não é mais consultado.
+  - Se o TSE servir uma cópia mais velha (% menor que o guardado), o dado mais novo é mantido e aparece o aviso "% apurado diminuiu …; mantido o anterior".
+  - Sem a abrangência de um estado (erro ou 429), aquele estado volta ao **portão por estado**: municípios só se o arquivo do estado mudou, ou a cada 10 min (`REVARRER`) enquanto não chegou a 100%.
 - **Recuo** (nos dois scripts): se o TSE responder 429/503, o próximo ciclo espera o dobro (até 300 s, `INTERVALO_MAX`); um ciclo sem limite volta para 60 s. `PARALELO` = 8 nos dois (no 1º turno, 24 levou a bloqueio).
-- Log por ciclo: `N pedidos (X cargo/estado abertos) · novos · iguais · limitados`.
+- Log por ciclo: `N pedidos (X municípios) · novos · iguais · limitados · segundos`.
+- O TSE manda os arquivos com `Cache-Control: max-age=58`: coletar mais rápido que ~60 s devolve o mesmo arquivo.
 - Cada processo publica no máximo a cada 120 s e cada push dispara o workflow (~1–2 min): o site anda a cada ~2–4 min.
-- Ensaio em 25/10 às 16h (TSE com 0%): 1º ciclo com 6.073 arquivos, os seguintes com 33, nenhum 429.
+- Ensaio em 25/10 às 16h (TSE com 0%): 1º ciclo com 6.073 arquivos, os seguintes com 33, nenhum 429. Durante a apuração o portão por estado abria tudo (todos os estados mudam a cada minuto) e o ciclo levava minutos.
+- Ensaio do filtro por município em 25/10 às 19h15 (~7% apurado): 450 a 700 pedidos por ciclo, 4 a 7 s, nenhum 429.
 
 - `--simular --turno 2` simula só os dois finalistas; nunca publica. Depois de simular, rode `--limpar --turno 2` (nacional) e uma coleta real `--uma-vez` (por município) antes de commitar.
 - Cada processo commita só a própria pasta (`docs/data/apuracao2t/` ou `docs/data/es/apuracao2t/...`).
