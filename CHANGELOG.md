@@ -3,6 +3,7 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-25
+- **2º turno, Previsão simples:** a tabela "Presidente — previsão por estado" virou o mapa do Brasil (o mesmo da aba Presidente): cada estado tem a cor de quem lidera a previsão, e a cor fica mais forte conforme as urnas são apuradas; abaixo da sigla, % apurado e previsão de cada candidato.
 - **2º turno, Previsão simples:** o título do card passa a ser "Como funciona: URNAS APURADAS + URNAS DO 1º TURNO", em letra grande, resumindo a conta de uma vez.
 - **Endereços:** a raiz do site (https://eleicoes2026.gfvdata.com/) passa a abrir o **2º turno** (página Brasil, antes `2turno.html`); as pesquisas do 1º turno passam para **/primeiro-turno** (antes a raiz). O link "← 1º turno" e o item "Pesquisas e análises" do switch apontam para o novo endereço; links antigos para `/2turno.html` redirecionam para a raiz.
 - **2º turno, página Brasil (`2turno.html`):** o item "Nacional e bancadas" do switch do 2º turno passa a se chamar **Brasil**. O card "Apuração do 2º turno" ganhou um switch **Cargos | No tempo**: o modo "No tempo" mostra o % de urnas apuradas ao longo da noite (presidente e média dos 6 estados com governador), a partir da série gravada pelo coletor. Nova subaba **Previsão simples** (`#previsao`): parte dos votos do 1º turno dos dois finalistas em cada município e os substitui pelos votos reais do 2º turno conforme as urnas são apuradas, para presidente (Brasil e 27 estados) e para os 6 governos estaduais em disputa.

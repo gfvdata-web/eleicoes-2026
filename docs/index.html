@@ -77,8 +77,7 @@
   .apu-leg span::before { content: ""; display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; background: var(--c); }
 
   /* Previsão simples */
-  .prev-uf td .duelo-mini { display: flex; height: 6px; width: 120px; border-radius: 3px; overflow: hidden; background: var(--bar-bg); margin-top: 4px; }
-  .prev-uf td .duelo-mini i { display: block; height: 100%; }
+  .sw.prev-fraca { opacity: .4; }
   .prev-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
   .prev-grid .disp-item { cursor: default; }
 
@@ -246,15 +245,8 @@
     <div class="prev-grid" id="prevGov"></div>
   </div>
 
-  <div class="card so-prev" hidden>
-    <h3>Presidente — previsão por estado</h3>
-    <div class="tbl-wrap"><table class="prev-uf">
-      <thead><tr><th>UF</th><th style="text-align:right">Urnas apuradas</th><th id="prevThA" style="text-align:right"></th><th id="prevThB" style="text-align:right"></th><th>Lidera na previsão</th></tr></thead>
-      <tbody id="prevUfBody"></tbody>
-    </table></div>
-  </div>
-
   <div class="card map-grid so-mapa">
+    <h3 class="so-prev" style="grid-column:1/-1;margin:0" hidden>Presidente — previsão por estado</h3>
     <svg id="mapa" viewBox="0 0 800 780" role="img" aria-label="Mapa do Brasil por estado"></svg>
     <div class="side">
       <div class="so-gov" hidden>
@@ -267,6 +259,7 @@
       </div>
       <h3>Como ler</h3>
       <p class="so-pres">Cada estado tem a cor de quem lidera ali a apuração (votos válidos). Abaixo da sigla: % de urnas apuradas e, na linha seguinte, % de Flávio / Lula. Cinza = estado ainda sem urnas apuradas.</p>
+      <p class="so-prev" hidden>Cada estado tem a cor de quem lidera ali a previsão. A cor fica mais forte conforme as urnas são apuradas: fraca = previsão ainda apoiada no 1º turno; forte = quase toda com votos de hoje. Abaixo da sigla: % de urnas apuradas e, na linha seguinte, a previsão de Flávio / Lula.</p>
       <p class="so-gov" hidden>Só os estados com <strong>contorno grosso</strong> votam para governador hoje. Os demais, <strong>claros e listrados</strong>, já elegeram o governador no 1º turno (4/10) e estão no mapa apenas como referência.</p>
       <p>Passe o mouse (ou toque) sobre um estado para ver os números.</p>
     </div>
@@ -326,7 +319,8 @@
     return { a, cs: cands.map(([nome, partido, p1]) => ({ nome, partido, p1, atual: valor(a, nome, partido) })) };
   }
   const lider = d => d.cs[0].atual && d.cs[1].atual ? (d.cs[0].atual.pct >= d.cs[1].atual.pct ? d.cs[0] : d.cs[1]) : null;
-  const pctUF = uf => { const a = APU[modo].ufs[uf]; return a ? +a.pct || 0 : 0; };
+  const pctUF = uf => { if (modo === "prev") return PREV_UF[uf] ? PREV_UF[uf].pct : 0; const a = APU[modo].ufs[uf]; return a ? +a.pct || 0 : 0; };
+  let PREV_UF = {};       // previsão de presidente por UF (preenchida por prever())
 
   // ---------- Card do topo: % apurado por cargo ----------
   function topo() {
@@ -443,6 +437,7 @@
   }
   function corUF(uf) {
     if (modo === "gov" && GOV[uf].sit === "definido") return listra(corP(GOV[uf].eleito[1]));
+    if (modo === "prev") { const r = PREV_UF[uf]; return r ? corP(ST.presidente[parte(r.p, 0) >= parte(r.p, 1) ? 0 : 1].partido) : "var(--neutro)"; }
     const l = lider(duelo(uf));
     if (l) return corP(l.partido);
     return modo === "gov" ? "var(--disputa)" : "var(--neutro)";
@@ -450,6 +445,8 @@
   const ehDisp = uf => modo === "gov" && GOV[uf] && GOV[uf].sit === "2turno";
   function pintar() {
     svg.selectAll("path").style("fill", d => GOV[d.properties.sigla] ? corUF(d.properties.sigla) : "#999")
+      // Previsão: cor fraca com poucas urnas apuradas, forte perto de 100%
+      .style("fill-opacity", d => modo === "prev" && PREV_UF[d.properties.sigla] ? .4 + .6 * Math.min(100, pctUF(d.properties.sigla)) / 100 : null)
       .classed("disp", d => ehDisp(d.properties.sigla));
     // disputas por cima, para o contorno grosso não ficar escondido pelos vizinhos
     svg.selectAll("path.disp").raise();
@@ -463,6 +460,7 @@
       .text(d => { const uf = d.properties.sigla; return def(uf) ? "" : pctMapa(pctUF(uf)); });
     svg.selectAll("text.cand").text(d => {
       const uf = d.properties.sigla;
+      if (modo === "prev") { const r = PREV_UF[uf]; return r ? fmt(parte(r.p, 0)).slice(0, -1) + " / " + fmt(parte(r.p, 1)).slice(0, -1) : ""; }
       if (def(uf) || !(pctUF(uf) > 0)) return "";
       const du = duelo(uf);
       return vDe(du, 0) + " / " + vDe(du, 1);
@@ -470,6 +468,12 @@
   }
   function legenda() {
     const ul = document.getElementById("legenda");
+    if (modo === "prev") {
+      ul.innerHTML = ST.presidente.map(c => `<li><span class="sw" style="background:${corP(c.partido)}"></span>${esc(c.nome)} lidera na previsão</li>`).join("") +
+        `<li><span class="sw prev-fraca" style="background:${corP(ST.presidente[0].partido)}"></span>Cor fraca: poucas urnas apuradas</li>` +
+        `<li><span class="sw" style="background:var(--neutro)"></span>Sem dados ainda</li>`;
+      return;
+    }
     if (modo === "pres") {
       ul.innerHTML = ST.presidente.map(c => `<li><span class="sw" style="background:${corP(c.partido)}"></span>${esc(c.nome)} lidera no estado</li>`).join("") +
         `<li><span class="sw" style="background:var(--neutro)"></span>Sem urnas apuradas ainda</li>`;
@@ -482,6 +486,15 @@
   }
   function tipHTML(uf) {
     const g = GOV[uf];
+    if (modo === "prev") {
+      const r = PREV_UF[uf];
+      if (!r) return `<h4>${esc(g.nome)}</h4><div class="sub">Carregando os dados por município…</div>`;
+      return `<h4>${esc(g.nome)}</h4>
+        <div class="sub"><span class="tag">${fmtPct(r.pct)} das urnas apuradas</span></div>
+        <div class="row" style="color:var(--muted);font-size:.72rem"><span></span><span>1º turno</span><span>previsão</span></div>` +
+        ST.presidente.map((c, i) => `<div class="row"><span><span class="pdot" style="background:${corP(c.partido)}"></span>${esc(c.nome)} <span class="pt">(${esc(c.partido)})</span></span><span class="t1">${fmt(parte(r.base, i))}</span><span class="v">${fmt(parte(r.p, i))}</span></div>`).join("") +
+        `<div class="sub" style="margin:6px 0 0">1º turno: só entre os dois finalistas.</div>`;
+    }
     if (modo === "gov" && g.sit === "definido") {
       const [n, p, v] = g.eleito;
       return `<h4>${esc(g.nome)} <span class="selo def">Definido no 1º turno</span></h4>
@@ -600,7 +613,7 @@
       const p2 = fetch(arqMun("apuracao2t", uf, cargo) + "?t=" + Date.now(), { cache: "no-store" })
         .then(r => (r.ok ? r.json() : null)).then(j => { if (j) T2[k] = j; }).catch(() => {});
       return Promise.all([p1, p2]);
-    })).then(() => { prevCarregando = null; if (modo === "prev") prever(); });
+    })).then(() => { prevCarregando = null; if (modo === "prev") desenhar(); });
     return prevCarregando;
   }
   function prever() {
@@ -612,6 +625,7 @@
     const PC = ST.presidente.map(c => [c.nome, c.partido]);
     const porUF = {};
     UFS.forEach(uf => { porUF[uf] = projetar("presidente", uf, PC); });
+    PREV_UF = porUF;
     const br = somaP(UFS.map(uf => porUF[uf]));
     const pa = parte(br.p, 0), pb = parte(br.p, 1);
     const totP = br.p[0] + br.p[1], totN = br.novos[0] + br.novos[1];
@@ -629,16 +643,6 @@
       ? `<i style="width:${pa}%;background:${corP(ST.presidente[0].partido)}"></i><i style="width:${pb}%;margin-left:auto;background:${corP(ST.presidente[1].partido)}"></i>` : "";
     document.getElementById("prevPlacarSub").innerHTML = totP > 0
       ? `<span>Votos válidos previstos: ${vt(Math.round(br.p[0]))} × ${vt(Math.round(br.p[1]))}</span><span>Linha tracejada = 50%</span>` : "";
-    document.getElementById("prevThA").textContent = ST.presidente[0].nome;
-    document.getElementById("prevThB").textContent = ST.presidente[1].nome;
-    document.getElementById("prevUfBody").innerHTML = UFS.slice().sort((a, b) => GOV[a].nome.localeCompare(GOV[b].nome)).map(uf => {
-      const r = porUF[uf];
-      if (!r) return `<tr><td class="uf">${uf}</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td></td></tr>`;
-      const a = parte(r.p, 0), b = parte(r.p, 1), l = a >= b ? ST.presidente[0] : ST.presidente[1];
-      return `<tr><td class="uf">${uf}</td><td class="num">${fmtPct(r.pct)}</td><td class="num">${fmt(a)}</td><td class="num">${fmt(b)}</td>
-        <td><span class="party"><span class="pdot" style="background:${corP(l.partido)}"></span>${esc(l.nome)}</span>
-        <div class="duelo-mini"><i style="width:${a}%;background:${corP(ST.presidente[0].partido)}"></i><i style="width:${b}%;margin-left:auto;background:${corP(ST.presidente[1].partido)}"></i></div></td></tr>`;
-    }).join("");
     // Governador
     document.getElementById("prevGov").innerHTML = DISP.map(uf => {
       const cs = GOV[uf].cand, r = projetar("governador", uf, cs);
@@ -657,8 +661,7 @@
   function desenhar() {
     topo();
     placar();
-    if (modo === "prev") return prever();
-    disputas();
+    if (modo === "prev") prever(); else disputas();
     if (!pronto) return;
     pintar();
     rotulos();
@@ -670,7 +673,6 @@
     document.querySelectorAll(".so-pres").forEach(el => { el.hidden = m !== "pres"; });
     document.querySelectorAll(".so-gov").forEach(el => { el.hidden = m !== "gov"; });
     document.querySelectorAll(".so-prev").forEach(el => { el.hidden = m !== "prev"; });
-    document.querySelectorAll(".so-mapa").forEach(el => { el.hidden = m === "prev"; });
     if (m === "prev") { prever(); carregarPrev(); }
     document.getElementById("titulo").textContent = TXT[m].t;
     document.getElementById("subtitulo").textContent = TXT[m].s;
