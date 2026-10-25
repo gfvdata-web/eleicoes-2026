@@ -3,6 +3,7 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-25
+- **2º turno, mapa da página Brasil:** cada estado ganhou uma última linha com os votos válidos já apurados / total estimado (apurados ÷ % de urnas apuradas), por exemplo `5MM/20MM`.
 - **Como a apuração andou (presidente, Brasil):** embaixo do mapa, na aba Presidente da apuração do 1º turno e do 2º turno, um gráfico com o % de votos válidos de cada candidato conforme as urnas foram apuradas, com eixo em % apurado ou horário. No 1º turno, a série foi reconstruída das atualizações publicadas em 4/10; no 2º turno, ela cresce ao vivo.
 - **Apuração do 2º turno mais rápida:** as páginas Brasil e Estados buscam os dados a cada 15 s (antes 60 s); os coletores consultam o TSE a cada 30 s (antes 60 s) e publicam no máximo a cada 15 s (antes 120 s).
 - **App Android "Apuração 2026" (`android/`):** APK de debug, gerado no GitHub Actions, que lê a apuração do 2º turno direto do TSE (presidente no Brasil, nos 27 estados e no exterior; governador em AC, AM, DF, ES, RN e TO) e se atualiza a cada minuto enquanto está aberto. Não muda o site.

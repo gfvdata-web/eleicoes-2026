@@ -124,6 +124,7 @@
   #mapa text { font-size: 13px; font-weight: 600; fill: #fff; pointer-events: none; text-anchor: middle; paint-order: stroke; stroke: rgba(0,0,0,.35); stroke-width: 2px; }
   #mapa text.pct { font-size: 11px; font-weight: 500; }
   #mapa text.cand { font-size: 9px; font-weight: 500; }
+  #mapa text.vol { font-size: 8px; font-weight: 500; opacity: .85; }
   #mapa text.def { fill: var(--text); stroke: none; opacity: .75; font-weight: 500; }
   .side h3, .legend h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
   .side p { font-size: .85rem; color: var(--muted); margin: 0 0 8px; }
@@ -274,7 +275,7 @@
         <ul id="legenda"></ul>
       </div>
       <h3>Como ler</h3>
-      <p class="so-pres">Cada estado tem a cor de quem lidera ali a apuração (votos válidos). Abaixo da sigla: % de urnas apuradas e, na linha seguinte, % de Flávio / Lula. Cinza = estado ainda sem urnas apuradas.</p>
+      <p class="so-pres">Cada estado tem a cor de quem lidera ali a apuração (votos válidos). Abaixo da sigla: % de urnas apuradas e, na linha seguinte, % de Flávio / Lula; por último, votos válidos já apurados / total estimado (MM = milhões). Cinza = estado ainda sem urnas apuradas.</p>
       <p class="so-prev" hidden>Cada estado tem a cor de quem lidera ali a previsão. A cor fica mais forte conforme as urnas são apuradas: fraca = previsão ainda apoiada no 1º turno; forte = quase toda com votos de hoje. Abaixo da sigla: % de urnas apuradas e, na linha seguinte, a previsão de Flávio / Lula.</p>
       <p class="so-gov" hidden>Só os estados com <strong>contorno grosso</strong> votam para governador hoje. Os demais, <strong>claros e listrados</strong>, já elegeram o governador no 1º turno (4/10) e estão no mapa apenas como referência.</p>
       <p>Passe o mouse (ou toque) sobre um estado para ver os números.</p>
@@ -581,7 +582,15 @@
       const du = duelo(uf);
       return vDe(du, 0) + " / " + vDe(du, 1);
     });
+    // Votos válidos já apurados / total estimado (apurados ÷ % de urnas apuradas)
+    svg.selectAll("text.vol").text(d => {
+      const uf = d.properties.sigla, a = APU[modo === "prev" ? "pres" : modo].ufs[uf];
+      if (def(uf) || !a || !(a.pct > 0) || !Array.isArray(a.res)) return "";
+      const v = a.res.reduce((s, r) => s + (+r[3] || 0), 0);
+      return v > 0 ? mm(v) + "/" + mm(v * 100 / Math.min(100, a.pct)) : "";
+    });
   }
+  const mm = n => n >= 1e6 ? (n / 1e6).toFixed(n < 1e7 ? 1 : 0).replace(".", ",") + "MM" : Math.round(n / 1e3) + "mil";
   function legenda() {
     const ul = document.getElementById("legenda");
     if (modo === "prev") {
@@ -655,6 +664,7 @@
     g.selectAll("text.uf").data(geo.features).join("text").attr("class", "uf").attr("x", px).attr("y", py).text(d => d.properties.sigla);
     g.selectAll("text.pct").data(geo.features).join("text").attr("class", "pct").attr("x", px).attr("y", d => py(d) + 12);
     g.selectAll("text.cand").data(geo.features).join("text").attr("class", "cand").attr("x", px).attr("y", d => py(d) + 22);
+    g.selectAll("text.vol").data(geo.features).join("text").attr("class", "vol").attr("x", px).attr("y", d => py(d) + 31);
     pronto = true;
     desenhar();
   });
