@@ -3,6 +3,7 @@
 Formato: data — descrição. Mudanças mais recentes no topo.
 
 ## 2026-10-25
+- **2º turno:** o placar de presidente mostra o % de Flávio e de Lula com duas casas decimais; o link "← 1º turno" (Brasil e Estados) passa a abrir "Nacional e bancadas" (`apuracao.html`) em vez de "Pesquisas e análises".
 - **2º turno, Governador:** os cards das disputas mostram o partido entre parênteses depois do nome de cada candidato.
 - **2º turno, mapa da página Brasil:** cada estado ganhou uma última linha com os votos válidos já apurados / total estimado (apurados ÷ % de urnas apuradas), por exemplo `5MM/20MM`. O pop-up do estado mostra o mesmo número ("5MM de ~20MM votos válidos").
 - **Como a apuração andou (presidente, Brasil):** embaixo do mapa, na aba Presidente da apuração do 1º turno e do 2º turno, um gráfico com o % de votos válidos de cada candidato conforme as urnas foram apuradas, com eixo em % apurado ou horário. No 1º turno, a série foi reconstruída das atualizações publicadas em 4/10; no 2º turno, ela cresce ao vivo.

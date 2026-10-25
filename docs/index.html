@@ -192,7 +192,7 @@
     <button type="button" class="tema-switch__btn" data-tema="light" aria-pressed="false"><span aria-hidden="true">☀️</span><span class="tema-switch__label">Claro</span></button>
     <button type="button" class="tema-switch__btn" data-tema="dark" aria-pressed="false"><span aria-hidden="true">🌙</span><span class="tema-switch__label">Escuro</span></button>
   </div>
-  <nav class="secoes" id="secoes" aria-label="Seção do 2º turno"><a href="./" aria-current="page">Brasil</a><a href="2turno-es.html">Estados</a><a href="primeiro-turno.html" class="volta">← 1º turno</a></nav>
+  <nav class="secoes" id="secoes" aria-label="Seção do 2º turno"><a href="./" aria-current="page">Brasil</a><a href="2turno-es.html">Estados</a><a href="apuracao.html" class="volta">← 1º turno</a></nav>
 
   <section class="apu" id="apu" aria-live="polite">
     <div class="apu-top">
@@ -305,7 +305,7 @@
 
   <footer>
     Apuração: Tribunal Superior Eleitoral (TSE), votos válidos, atualizada a cada minuto. Percentuais do 1º turno: resultado final do TSE de 4/10/2026.
-    <a href="primeiro-turno.html">Ver as páginas do 1º turno</a>.
+    <a href="apuracao.html">Ver as páginas do 1º turno</a>.
   </footer>
 </div>
 <div id="tip" role="tooltip"></div>
@@ -529,7 +529,7 @@
     document.getElementById("placar").innerHTML = cs.map((c, i) => `
       <div class="lado">
         <div class="nm"><span class="pdot" style="background:${corP(c.partido)}"></span>${esc(c.nome)} <span class="pt">(${esc(c.partido)})</span></div>
-        <div class="pc">${c.atual ? fmt(c.atual.pct) : "—"}</div>
+        <div class="pc">${c.atual ? c.atual.pct.toFixed(2).replace(".", ",") + "%" : "—"}</div>
         <div class="vt">${c.atual ? (c.atual.votos ? vt(c.atual.votos) + " votos" : "") : "1º turno: " + fmt(c.pct1t)}</div>
       </div>${i === 0 ? '<div class="x">×</div>' : ""}`).join("");
     const a = cs[0].atual ? cs[0].atual.pct : 0, b = cs[1].atual ? cs[1].atual.pct : 0;
