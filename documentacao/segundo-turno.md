@@ -14,7 +14,7 @@ Páginas do 2º turno de 25/10/2026, criadas a pedido do usuário "começando do
 
 ## Estrutura das páginas
 
-Switch próprio do 2º turno (igual nas quatro): **Brasil** (`index.html`, raiz do site; antes `2turno.html` e "Nacional e bancadas") | **Estados** (`2turno-es.html`) | **Urnas até 19h** (`2turno-urnas.html`, desde 28/10; ver [urnas-19h.md](urnas-19h.md)) | **Urnas zero** (`urnas-zero.html`, desde 28/10; ver [urnas-zero.md](urnas-zero.md)) | **← 1º turno** (abre `apuracao.html`, "Nacional e bancadas").
+Switch próprio do 2º turno (igual nas cinco): **Brasil** (`index.html`, raiz do site; antes `2turno.html` e "Nacional e bancadas") | **Estados** (`2turno-es.html`) | **Urnas até 19h** (`2turno-urnas.html`, desde 28/10; ver [urnas-19h.md](urnas-19h.md)) | **Urnas zero** (`urnas-zero.html`, desde 28/10; ver [urnas-zero.md](urnas-zero.md)) | **Votos a menos** (`urnas-queda.html`, desde 28/10; ver [urnas-queda.md](urnas-queda.md)) | **← 1º turno** (abre `apuracao.html`, "Nacional e bancadas").
 
 ### `index.html` (Brasil)
 - **Card do topo "Apuração do 2º turno":** % apurado por cargo. Presidente = `BR` do TSE; Governador = média do % nos 6 estados com 2º turno, com quantos já têm apuração e quantos terminaram.
