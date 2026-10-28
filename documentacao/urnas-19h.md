@@ -8,13 +8,14 @@ Em 25/10/2026, às 17h03, o ministro Zanin (STF) prorrogou a votação do 2º tu
 O TSE **não publicou lista** das seções que usaram a prorrogação. A Gazeta do Povo, com base em apuração do G1 nos logs de urna, contou 35,5 mil votos para presidente depois das 17h, sem divisão por estado nem por candidato.
 
 ## Critério (nosso, não oficial)
-- **Urna postergada:** urna cujo encerramento, convertido para o horário de Brasília, foi **depois das 17h30**.
-  - O limite fica na constante `LIMITE` de `scripts/urnas_19h.py`.
-  - Foi escolhido com o usuário para excluir as urnas que só fecharam alguns minutos depois das 17h por causa da fila normal.
+- **Urna postergada:** urna cujo encerramento, convertido para o horário de Brasília, foi **a partir das 18h45** (minuto cheio: 18:45:00 em diante).
+  - O limite fica na constante `LIMITE` de `scripts/urnas_19h.py`; vale para o mapa, os cartões e o histograma.
+  - Histórico: em 28/10 o corte era 17h30; o usuário passou para 18h45 depois de ver a dispersão por minuto. A fila normal acaba por volta das 17h40, há um patamar de 5 a 30 urnas por minuto até ~18h55 e um pico entre 19h00 e 19h10 (as urnas que ficaram até o fim da prorrogação).
+  - Na subaba Comparativo, o leitor muda o corte com um controle deslizante (17h15 a 19h15).
 - **Fonte do horário:** o horário vem de `DT_ENCERRAMENTO` no boletim de urna e está em **hora local**.
   - O fuso de cada urna é deduzido de `DT_ABERTURA`, porque todas abriram às 8h de Brasília: `fuso = round(8h − abertura local)`.
   - Isso cobre AC, oeste do AM, MT, MS, RO e RR sem precisar de tabela.
-  - Urna com abertura fora do padrão (mais de 20 min de diferença) herda o fuso mais comum do município.
+  - Um município tem um fuso só: toda urna usa o fuso mais comum do município (só entram na conta as aberturas a até 10 min de uma hora cheia), o que corrige urnas que abriram atrasadas.
   - Urna sem horário de encerramento conta como não postergada e entra em `sem_horario`.
 - **Exterior (ZZ):** fica de fora, porque cada país tem seu fuso.
 - **Limite do critério:** urna postergada não quer dizer que todos os votos dela foram dados depois das 17h. A maior parte foi dada durante o dia.
@@ -32,17 +33,22 @@ Os dados são gerados por `python scripts/urnas_19h.py [--baixar] [--manter]`, q
   - Nas UFs há também `fusos` (os encontrados) e `municipios` (os 8 com mais urnas postergadas, no formato `[nome, n]`).
 - `histograma`: urnas por faixa de 15 min do horário de encerramento (Brasília), de 16h30 a 19h30. Mais `antes` e `depois`.
 
+`docs/data/urnas19h/minutos.json` (lido só no Comparativo):
+- `controle` (`min`, `max`, `padrao` do controle deslizante), `colunas` e, para `br` e cada UF em `ufs`, uma linha por minuto de encerramento (Brasília): `[minuto, urnas, flavio, lula, brancos, nulos, aptos, comparecimento]`, com `minuto` em minutos desde 0h.
+- Encerramentos antes de 17h00 ficam no balde 1019 (16:59) e de 20h00 em diante no 1200. A página soma as linhas com `minuto >= corte` (postergadas) e o resto (não postergadas).
+
 `docs/data/urnas19h/secoes.json`:
-- `colunas` e `secoes`, uma linha por urna postergada: `[uf, municipio, zona, secao, local, encerramento, aptos, comparecimento, flavio, lula, brancos, nulos]`.
+- `colunas` e `secoes`, uma linha por urna que encerrou a partir de `SECOES_DESDE` (17h15, o mínimo do controle): `[uf, municipio, zona, secao, local, encerramento, aptos, comparecimento, flavio, lula, brancos, nulos]`. O encerramento vem em minuto cheio (HH:MM), e a página filtra pelo corte escolhido.
 
 ## Página
 - **Mapa e resumo (`#mapa`):**
   - mapa do Brasil colorido pelo número de urnas postergadas, ou pelo % das urnas da UF;
   - pop-up por UF;
   - cards com o total e Flávio × Lula nessas urnas;
-  - histograma dos horários de encerramento, com marcas em 17h03 (decisão) e 17h30 (critério).
+  - histograma dos horários de encerramento, com marcas em 17h03 (decisão) e 18h45 (critério).
 - **Comparativo (`#comparativo`):**
   - seletor Brasil / UF;
-  - tabela "Urnas não postergadas × Urnas postergadas" com votos e % válidos de Flávio e Lula, brancos, nulos e comparecimento;
+  - controle deslizante do corte (padrão 18h45) e duas dispersões por minuto de encerramento: nº de urnas (escala log) e % de Lula nos válidos (ponto do tamanho do nº de urnas), com os minutos depois do corte em destaque;
+  - tabela "Urnas não postergadas × Urnas postergadas", recalculada pelo corte, com votos e % válidos de Flávio e Lula, brancos, nulos e comparecimento;
   - barras empilhadas;
-  - lista filtrável das urnas postergadas, que carrega `secoes.json` só nessa aba.
+  - lista filtrável das urnas postergadas pelo corte escolhido, que carrega `secoes.json` só nessa aba.

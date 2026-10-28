@@ -99,10 +99,16 @@
   #tip .lin span:first-child { color: var(--muted); }
   #tip ul { margin: 4px 0 0; padding-left: 18px; color: var(--muted); }
   #hist { width: 100%; height: 230px; display: block; }
-  #hist .eixo text { font-size: 10px; fill: var(--muted); }
-  #hist .eixo line, #hist .eixo path { stroke: var(--border); }
-  #hist .marca { stroke-width: 1.5; stroke-dasharray: 4 3; }
-  #hist .marca-t { font-size: 10px; font-weight: 600; }
+  :is(#hist, .disp) .eixo text { font-size: 10px; fill: var(--muted); }
+  :is(#hist, .disp) .eixo line, :is(#hist, .disp) .eixo path { stroke: var(--border); }
+  :is(#hist, .disp) .marca { stroke-width: 1.5; stroke-dasharray: 4 3; }
+  :is(#hist, .disp) .marca-t { font-size: 10px; font-weight: 600; }
+  .disp { display: block; width: 100%; }
+  .disp .grade line { stroke: var(--border); }
+  .corte { display: flex; align-items: center; gap: 12px; margin: 4px 0 12px; font-size: .9rem; }
+  .corte input[type=range] { flex: 1; min-width: 0; accent-color: var(--ao-vivo); }
+  .corte output { font-weight: 700; font-size: 1.1rem; min-width: 3.2em; color: var(--ao-vivo); }
+  .disp-tit { font-size: .85rem; color: var(--muted); margin: 14px 0 2px; }
   .barra2 { display: flex; height: 26px; border-radius: 6px; overflow: hidden; background: var(--bar-bg); font-size: .78rem; font-weight: 600; color: #fff; }
   .barra2 div { display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .barra2-rot { font-size: .82rem; font-weight: 600; margin: 10px 0 4px; }
@@ -130,7 +136,7 @@
   <header>
     <span class="turno">2º turno · 25/10/2026</span>
     <h1>Urnas com votação até 19h</h1>
-    <p>Onde ficaram as urnas que encerraram depois das 17h30 e como votaram Flávio e Lula nelas.</p>
+    <p>Onde ficaram as urnas que encerraram a partir das <span class="limTxt">18h45</span> e como votaram Flávio e Lula nelas.</p>
     <div class="modo" id="modo" role="group" aria-label="Seção da página">
       <button type="button" data-aba="mapa" aria-pressed="true">Mapa e resumo</button>
       <button type="button" data-aba="comparativo" aria-pressed="false">Comparativo</button>
@@ -140,7 +146,7 @@
   <div class="card aviso">
     <h3>O que são estas urnas</h3>
     <p class="nota-txt">Em 25/10/2026, às 17h03, o STF (ministro Zanin) prorrogou a votação do 2º turno até as 19h (horário de Brasília), somente nas seções que ainda estavam abertas. O TSE não publicou uma lista dessas seções.</p>
-    <p class="nota-txt">Critério deste site: consideramos urna <strong>postergada</strong> a que encerrou depois das <span id="limite">17h30</span> (horário de Brasília), pelo horário de encerramento registrado no boletim de urna do TSE. Os votos do exterior (ZZ) ficam de fora.</p>
+    <p class="nota-txt">Critério deste site: consideramos urna <strong>postergada</strong> a que encerrou a partir das <span class="limTxt">18h45</span> (horário de Brasília), pelo horário de encerramento registrado no boletim de urna do TSE. Os votos do exterior (ZZ) ficam de fora.</p>
     <p class="nota-txt" style="margin:0"><strong>Atenção:</strong> o critério é nosso, não uma lista oficial. Urna postergada não é o mesmo que todo voto dado depois das 17h: a urna pode ter registrado votos antes e depois desse horário, e urnas que fecharam mais cedo também podem ter recebido eleitores tarde.</p>
   </div>
 
@@ -170,21 +176,32 @@
 
     <div class="card">
       <h3>A que horas as urnas encerraram</h3>
-      <p class="nota">Número de urnas por horário de encerramento (Brasília), em faixas de 15 minutos (escala logarítmica, para as faixas pequenas aparecerem). Faixas a partir das 17h30 em destaque.</p>
+      <p class="nota">Número de urnas por horário de encerramento (Brasília), em faixas de 15 minutos (escala logarítmica, para as faixas pequenas aparecerem). Faixas a partir das <span class="limTxt">18h45</span> em destaque.</p>
       <svg id="hist" role="img" aria-label="Histograma do horário de encerramento das urnas"></svg>
     </div>
   </section>
 
   <section id="aba-comparativo" data-aba-painel="comparativo" hidden>
     <div class="card">
-      <h3>Urnas postergadas × não postergadas</h3>
+      <h3>Onde fazer o corte</h3>
       <div class="ctrl"><label for="selUf">Recorte:</label><select id="selUf"></select></div>
+      <p class="nota">Cada ponto é um minuto de encerramento (horário de Brasília). Mova o controle para escolher a partir de que horário a urna conta como postergada; a tabela, as barras e a lista abaixo acompanham. O padrão da página é <span class="limTxt">18h45</span>.</p>
+      <div class="corte"><label for="corte">Encerrou a partir de</label><input type="range" id="corte" min="1035" max="1155" step="1" value="1125"><output id="corteOut" for="corte">18h45</output></div>
+      <div class="disp-tit">Urnas encerradas por minuto (escala logarítmica)</div>
+      <svg class="disp" id="disp1" role="img" aria-label="Número de urnas encerradas a cada minuto"></svg>
+      <div class="disp-tit">% de <span class="nomeL">Lula</span> nos votos válidos das urnas de cada minuto (tamanho do ponto = nº de urnas)</div>
+      <svg class="disp" id="disp2" role="img" aria-label="Percentual de Lula nos votos válidos por minuto de encerramento"></svg>
+    </div>
+    <div class="card">
+      <h3>Urnas postergadas × não postergadas</h3>
+      <p class="nota" id="compSub"></p>
       <div class="tbl-wrap"><table id="tabComp"></table></div>
       <div class="barras" id="barras"></div>
       <p class="nota" style="margin:12px 0 0">Percentuais de Flávio e Lula sobre os votos válidos (soma dos dois). Margem em pontos percentuais (p.p.): Flávio menos Lula.</p>
     </div>
     <div class="card">
       <h3>Seções postergadas</h3>
+      <p class="nota" id="secSub"></p>
       <div class="ctrl"><label for="busca">Município:</label><input id="busca" type="search" placeholder="Filtrar por nome"><span id="secNota" style="color:var(--muted)"></span></div>
       <div class="tbl-wrap"><table id="tabSecoes"></table></div>
     </div>
@@ -212,7 +229,7 @@
   const hh = m => String(Math.floor(m / 60)).padStart(2, "0") + "h" + (m % 60 ? String(m % 60).padStart(2, "0") : "");
   const minDe = t => { const m = /(\d{1,2}):(\d{2})/.exec(String(t)); return m ? (+m[1]) * 60 + (+m[2]) : null; };
 
-  let R = null, SEC = null, secPromessa = null, uf = "BR", metrica = "n";
+  let R = null, SEC = null, secPromessa = null, M = null, minPromessa = null, corte = null, uf = "BR", metrica = "n";
   let F = { nome: "Flávio", partido: "PL" }, L = { nome: "Lula", partido: "PT" };
   const UFS_NOME = {};
 
@@ -231,7 +248,7 @@
     document.querySelectorAll("[data-aba-painel]").forEach(s => { s.hidden = s.dataset.abaPainel !== nome; });
     if (hash) { try { history.replaceState(null, "", "#" + nome); } catch (e) {} }
     fechaTip();
-    if (nome === "comparativo" && R) { carregaSecoes(); comparativo(); }
+    if (nome === "comparativo" && R) { carregaSecoes(); carregaMinutos(); comparativo(); }
     if (nome === "mapa" && R) { desenhaHist(); }
   }
   document.getElementById("modo").addEventListener("click", ev => { const b = ev.target.closest("button"); if (b) aba(b.dataset.aba, true); });
@@ -358,8 +375,74 @@
     return `<div><div class="barra2-rot">${rot}</div><div class="barra2" role="img" aria-label="${escapar(F.nome)} ${pc(a)}, ${escapar(L.nome)} ${pc(b)}">` +
       `<div style="width:${a}%;background:${corP(F.partido)}">${a >= 12 ? pc(a) : ""}</div><div style="width:${b}%;background:${corP(L.partido)}">${b >= 12 ? pc(b) : ""}</div></div></div>`;
   }
+  // grupos pelo corte escolhido (minutos.json); sem ele, o corte padrão do resumo
+  const COLM = ["minuto", "urnas", "flavio", "lula", "brancos", "nulos", "aptos", "comparecimento"];
+  const linhasMin = u => M ? (u === "BR" ? M.br : M.ufs[u] || []) : [];
+  function totCorte(u) {
+    if (!M) return tot(u);
+    const g = () => ({ urnas: 0, flavio: 0, lula: 0, brancos: 0, nulos: 0, aptos: 0, comparecimento: 0 });
+    const np = g(), p = g();
+    linhasMin(u).forEach(r => { const d = r[0] >= corte ? p : np; COLM.forEach((c, i) => { if (i) d[c] += r[i]; }); });
+    return { np, p };
+  }
+  function carregaMinutos() {
+    if (minPromessa) return minPromessa;
+    minPromessa = fetch("data/urnas19h/minutos.json" + bust).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(j => {
+        M = j;
+        const el = document.getElementById("corte");
+        el.min = minDe(j.controle.min); el.max = minDe(j.controle.max);
+        if (corte == null) corte = minDe(j.controle.padrao);
+        el.value = corte;
+        comparativo();
+      })
+      .catch(() => { minPromessa = null; });
+    return minPromessa;
+  }
+  document.getElementById("corte").addEventListener("input", ev => { corte = +ev.target.value; comparativo(); });
+
+  // ---------- Dispersão por minuto ----------
+  function dispersao() {
+    const linhas = linhasMin(uf), e1 = document.getElementById("disp1"), e2 = document.getElementById("disp2");
+    if (!M || e1.clientWidth === 0) return;
+    const W = e1.clientWidth, mg = { t: 18, r: 10, b: 26, l: 48 };
+    const x = d3.scaleLinear().domain([1019, 1201]).range([mg.l, W - mg.r]);
+    const rotX = m => m <= 1019 ? "<17h" : m >= 1200 ? "20h+" : hh(m);
+    const fmtX = d3.axisBottom(x).tickValues(d3.range(1020, 1201, W < 500 ? 30 : 15)).tickFormat(rotX);
+    const depois = r => r[0] >= corte;
+    const titulo = r => { const v = r[2] + r[3]; return `${rotX(r[0])}: ${num(r[1])} urna${r[1] === 1 ? "" : "s"} · ${F.nome} ${pc(razao(r[2], v))} · ${L.nome} ${pc(razao(r[3], v))}`; };
+    const desenha = (el, H, y, yv, raio, ticks, fmtY) => {
+      const s = d3.select(el); s.selectAll("*").remove(); s.attr("viewBox", `0 0 ${W} ${H}`);
+      s.append("g").attr("class", "grade").selectAll("line").data(ticks).join("line")
+        .attr("x1", mg.l).attr("x2", W - mg.r).attr("y1", y).attr("y2", y);
+      s.append("g").attr("class", "eixo").attr("transform", `translate(${mg.l},0)`).call(d3.axisLeft(y).tickValues(ticks).tickFormat(fmtY).tickSize(0)).call(g => g.select(".domain").remove());
+      s.append("g").attr("class", "eixo").attr("transform", `translate(0,${H - mg.b})`).call(fmtX);
+      s.append("g").selectAll("circle").data(linhas.filter(r => r[2] + r[3] > 0)).join("circle")
+        .attr("cx", r => x(r[0])).attr("cy", r => y(yv(r))).attr("r", raio)
+        .attr("fill", r => depois(r) ? "var(--ao-vivo)" : "var(--bar)").attr("opacity", r => depois(r) ? .9 : .45)
+        .append("title").text(titulo);
+      const xc = x(corte - .5);
+      s.append("line").attr("class", "marca").attr("x1", xc).attr("x2", xc).attr("y1", mg.t - 6).attr("y2", H - mg.b).attr("stroke", "var(--ao-vivo)");
+      s.append("text").attr("class", "marca-t").attr("x", xc + 4).attr("y", mg.t - 8).attr("fill", "var(--ao-vivo)").text("corte " + hh(corte));
+    };
+    const mx = d3.max(linhas, r => r[1]) || 1;
+    const t1 = [1, 10, 100, 1000, 10000, 100000].filter(t => t <= mx * 1.5);
+    desenha(e1, 220, d3.scaleLog().domain([.8, mx * 1.5]).range([220 - mg.b, mg.t]), r => r[1], 3.2, t1, d => num(d));
+    const ps = linhas.filter(r => r[2] + r[3] > 0).map(r => razao(r[3], r[2] + r[3]));
+    const lo = Math.max(0, Math.floor((d3.min(ps) || 0) / 10) * 10), hi = Math.min(100, Math.ceil((d3.max(ps) || 100) / 10) * 10);
+    const ra = d3.scaleSqrt().domain([1, mx]).range([1.8, 9]);
+    desenha(e2, 200, d3.scaleLinear().domain([lo, hi]).range([200 - mg.b, mg.t]), r => razao(r[3], r[2] + r[3]), r => ra(r[1]), d3.range(lo, hi + 1, 10), d => d + "%");
+  }
+  new ResizeObserver(() => { if (M && !document.getElementById("aba-comparativo").hidden) dispersao(); }).observe(document.getElementById("disp1"));
+
   function comparativo() {
-    const t = tot(uf), a = t.np, b = t.p;
+    const t = totCorte(uf), a = t.np, b = t.p;
+    const lim = M ? corte : minDe(R.criterio.limite);
+    document.getElementById("corteOut").textContent = hh(lim);
+    const sub = `Postergada = encerrou a partir das ${hh(lim)} (horário de Brasília)` + (M && corte !== minDe(M.controle.padrao) ? `; o padrão da página é ${hh(minDe(M.controle.padrao))}.` : ".");
+    document.getElementById("compSub").textContent = sub;
+    document.getElementById("secSub").textContent = sub;
+    dispersao();
     const va = a.flavio + a.lula, vb = b.flavio + b.lula;
     const ma = razao(a.flavio, va) - razao(a.lula, va), mb = razao(b.flavio, vb) - razao(b.lula, vb);
     const linha = (rot, fa, fb, dif, cls) => `<tr class="${cls || ""}"><td>${rot}</td><td class="num">${fa}</td><td class="num">${fb}</td><td class="num dif">${dif == null ? "" : dif}</td></tr>`;
@@ -394,9 +477,11 @@
     if (!SEC) return;
     const col = {}; SEC.colunas.forEach((c, i) => { col[c] = i; });
     const q = document.getElementById("busca").value.trim().toLowerCase();
-    // secoes.json já traz só as postergadas (o script compara com segundos; 17:30 aqui pode ser 17:30:40)
+    // secoes.json traz as urnas desde o mínimo do controle; o encerramento vem em minuto cheio (HH:MM)
+    const lim = M ? corte : minDe(R.criterio.limite);
     const todas = SEC.secoes.filter(s => {
       if (uf !== "BR" && s[col.uf] !== uf) return false;
+      if (minDe(s[col.encerramento]) < lim) return false;
       return !q || String(s[col.municipio]).toLowerCase().includes(q);
     });
     const max = uf === "BR" ? 200 : 500;
@@ -413,7 +498,8 @@
   fetch("data/urnas19h/resumo.json" + bust).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(j => {
     R = j;
     if (j.candidatos) { F = j.candidatos.flavio || F; L = j.candidatos.lula || L; }
-    document.getElementById("limite").textContent = hh(minDe(j.criterio.limite));
+    document.querySelectorAll(".limTxt").forEach(e => { e.textContent = hh(minDe(j.criterio.limite)); });
+    document.querySelectorAll(".nomeL").forEach(e => { e.textContent = L.nome; });
     const ufs = Object.keys(j.ufs).sort();
     document.getElementById("selUf").innerHTML = `<option value="BR">Brasil</option>` + ufs.map(u => `<option value="${escapar(u)}">${escapar(u)}</option>`).join("");
     document.getElementById("rodape").innerHTML = `${escapar(j.fonte || "")} Dados gerados em ${escapar(j.gerado_em)}. `;

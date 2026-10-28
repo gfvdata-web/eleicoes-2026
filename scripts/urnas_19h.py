@@ -3,7 +3,8 @@ Gera os dados de 2turno-urnas.html: urnas do 2º turno (25/10/2026) que ficaram 
 STF prorrogou a votação até as 19h (horário de Brasília) nas seções que ainda não tinham encerrado. O TSE não
 publicou lista dessas seções; a página usa o horário de encerramento gravado no boletim de urna (BU).
 
-Critério: urna "postergada" = encerrou depois de LIMITE (17h30) no horário de Brasília. O BU traz o horário local;
+Critério: urna "postergada" = encerrou a partir de LIMITE (18h45) no horário de Brasília (minuto cheio: 18:45:00
+em diante). A página deixa o leitor mudar o corte (minutos.json); o padrão é este. O BU traz o horário local;
 o fuso de cada urna sai da abertura (todas abriram às 8h de Brasília): fuso = round(hora local de abertura − 8h).
 Urna com abertura fora do padrão herda o fuso mais comum do município. O exterior (ZZ) fica de fora.
 
@@ -13,7 +14,10 @@ Presidente é lido. Os links saem da API do portal (package resultados-2026-bole
 Saída em docs/data/urnas19h/:
   resumo.json   critério, totais do Brasil e de cada UF por grupo (não postergadas × postergadas), histograma
                 dos horários de encerramento e municípios com mais urnas postergadas
-  secoes.json   uma linha por urna postergada, com município, zona, seção, encerramento e votos
+  minutos.json  por minuto de encerramento (Brasília), no Brasil e em cada UF: urnas, votos, aptos e comparecimento
+                (antes de 17h00 num balde só, 16:59; de 20h00 em diante em 20:00)
+  secoes.json   uma linha por urna encerrada a partir de SECOES_DESDE (17h15), com município, zona, seção,
+                encerramento e votos; a página filtra pelo corte escolhido
 
 Uso: python scripts/urnas_19h.py [--baixar] [--manter]
   --baixar   baixa de novo os zips para apuracao-bruto/urnas19h/ (senão usa os que já estão lá)
@@ -36,7 +40,9 @@ BRUTO = RAIZ / "apuracao-bruto" / "urnas19h"
 SAIDA = RAIZ / "docs" / "data" / "urnas19h"
 API = "https://dadosabertos.tse.jus.br/api/3/action/package_show?id=resultados-2026-boletim-de-urna"
 UFS = ("AC AL AM AP BA CE DF ES GO MA MG MS MT PA PB PE PI PR RJ RN RO RR RS SC SE SP TO").split()
-LIMITE = 17 * 60 + 30            # minutos desde 0h, horário de Brasília
+LIMITE = 18 * 60 + 45            # minutos desde 0h, horário de Brasília (encerrou a partir deste minuto)
+SECOES_DESDE = 17 * 60 + 15      # a lista de seções começa aqui (é o mínimo do controle de corte da página)
+MIN_INI, MIN_FIM = 17 * 60 - 1, 20 * 60
 DECISAO = "17h03"
 HIST_INI, HIST_FIM, HIST_PASSO = 16 * 60 + 30, 19 * 60 + 30, 15   # faixas do histograma (Brasília)
 NUMEROS = {"13": "lula", "22": "flavio"}
@@ -146,24 +152,34 @@ def main():
         baixar()
 
     br = {"nao_post": grupo(), "post": grupo(), "sem_horario": 0}
-    ufs, secoes = {}, []
+    ufs, secoes, minutos_uf = {}, [], {}
+    minutos_br = defaultdict(lambda: [0] * 7)
     nbin = (HIST_FIM - HIST_INI) // HIST_PASSO
     hist = {"antes": 0, "faixas": [0] * nbin, "depois": 0}
     for uf in UFS:
         urnas = ler_uf(uf)
         r = {"nao_post": grupo(), "post": grupo(), "sem_horario": 0, "fusos": sorted({u["fuso"] for u in urnas})}
         muns = Counter()
+        por_min = defaultdict(lambda: [0] * 7)
         for u in urnas:
             fb = u["fecha_bsb"]
             if fb is None:
                 r["sem_horario"] += 1
-            if fb is not None and fb > LIMITE:
+            if fb is not None and fb >= LIMITE:
                 somar(r["post"], u)
                 muns[u["nome"]] += 1
-                secoes.append([uf, u["nome"], u["zona"], u["secao"], u["local"], hhmm(fb),
-                               u["aptos"], u["comp"], u["flavio"], u["lula"], u["brancos"], u["nulos"]])
             else:
                 somar(r["nao_post"], u)
+            if fb is not None and fb >= SECOES_DESDE:
+                secoes.append([uf, u["nome"], u["zona"], u["secao"], u["local"], hhmm(fb),
+                               u["aptos"], u["comp"], u["flavio"], u["lula"], u["brancos"], u["nulos"]])
+            m = min(max(int(fb), MIN_INI), MIN_FIM) if fb is not None else MIN_INI
+            for i, v in enumerate((1, u["flavio"], u["lula"], u["brancos"], u["nulos"], u["aptos"], u["comp"])):
+                por_min[m][i] += v
+        minutos_uf[uf] = [[m, *v] for m, v in sorted(por_min.items())]
+        for m, v in por_min.items():
+            for i, x in enumerate(v):
+                minutos_br[m][i] += x
             if fb is not None:
                 if fb < HIST_INI:
                     hist["antes"] += 1
@@ -185,7 +201,7 @@ def main():
     resumo = {
         "gerado_em": agora,
         "criterio": {"limite": hhmm(LIMITE), "decisao": DECISAO, "fuso": "horário de Brasília",
-                     "texto": "urna que encerrou depois das 17h30 (horário de Brasília), pelo horário gravado no boletim de urna"},
+                     "texto": "urna que encerrou a partir das 18h45 (horário de Brasília), pelo horário gravado no boletim de urna"},
         "fonte": "TSE, dados abertos: Boletim de urna, 2º turno (arquivos de 26/10/2026), cargo Presidente",
         "candidatos": {"flavio": {"nome": "Flávio Bolsonaro", "partido": "PL"}, "lula": {"nome": "Lula", "partido": "PT"}},
         "br": br,
@@ -194,6 +210,12 @@ def main():
     }
     SAIDA.mkdir(parents=True, exist_ok=True)
     (SAIDA / "resumo.json").write_text(json.dumps(resumo, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    (SAIDA / "minutos.json").write_text(json.dumps({
+        "gerado_em": agora,
+        "colunas": ["minuto", "urnas", "flavio", "lula", "brancos", "nulos", "aptos", "comparecimento"],
+        "controle": {"min": hhmm(SECOES_DESDE), "max": "19:15", "padrao": hhmm(LIMITE)},
+        "br": [[m, *v] for m, v in sorted(minutos_br.items())],
+        "ufs": minutos_uf}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     (SAIDA / "secoes.json").write_text(json.dumps({
         "gerado_em": agora,
         "colunas": ["uf", "municipio", "zona", "secao", "local", "encerramento", "aptos", "comparecimento",
