@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2º turno 2026 — Urnas zero</title>
+<meta name="description" content="As 3.042 seções do 2º turno de 2026 em que Flávio Bolsonaro teve de 0 a 10 votos: onde ficam e como essas mesmas seções votaram em 2022 e 2018.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<style>
+  :root {
+    --bg: #f7f6f2; --surface: #ffffff; --text: #1d1d1b; --muted: #6b6a65; --border: #e3e1da;
+    --accent: #2f5d8a; --state-stroke: #ffffff; --bar: #2f5d8a; --bar-bg: #ecebe6;
+    --ao-vivo: #b3261e; --neutro: #cfcdc6; --disputa: #e0a43a; --pt: #c8102e; --flavio: #1b2f6e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #141413; --surface: #1e1e1c; --text: #eeede8; --muted: #a09f99; --border: #33322f;
+      --accent: #7fb0e0; --state-stroke: #141413; --bar: #7fb0e0; --bar-bg: #2a2a27;
+      --ao-vivo: #ef6b5f; --neutro: #3d3c39; --disputa: #d39a35; --pt: #e8566b; --flavio: #6f8fe0;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #141413; --surface: #1e1e1c; --text: #eeede8; --muted: #a09f99; --border: #33322f;
+    --accent: #7fb0e0; --state-stroke: #141413; --bar: #7fb0e0; --bar-bg: #2a2a27;
+    --ao-vivo: #ef6b5f; --neutro: #3d3c39; --disputa: #d39a35; --pt: #e8566b; --flavio: #6f8fe0;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; line-height: 1.45; }
+  .wrap { position: relative; max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+  header h1 { font-size: 1.7rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); font-size: .95rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 20px; }
+  .card h3 { margin: 0 0 4px; }
+  .card .nota { margin: 0 0 12px; color: var(--muted); font-size: .85rem; }
+  [hidden] { display: none !important; }
+  .modo { display: inline-flex; margin-top: 14px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .modo button { font: inherit; font-size: .9rem; font-weight: 600; padding: 6px 16px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
+  .modo button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+  .turno { display: inline-block; font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ao-vivo); margin-bottom: 4px; }
+  .legend ul { list-style: none; padding: 0; margin: 0 0 16px; }
+  .legend li { display: flex; align-items: center; gap: 8px; font-size: .88rem; margin: 6px 0; line-height: 1.25; }
+  .sw { width: 16px; height: 16px; border-radius: 3px; flex: none; }
+  .pdot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th { text-align: left; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border-bottom: 1px solid var(--border); padding: 8px; }
+  td { border-bottom: 1px solid var(--border); padding: 9px 8px; vertical-align: top; }
+  td.uf { font-weight: 700; white-space: nowrap; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  footer { margin-top: 24px; font-size: .8rem; color: var(--muted); }
+  footer a { color: var(--accent); }
+  .tema-switch { position: absolute; top: 24px; right: 16px; display: flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; z-index: 5; }
+  .tema-switch__btn { display: inline-flex; align-items: center; gap: .3rem; border: 0; background: var(--surface); color: var(--muted); font: inherit; font-size: .75rem; font-weight: 600; padding: .32rem .7rem; cursor: pointer; }
+  .tema-switch__btn + .tema-switch__btn { border-left: 1px solid var(--border); }
+  .tema-switch__btn--ativo { background: var(--accent); color: var(--surface); }
+  @media (max-width: 480px) { .tema-switch__label { display: none; } .tema-switch__btn { padding: .32rem .6rem; font-size: .85rem; } }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) :is(#mapa path, .sw, .pdot) { filter: saturate(.62) brightness(.82); } }
+  :root[data-theme="dark"] :is(#mapa path, .sw, .pdot) { filter: saturate(.62) brightness(.82); }
+  .secoes { display: inline-grid; grid-auto-flow: column; grid-auto-columns: auto; margin: 0 0 16px; padding: 3px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); }
+  .secoes a { display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.15; font-size: .85rem; font-weight: 600; padding: 6px 16px; border-radius: 999px; color: var(--muted); text-decoration: none; }
+  .secoes a:hover { color: var(--text); }
+  .secoes a[aria-current="page"] { background: var(--accent); color: var(--surface); }
+  .secoes a.volta { font-weight: 500; }
+  @media (max-width: 900px) { .secoes { margin-right: 84px; } .secoes a { font-size: .75rem; padding: 5px 10px; } }
+  @media (max-width: 560px) { .secoes { display: grid; grid-template-columns: repeat(2, 1fr); border-radius: 14px; } .secoes a { border-radius: 11px; } }
+
+  /* Página Urnas zero */
+  .nota-txt { font-size: .88rem; color: var(--muted); margin: 0 0 8px; }
+  .aviso { border-left: 4px solid var(--disputa); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 20px; }
+  .cards .card { margin-top: 0; }
+  .kpi .rot { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .kpi strong { display: block; font-size: 1.6rem; font-variant-numeric: tabular-nums; line-height: 1.25; }
+  .kpi small { display: block; color: var(--muted); font-size: .78rem; }
+  .map-grid { display: grid; grid-template-columns: 1fr 240px; gap: 16px; align-items: start; }
+  @media (max-width: 820px) { .map-grid { grid-template-columns: 1fr; } }
+  #mapa { width: 100%; height: auto; display: block; }
+  #mapa path { stroke: var(--text); stroke-opacity: .45; stroke-width: .7; cursor: pointer; }
+  #mapa path:hover, #mapa path.sel { stroke-opacity: 1; stroke-width: 2; }
+  #mapa circle { fill: var(--pt); fill-opacity: .55; stroke: var(--surface); stroke-width: .5; cursor: pointer; }
+  #mapa circle:hover { fill-opacity: .95; }
+  .grad { height: 12px; border-radius: 6px; margin: 4px 0; border: 1px solid var(--border); }
+  .grad-ex { display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  #tip { position: fixed; z-index: 10; opacity: 0; pointer-events: none; width: 320px; max-width: calc(100vw - 24px);
+         background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.18); font-size: .82rem; }
+  #tip.aberto { opacity: 1; pointer-events: auto; }
+  #tip h4 { margin: 0 0 6px; font-size: 1rem; padding-right: 22px; }
+  #tip .fecha { position: absolute; top: 6px; right: 8px; border: 0; background: transparent; color: var(--muted); font-size: 1.1rem; cursor: pointer; }
+  #tip .lin { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0; font-variant-numeric: tabular-nums; }
+  #tip .lin span:first-child { color: var(--muted); }
+  .alterna { display: inline-flex; padding: 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+  .alterna button { font: inherit; font-size: .78rem; font-weight: 600; padding: 4px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
+  .alterna button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+  .topo-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin-bottom: 8px; }
+  .topo-card h3 { margin: 0; }
+  .ctrl { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-bottom: 12px; font-size: .88rem; }
+  .ctrl select, .ctrl input { font: inherit; font-size: .88rem; padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); max-width: 100%; }
+  svg.graf { width: 100%; height: auto; display: block; }
+  svg.graf text { fill: var(--muted); font-size: 11px; }
+  svg.graf .eixo line, svg.graf .eixo path { stroke: var(--border); }
+  svg.graf text.valor { fill: var(--text); font-weight: 600; }
+  .leg { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .82rem; margin: 8px 0; }
+  .dois { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .dois { grid-template-columns: 1fr; } }
+  th.num { text-align: right; }
+  th.ord { cursor: pointer; user-select: none; white-space: nowrap; }
+  th.ord:hover { color: var(--text); }
+  #tabSecoes td, #tabSecoes th { padding: 6px 8px; font-size: .82rem; }
+  td.loc { min-width: 160px; }
+  .difl { cursor: help; color: var(--disputa); font-weight: 700; }
+  .pag { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; font-size: .85rem; }
+  .pag button { font: inherit; padding: 5px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); cursor: pointer; }
+  .pag button:disabled { opacity: .45; cursor: default; }
+  .barra-h { display: grid; grid-template-columns: 24px 1fr 56px; gap: 8px; align-items: center; font-size: .82rem; margin: 3px 0; font-variant-numeric: tabular-nums; }
+  .barra-h div.b { height: 14px; background: var(--bar-bg); border-radius: 3px; overflow: hidden; }
+  .barra-h div.b i { display: block; height: 100%; background: var(--flavio); }
+  .barra-h span:last-child { text-align: right; }
+</style>
+<!-- Contagem de acessos (GoatCounter); o painel-status separa os sites pelo caminho. -->
+<script>window.goatcounter = { path: (p) => "/eleicoes-2026" + p };</script>
+<script data-goatcounter="https://gfvdata.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="tema-switch" id="tema-switch" role="group" aria-label="Tema da página">
+    <button type="button" class="tema-switch__btn" data-tema="light" aria-pressed="false"><span aria-hidden="true">☀️</span><span class="tema-switch__label">Claro</span></button>
+    <button type="button" class="tema-switch__btn" data-tema="dark" aria-pressed="false"><span aria-hidden="true">🌙</span><span class="tema-switch__label">Escuro</span></button>
+  </div>
+  <nav class="secoes" id="secoes" aria-label="Seção do 2º turno"><a href="./">Brasil</a><a href="2turno-es.html">Estados</a><a href="2turno-urnas.html">Urnas até 19h</a><a href="urnas-zero.html" aria-current="page">Urnas zero</a><a href="apuracao.html" class="volta">← 1º turno</a></nav>
+
+  <header>
+    <span class="turno">2º turno · 25/10/2026</span>
+    <h1>Urnas zero</h1>
+    <p>Seções (urnas) em que Flávio Bolsonaro (PL, 22) teve de 0 a 10 votos. Lula (PT, 13) venceu o país com 51,79% dos votos válidos.</p>
+  </header>
+
+  <div class="card aviso">
+    <h3>O critério</h3>
+    <p class="nota-txt" style="margin:0">Chamamos de <strong>urna zero</strong> a seção eleitoral do 2º turno de 2026 em que Flávio teve <strong>até <span id="crit">10</span> votos</strong> (de 0 a 10). O critério é nosso, não uma classificação oficial do TSE. A página também mostra como as mesmas seções votaram no 2º turno de 2022 (Lula × Jair Bolsonaro) e de 2018 (Jair Bolsonaro × Haddad).</p>
+  </div>
+
+  <p class="card" id="erro" hidden></p>
+
+  <div class="cards" id="kpis"></div>
+
+  <div class="card">
+    <h3>Quantos votos Flávio teve nessas urnas</h3>
+    <p class="nota">Número de urnas zero por quantidade de votos de Flávio na seção.</p>
+    <div id="distrib"></div>
+  </div>
+
+  <div class="card">
+    <div class="topo-card"><h3>Onde ficam</h3>
+      <div class="alterna" id="pontos" role="group" aria-label="Pontos do mapa"><button type="button" data-p="1" aria-pressed="true">Locais de votação</button><button type="button" data-p="0" aria-pressed="false">Só estados</button></div>
+    </div>
+    <p class="nota">Estados coloridos pelo número de urnas zero; cada ponto é um local de votação (tamanho pelo comparecimento nas urnas zero). Toque ou clique para detalhes.</p>
+    <div class="map-grid">
+      <svg id="mapa" viewBox="0 0 800 780" role="img" aria-label="Mapa do Brasil com as urnas zero por estado e por local de votação"></svg>
+      <div class="legend">
+        <div style="font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Urnas zero por estado</div>
+        <div class="grad" id="grad"></div>
+        <div class="grad-ex"><span>0</span><span id="legMax"></span></div>
+        <p class="nota-txt" id="notaMapa" style="margin-top:14px"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>As mesmas urnas em 2018, 2022 e 2026</h3>
+    <p class="nota">Percentual do candidato do PT e do candidato Bolsonaro (Jair em 2018 e 2022, Flávio em 2026) sobre a soma dos votos dos dois, no 2º turno de cada ano, somando só as seções escolhidas abaixo. A marca tracejada é o resultado do país inteiro no mesmo ano.</p>
+    <div class="ctrl"><div class="alterna" id="casam" role="group" aria-label="Seções comparadas"><button type="button" data-c="ano" aria-pressed="true">Casadas em cada ano</button><button type="button" data-c="dois" aria-pressed="false">Casadas nos dois anos</button></div></div>
+    <div class="leg"><span><span class="pdot" style="background:var(--pt)"></span>Candidato do PT (Haddad, Lula, Lula)</span><span><span class="pdot" style="background:var(--flavio)"></span>Candidato Bolsonaro (Jair, Jair, Flávio)</span></div>
+    <svg id="graf" class="graf" viewBox="0 0 640 300" role="img" aria-label="Percentual do PT e de Bolsonaro nas mesmas seções em 2018, 2022 e 2026"></svg>
+    <div class="tbl-wrap"><table id="tabAnos"></table></div>
+    <p class="nota" style="margin:12px 0 0" id="metodo"></p>
+  </div>
+
+  <div class="dois">
+    <div class="card">
+      <h3>Por estado</h3>
+      <p class="nota">Urnas zero e participação no total de seções da UF (ZZ = exterior).</p>
+      <div class="tbl-wrap" style="max-height:420px;overflow-y:auto"><table id="tabUf"></table></div>
+    </div>
+    <div class="card">
+      <h3>Municípios com mais urnas zero</h3>
+      <p class="nota">Os 15 primeiros.</p>
+      <div class="tbl-wrap"><table id="tabMun"></table></div>
+      <h3 style="margin-top:18px">Outros recortes</h3>
+      <div class="tbl-wrap"><table id="tabRec"></table></div>
+      <p class="nota" style="margin:10px 0 0">&ldquo;Nome do local indica comunidade indígena&rdquo;: o nome do local de votação contém INDÍGENA, ALDEIA, TIKUNA ou GUARANI. É um critério aproximado pelo nome, não um cadastro oficial. Preso provisório: tipo de local 3 no cadastro do TSE.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Todas as seções</h3>
+    <div class="ctrl">
+      <label for="fUf">Estado:</label><select id="fUf"></select>
+      <label for="busca">Município ou local:</label><input id="busca" type="search" placeholder="Filtrar por nome">
+      <span id="secNota" style="color:var(--muted)"></span>
+    </div>
+    <div class="tbl-wrap"><table id="tabSecoes"></table></div>
+    <div class="pag"><button type="button" id="ant">‹ Anterior</button><span id="pagInfo"></span><button type="button" id="prox">Próxima ›</button></div>
+    <p class="nota" style="margin:10px 0 0"><span class="difl">≠</span> = a seção tinha a mesma numeração naquele ano, mas em outro local de votação (passe o mouse para ver o local). &ldquo;—&rdquo; = a seção não existia naquele ano.</p>
+  </div>
+
+  <footer>
+    <p id="rodape"></p>
+    <p>Fonte: dados abertos do Tribunal Superior Eleitoral (TSE) — votação por seção e detalhe da votação por seção (2º turno de 2026, 2022 e 2018) e eleitorado por local de votação (2026). Seções agregadas votam na urna principal. O TSE renumera seções entre eleições; por isso o casamento de uma seção entre anos pela numeração é aproximado. Alguns nomes de local trazem caracteres corrompidos na origem. <a href="./">Voltar ao 2º turno</a>.</p>
+  </footer>
+</div>
+<div id="tip" role="dialog" aria-label="Detalhes"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+(function () {
+  const escapar = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const num = v => (Number(v) || 0).toLocaleString("pt-BR");
+  const pc = (v, d) => (isFinite(v) ? v : 0).toLocaleString("pt-BR", { minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d }) + "%";
+  const razao = (a, b) => b > 0 ? 100 * a / b : 0;
+  const ANOS = ["2018", "2022", "2026"];
+  const RE_IND = /IND[IÍ]GENA|ALDEIA|TIKUNA|GUARANI/i;
+  const TIPOS = { 0: "sem cadastro", 1: "convencional", 2: "voto em trânsito", 3: "preso provisório", 4: "temporário" };
+
+  let D = null, S = [], GEO = null, pagina = 0, ord = { k: "uf", asc: true }, modoCasa = "ano", pontosOn = true;
+  const tip = document.getElementById("tip");
+  const svg = d3.select("#mapa");
+
+  function erro(msg) { const e = document.getElementById("erro"); e.textContent = msg; e.hidden = false; }
+  function fechaTip() { tip.classList.remove("aberto"); svg.selectAll("path").classed("sel", false); }
+  function mostraTip(ev, html) {
+    tip.innerHTML = '<button class="fecha" type="button" aria-label="Fechar">×</button>' + html;
+    tip.classList.add("aberto");
+    const w = tip.offsetWidth, h = tip.offsetHeight, pad = 12;
+    let x = ev.clientX + pad, y = ev.clientY + pad;
+    if (x + w > innerWidth - 8) x = ev.clientX - w - pad;
+    if (x < 8) x = 8;
+    if (y + h > innerHeight - 8) y = Math.max(8, innerHeight - h - 8);
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  }
+  tip.addEventListener("click", ev => { if (ev.target.closest(".fecha")) fechaTip(); });
+  document.addEventListener("click", ev => { if (!ev.target.closest("#mapa") && !ev.target.closest("#tip")) fechaTip(); });
+  const lin = (a, b) => `<div class="lin"><span>${a}</span><b>${b}</b></div>`;
+
+  function prepara() {
+    S = D.secoes.map((r, i) => {
+      const loc = D.locais[r[4]] || ["", 0, null, null];
+      return { i, uf: r[0], mun: D.mun[r[0] + "-" + r[1]] || String(r[1]), zona: r[2], sec: r[3], li: r[4], loc: String(loc[0]), tipo: loc[1], lon: loc[2], lat: loc[3],
+        aptos: r[5], comp: r[6], fl: r[7], lu: r[8], c22: r[12], b22: r[13], l22: r[14], c18: r[16], b18: r[17], h18: r[18],
+        n22: (D.nomes22 || {})[String(i)], n18: (D.nomes18 || {})[String(i)] };
+    });
+  }
+
+  // ---------- Cartões e distribuição ----------
+  function kpis() {
+    const n = S.length, ap = d3.sum(S, s => s.aptos), cp = d3.sum(S, s => s.comp), fl = d3.sum(S, s => s.fl), lu = d3.sum(S, s => s.lu), v = fl + lu;
+    const t = D.tot["2026"];
+    const k = (rot, val, sub) => `<div class="card kpi"><span class="rot">${rot}</span><strong>${val}</strong><small>${sub}</small></div>`;
+    document.getElementById("kpis").innerHTML =
+      k("Urnas zero", num(n), `${pc(razao(n, t[2]), 2)} das ${num(t[2])} seções do país`) +
+      k("Eleitores aptos", num(ap), "cadastrados nessas seções") +
+      k("Comparecimento", pc(razao(cp, ap)), `${num(cp)} eleitores`) +
+      k('<span class="pdot" style="background:var(--pt)"></span>Lula (PT)', pc(razao(lu, v)), `${num(lu)} votos · % dos válidos`) +
+      k('<span class="pdot" style="background:var(--flavio)"></span>Flávio (PL)', pc(razao(fl, v)), `${num(fl)} votos · % dos válidos`);
+    const cont = d3.range(0, D.criterio + 1).map(x => S.filter(s => s.fl === x).length), mx = d3.max(cont) || 1;
+    document.getElementById("distrib").innerHTML = cont.map((c, x) => `<div class="barra-h"><span>${x}</span><div class="b"><i style="width:${razao(c, mx)}%"></i></div><span>${num(c)}</span></div>`).join("");
+  }
+
+  // ---------- Mapa ----------
+  function pintaMapa(geo) {
+    const porUf = d3.rollup(S, v => v.length, s => s.uf);
+    const mx = d3.max([...porUf.entries()].filter(e => e[0] !== "ZZ"), e => e[1]) || 1;
+    const esc = d3.scaleSequential(d3.interpolateOranges).domain([0, mx * 1.2]);
+    document.getElementById("legMax").textContent = num(mx);
+    document.getElementById("grad").style.background = "linear-gradient(90deg," + d3.range(0, 1.01, .25).map(t => esc(t * mx * 1.2) + " " + t * 100 + "%").join(",") + ")";
+    const proj = d3.geoMercator().fitExtent([[10, 10], [790, 770]], geo), path = d3.geoPath(proj);
+    svg.selectAll("*").remove();
+    const g = svg.append("g");
+    g.selectAll("path").data(geo.features).join("path").attr("d", path).attr("fill", d => esc(porUf.get(d.properties.sigla) || 0))
+      .on("click", (ev, d) => {
+        const u = d.properties.sigla, n = porUf.get(u) || 0, t = D.ufs[u] || [0, 0];
+        svg.selectAll("path").classed("sel", x => x.properties.sigla === u);
+        mostraTip(ev, `<h4>${escapar(d.properties.nome || u)} (${escapar(u)})</h4>` + lin("Urnas zero", num(n)) + lin("Seções da UF", num(t[0])) + lin("% das seções", pc(razao(n, t[0]), 2)));
+      });
+    const nota = document.getElementById("notaMapa");
+    if (!pontosOn) { nota.textContent = "Pontos ocultos."; return; }
+    const loc = new Map();
+    let sem = 0;
+    S.forEach(s => {
+      if (s.uf === "ZZ" || s.lon == null || s.lat == null || s.tipo === 0) { sem++; return; }
+      let o = loc.get(s.li);
+      if (!o) { o = { nome: s.loc, mun: s.mun, uf: s.uf, lon: s.lon, lat: s.lat, n: 0, comp: 0, fl: 0, lu: 0, tipo: s.tipo }; loc.set(s.li, o); }
+      o.n++; o.comp += s.comp; o.fl += s.fl; o.lu += s.lu;
+    });
+    const pts = [...loc.values()].filter(o => proj([o.lon, o.lat])).sort((a, b) => b.comp - a.comp);
+    const r = d3.scaleSqrt().domain([0, d3.max(pts, o => o.comp) || 1]).range([2.2, 14]);
+    g.selectAll("circle").data(pts).join("circle").attr("cx", o => proj([o.lon, o.lat])[0]).attr("cy", o => proj([o.lon, o.lat])[1]).attr("r", o => r(o.comp))
+      .on("click", (ev, o) => {
+        ev.stopPropagation();
+        mostraTip(ev, `<h4>${escapar(o.nome)}</h4>` + lin("Município", escapar(o.mun) + " (" + escapar(o.uf) + ")") + lin("Tipo de local", escapar(TIPOS[o.tipo] || "—")) + lin("Urnas zero no local", num(o.n)) + lin("Comparecimento", num(o.comp)) + lin("Flávio", num(o.fl)) + lin("Lula", num(o.lu)));
+      });
+    nota.textContent = `${num(pts.length)} locais no mapa. ${num(sem)} seções ficam fora dos pontos por não terem coordenada do local ou serem do exterior (ainda contam nos estados e nos totais).`;
+  }
+  document.getElementById("pontos").addEventListener("click", ev => {
+    const b = ev.target.closest("button"); if (!b) return;
+    pontosOn = b.dataset.p === "1";
+    document.querySelectorAll("#pontos button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    fechaTip(); if (GEO) pintaMapa(GEO);
+  });
+
+  // ---------- Mesmas urnas em 3 anos ----------
+  function conjunto(ano) {
+    const dois = s => s.c22 === 1 && s.c18 === 1;
+    if (ano === "2026") return modoCasa === "dois" ? S.filter(dois) : S;
+    const k = ano === "2022" ? "c22" : "c18";
+    return S.filter(s => s[k] === 1 && (modoCasa !== "dois" || dois(s)));
+  }
+  function soma(ano, c) {
+    if (ano === "2026") return { pt: d3.sum(c, s => s.lu), bo: d3.sum(c, s => s.fl), n: c.length, zero: c.length };
+    const [kb, kp] = ano === "2022" ? ["b22", "l22"] : ["b18", "h18"];
+    return { pt: d3.sum(c, s => s[kp]), bo: d3.sum(c, s => s[kb]), n: c.length, zero: c.filter(s => s[kb] <= D.criterio).length };
+  }
+  function anos() {
+    const R = {};
+    ANOS.forEach(a => { R[a] = soma(a, conjunto(a)); });
+    const W = 640, H = 300, mg = { t: 24, r: 10, b: 34, l: 40 };
+    const x0 = d3.scaleBand().domain(ANOS).range([mg.l, W - mg.r]).padding(.25), x1 = d3.scaleBand().domain(["pt", "bo"]).range([0, x0.bandwidth()]).padding(.08);
+    const y = d3.scaleLinear().domain([0, 100]).range([H - mg.b, mg.t]);
+    const s = d3.select("#graf"); s.selectAll("*").remove();
+    s.append("g").attr("class", "eixo").attr("transform", `translate(${mg.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d => d + "%"));
+    ANOS.forEach(a => {
+      const r = R[a], v = r.pt + r.bo, vals = { pt: razao(r.pt, v), bo: razao(r.bo, v) };
+      ["pt", "bo"].forEach(k => {
+        const x = x0(a) + x1(k), w = x1.bandwidth(), t = D.tot[a], pv = razao(t[k === "pt" ? 0 : 1], t[0] + t[1]);
+        s.append("rect").attr("x", x).attr("width", w).attr("y", y(vals[k])).attr("height", y(0) - y(vals[k])).attr("rx", 2).attr("fill", k === "pt" ? "var(--pt)" : "var(--flavio)");
+        s.append("text").attr("class", "valor").attr("x", x + w / 2).attr("y", y(vals[k]) - 4).attr("text-anchor", "middle").text(r.n ? pc(vals[k]) : "—");
+        s.append("line").attr("x1", x - 2).attr("x2", x + w + 2).attr("y1", y(pv)).attr("y2", y(pv)).attr("stroke", "var(--text)").attr("stroke-width", 1.5).attr("stroke-dasharray", "4 3")
+          .append("title").text(`País inteiro em ${a}: ${pc(pv)}`);
+      });
+      s.append("text").attr("x", x0(a) + x0.bandwidth() / 2).attr("y", H - 12).attr("text-anchor", "middle").style("font-weight", 600).text(a);
+    });
+    document.getElementById("tabAnos").innerHTML = '<thead><tr><th>Ano</th><th class="num">Seções comparadas</th><th class="num">PT</th><th class="num">Bolsonaro</th><th class="num">Já com Bolsonaro ≤ ' + D.criterio + '</th><th class="num">País: PT × Bolsonaro</th></tr></thead><tbody>' +
+      ANOS.map(a => {
+        const r = R[a], v = r.pt + r.bo, t = D.tot[a], pv = t[0] + t[1];
+        return `<tr><td class="uf">${a}</td><td class="num">${num(r.n)}</td><td class="num">${r.n ? pc(razao(r.pt, v)) : "—"}</td><td class="num">${r.n ? pc(razao(r.bo, v)) : "—"}</td><td class="num">${a === "2026" ? "todas" : num(r.zero) + " (" + pc(razao(r.zero, r.n)) + ")"}</td><td class="num">${pc(razao(t[0], pv))} × ${pc(razao(t[1], pv))}</td></tr>`;
+      }).join("") + "</tbody>";
+    const cc = k => [1, 2, 0].map(c => S.filter(s => s[k] === c).length);
+    const a22 = cc("c22"), a18 = cc("c18");
+    document.getElementById("metodo").innerHTML = `<strong>Método.</strong> Uma seção é &ldquo;casada&rdquo; quando tem a mesma zona, número e local de votação no ano anterior. Entre as ${num(S.length)} urnas zero de 2026: em 2022, ${num(a22[0])} casam (mesmo local), ${num(a22[1])} têm a mesma numeração em outro local de votação (não entram na soma) e ${num(a22[2])} não existiam; em 2018, ${num(a18[0])} casam, ${num(a18[1])} em outro local e ${num(a18[2])} não existiam. Percentuais sobre a soma dos votos dos dois candidatos. O TSE renumera seções, então o casamento é aproximado.`;
+  }
+  document.getElementById("casam").addEventListener("click", ev => {
+    const b = ev.target.closest("button"); if (!b) return;
+    modoCasa = b.dataset.c;
+    document.querySelectorAll("#casam button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    anos();
+  });
+
+  // ---------- Destaques ----------
+  function destaques() {
+    const porUf = d3.rollup(S, v => v.length, s => s.uf);
+    const ufs = Object.keys(D.ufs).map(u => ({ u, n: porUf.get(u) || 0, t: D.ufs[u][0] })).filter(o => o.n > 0).sort((a, b) => b.n - a.n);
+    document.getElementById("tabUf").innerHTML = '<thead><tr><th>UF</th><th class="num">Urnas zero</th><th class="num">% das seções da UF</th></tr></thead><tbody>' +
+      ufs.map(o => `<tr><td class="uf">${escapar(o.u)}</td><td class="num">${num(o.n)}</td><td class="num">${pc(razao(o.n, o.t), 2)}</td></tr>`).join("") + "</tbody>";
+    const mun = d3.rollups(S, v => v.length, s => s.uf + "|" + s.mun).sort((a, b) => b[1] - a[1]).slice(0, 15);
+    document.getElementById("tabMun").innerHTML = '<thead><tr><th>Município</th><th class="num">Urnas zero</th></tr></thead><tbody>' +
+      mun.map(([k, n]) => { const i = k.indexOf("|"); return `<tr><td>${escapar(k.slice(i + 1))} <span style="color:var(--muted)">${escapar(k.slice(0, i))}</span></td><td class="num">${num(n)}</td></tr>`; }).join("") + "</tbody>";
+    const ind = S.filter(s => RE_IND.test(s.loc)).length, pre = S.filter(s => s.tipo === 3).length, ext = S.filter(s => s.uf === "ZZ").length;
+    const r = (rot, n) => `<tr><td>${rot}</td><td class="num">${num(n)}</td><td class="num">${pc(razao(n, S.length))}</td></tr>`;
+    document.getElementById("tabRec").innerHTML = '<thead><tr><th>Recorte</th><th class="num">Urnas zero</th><th class="num">% do total</th></tr></thead><tbody>' +
+      r("Nome do local indica comunidade indígena", ind) + r("Local de preso provisório", pre) + r("Exterior (ZZ)", ext) + "</tbody>";
+  }
+
+  // ---------- Tabela ----------
+  const COLS = [["uf", "UF"], ["mun", "Município"], ["zona", "Zona", 1], ["sec", "Seção", 1], ["loc", "Local"], ["aptos", "Aptos", 1], ["comp", "Compar.", 1], ["fl", "Flávio 26", 1], ["lu", "Lula 26", 1],
+    ["b22", "Bolsonaro 22", 1], ["l22", "Lula 22", 1], ["b18", "Bolsonaro 18", 1], ["h18", "Haddad 18", 1]];
+  function celAno(s, casa, v, nome) {
+    if (s[casa] === 0) return "—";
+    return num(v) + (s[casa] === 2 ? ` <span class="difl" tabindex="0" title="${escapar("Outro local de votação nesse ano: " + (nome || "não informado"))}">≠</span>` : "");
+  }
+  function tabela() {
+    const u = document.getElementById("fUf").value, q = document.getElementById("busca").value.trim().toLowerCase();
+    let L = S.filter(s => (!u || s.uf === u) && (!q || s.mun.toLowerCase().includes(q) || s.loc.toLowerCase().includes(q)));
+    const k = ord.k, txt = typeof S[0][k] === "string";
+    L = L.slice().sort((a, b) => (txt ? String(a[k]).localeCompare(String(b[k]), "pt-BR") : a[k] - b[k]) * (ord.asc ? 1 : -1) || a.i - b.i);
+    const PP = 50, np = Math.max(1, Math.ceil(L.length / PP));
+    if (pagina >= np) pagina = np - 1;
+    const vis = L.slice(pagina * PP, pagina * PP + PP);
+    document.getElementById("secNota").textContent = num(L.length) + " seções";
+    document.getElementById("pagInfo").textContent = `Página ${pagina + 1} de ${np}`;
+    document.getElementById("ant").disabled = pagina === 0; document.getElementById("prox").disabled = pagina >= np - 1;
+    document.getElementById("tabSecoes").innerHTML = "<thead><tr>" + COLS.map(c => `<th class="ord${c[2] ? " num" : ""}" data-k="${c[0]}" aria-sort="${ord.k === c[0] ? (ord.asc ? "ascending" : "descending") : "none"}">${c[1]}${ord.k === c[0] ? (ord.asc ? " ▲" : " ▼") : ""}</th>`).join("") + "</tr></thead><tbody>" +
+      vis.map(s => `<tr><td class="uf">${escapar(s.uf)}</td><td>${escapar(s.mun)}</td><td class="num">${num(s.zona)}</td><td class="num">${num(s.sec)}</td><td class="loc">${escapar(s.loc)}</td><td class="num">${num(s.aptos)}</td><td class="num">${num(s.comp)}</td><td class="num">${num(s.fl)}</td><td class="num">${num(s.lu)}</td>` +
+        `<td class="num">${celAno(s, "c22", s.b22, s.n22)}</td><td class="num">${celAno(s, "c22", s.l22, s.n22)}</td><td class="num">${celAno(s, "c18", s.b18, s.n18)}</td><td class="num">${celAno(s, "c18", s.h18, s.n18)}</td></tr>`).join("") + "</tbody>";
+  }
+  document.getElementById("tabSecoes").addEventListener("click", ev => {
+    const th = ev.target.closest("th.ord"); if (!th) return;
+    ord = { k: th.dataset.k, asc: ord.k === th.dataset.k ? !ord.asc : true }; pagina = 0; tabela();
+  });
+  document.getElementById("fUf").addEventListener("change", () => { pagina = 0; tabela(); });
+  document.getElementById("busca").addEventListener("input", () => { pagina = 0; tabela(); });
+  document.getElementById("ant").addEventListener("click", () => { pagina--; tabela(); });
+  document.getElementById("prox").addEventListener("click", () => { pagina++; tabela(); });
+
+  // ---------- Início ----------
+  Promise.all([
+    fetch("data/urnas-zero/urnas.json?t=" + Date.now()).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+    fetch("data/brasil-estados.geojson").then(r => r.json())
+  ]).then(([j, geo]) => {
+    D = j; GEO = geo; prepara();
+    document.getElementById("crit").textContent = D.criterio;
+    document.getElementById("fUf").innerHTML = '<option value="">Todos</option>' + Object.keys(D.ufs).sort().filter(u => S.some(s => s.uf === u)).map(u => `<option value="${escapar(u)}">${escapar(u)}</option>`).join("");
+    document.getElementById("rodape").textContent = "Dados gerados em " + D.gerado + ".";
+    kpis(); pintaMapa(geo); anos(); destaques(); tabela();
+  }).catch(e => { console.error(e); erro("Os dados das urnas zero ainda não estão disponíveis. Tente novamente mais tarde."); });
+
+  // ---------- Tema ----------
+  var Rt = document.documentElement, bs = document.querySelectorAll("#tema-switch .tema-switch__btn");
+  var mq = window.matchMedia("(prefers-color-scheme: dark)");
+  function efetivo() { var a = Rt.getAttribute("data-theme"); return a === "dark" || a === "light" ? a : (mq.matches ? "dark" : "light"); }
+  function sync() { var e = efetivo(); bs.forEach(function (b) { var on = b.dataset.tema === e; b.classList.toggle("tema-switch__btn--ativo", on); b.setAttribute("aria-pressed", on); }); }
+  bs.forEach(function (b) { b.addEventListener("click", function () {
+    Rt.setAttribute("data-theme", b.dataset.tema);
+    try { localStorage.setItem("tema", b.dataset.tema); } catch (e) {}
+    sync();
+  }); });
+  mq.addEventListener("change", function () { if (!Rt.getAttribute("data-theme")) sync(); });
+  sync();
+})();
+</script>
+</body>
+</html>
