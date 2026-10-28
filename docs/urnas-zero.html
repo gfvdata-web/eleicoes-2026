@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>2º turno 2026 — Urnas zero</title>
-<meta name="description" content="As 3.042 seções do 2º turno de 2026 em que Flávio Bolsonaro teve de 0 a 10 votos: onde ficam e como essas mesmas seções votaram em 2022 e 2018.">
+<meta name="description" content="As 3.042 seções do 2º turno de 2026 em que Flávio Bolsonaro teve de 0 a 10 votos: onde ficam e como essas mesmas seções votaram nos 2º turnos de presidente desde 2002.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
@@ -140,7 +140,7 @@
 
   <div class="card aviso">
     <h3>O critério</h3>
-    <p class="nota-txt" style="margin:0">Chamamos de <strong>urna zero</strong> a seção eleitoral do 2º turno de 2026 em que Flávio teve <strong>até <span id="crit">10</span> votos</strong> (de 0 a 10). O critério é nosso, não uma classificação oficial do TSE. A página também mostra como as mesmas seções votaram no 2º turno de 2022 (Lula × Jair Bolsonaro) e de 2018 (Jair Bolsonaro × Haddad).</p>
+    <p class="nota-txt" style="margin:0">Chamamos de <strong>urna zero</strong> a seção eleitoral do 2º turno de 2026 em que Flávio teve <strong>até <span id="crit">10</span> votos</strong> (de 0 a 10). O critério é nosso, não uma classificação oficial do TSE. A página também mostra como as mesmas seções votaram nos 2º turnos de presidente de 2002 a 2022 (o candidato do PT contra o adversário de cada ano).</p>
   </div>
 
   <p class="card" id="erro" hidden></p>
@@ -170,11 +170,11 @@
   </div>
 
   <div class="card">
-    <h3>As mesmas urnas em 2018, 2022 e 2026</h3>
-    <p class="nota">Percentual do candidato do PT e do candidato Bolsonaro (Jair em 2018 e 2022, Flávio em 2026) sobre a soma dos votos dos dois, no 2º turno de cada ano, somando só as seções escolhidas abaixo. A marca tracejada é o resultado do país inteiro no mesmo ano.</p>
-    <div class="ctrl"><div class="alterna" id="casam" role="group" aria-label="Seções comparadas"><button type="button" data-c="ano" aria-pressed="true">Casadas em cada ano</button><button type="button" data-c="dois" aria-pressed="false">Casadas nos dois anos</button></div></div>
-    <div class="leg"><span><span class="pdot" style="background:var(--pt)"></span>Candidato do PT (Haddad, Lula, Lula)</span><span><span class="pdot" style="background:var(--flavio)"></span>Candidato Bolsonaro (Jair, Jair, Flávio)</span></div>
-    <svg id="graf" class="graf" viewBox="0 0 640 300" role="img" aria-label="Percentual do PT e de Bolsonaro nas mesmas seções em 2018, 2022 e 2026"></svg>
+    <h3>As mesmas urnas, de 2002 a 2026</h3>
+    <p class="nota">Percentual do candidato do PT e do adversário (o segundo colocado do 2º turno de cada ano) sobre a soma dos votos dos dois, somando só as seções escolhidas abaixo. A linha tracejada é o resultado do país inteiro no mesmo ano. Em 1998 e 1994 não houve 2º turno.</p>
+    <div class="ctrl"><div class="alterna" id="casam" role="group" aria-label="Seções comparadas"><button type="button" data-c="ano" aria-pressed="true">Casadas em cada ano</button><button type="button" data-c="dois" aria-pressed="false">As mesmas seções em todos os anos</button></div></div>
+    <div class="leg"><span><span class="pdot" style="background:var(--pt)"></span>Candidato do PT (Lula, Dilma, Haddad)</span><span><span class="pdot" style="background:var(--flavio)"></span>Adversário do PT (Serra, Alckmin, Aécio, Jair, Flávio)</span><span>Linha tracejada: país inteiro</span></div>
+    <svg id="graf" class="graf" viewBox="0 0 640 320" role="img" aria-label="Percentual do PT e do adversário nas mesmas seções, 2º turnos de 2002 a 2026"></svg>
     <div class="tbl-wrap"><table id="tabAnos"></table></div>
     <p class="nota" style="margin:12px 0 0" id="metodo"></p>
   </div>
@@ -204,12 +204,12 @@
     </div>
     <div class="tbl-wrap"><table id="tabSecoes"></table></div>
     <div class="pag"><button type="button" id="ant">‹ Anterior</button><span id="pagInfo"></span><button type="button" id="prox">Próxima ›</button></div>
-    <p class="nota" style="margin:10px 0 0"><span class="difl">≠</span> = a seção tinha a mesma numeração naquele ano, mas em outro local de votação (passe o mouse para ver o local). &ldquo;—&rdquo; = a seção não existia naquele ano.</p>
+    <p class="nota" style="margin:10px 0 0"><span class="difl">≠</span> = a seção tinha a mesma numeração naquele ano, mas em outro local de votação (passe o mouse para ver o local, quando o TSE publica o nome). Colunas &ldquo;% PT&rdquo; = percentual do candidato do PT sobre a soma dos dois candidatos do 2º turno daquele ano. &ldquo;—&rdquo; = a seção não existia naquele ano.</p>
   </div>
 
   <footer>
     <p id="rodape"></p>
-    <p>Fonte: dados abertos do Tribunal Superior Eleitoral (TSE) — votação por seção e detalhe da votação por seção (2º turno de 2026, 2022 e 2018) e eleitorado por local de votação (2026). Seções agregadas votam na urna principal. O TSE renumera seções entre eleições; por isso o casamento de uma seção entre anos pela numeração é aproximado. Alguns nomes de local trazem caracteres corrompidos na origem. <a href="./">Voltar ao 2º turno</a>.</p>
+    <p>Fonte: dados abertos do Tribunal Superior Eleitoral (TSE) — votação por seção e detalhe da votação por seção dos 2º turnos de presidente de 2002 a 2026, e eleitorado por local de votação (2010, 2014 e 2026). Seções agregadas votam na urna principal. O TSE renumera seções entre eleições; por isso o casamento de uma seção entre anos pela numeração é aproximado. Alguns nomes de local trazem caracteres corrompidos na origem. <a href="./">Voltar ao 2º turno</a>.</p>
   </footer>
 </div>
 <div id="tip" role="dialog" aria-label="Detalhes"></div>
@@ -221,7 +221,7 @@
   const num = v => (Number(v) || 0).toLocaleString("pt-BR");
   const pc = (v, d) => (isFinite(v) ? v : 0).toLocaleString("pt-BR", { minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d }) + "%";
   const razao = (a, b) => b > 0 ? 100 * a / b : 0;
-  const ANOS = ["2018", "2022", "2026"];
+  let ANOS = [], NOME = {};
   const RE_IND = /IND[IÍ]GENA|ALDEIA|TIKUNA|GUARANI/i;
   const TIPOS = { 0: "sem cadastro", 1: "convencional", 2: "voto em trânsito", 3: "preso provisório", 4: "temporário" };
 
@@ -246,11 +246,21 @@
   const lin = (a, b) => `<div class="lin"><span>${a}</span><b>${b}</b></div>`;
 
   function prepara() {
+    // anos[0] = 2026; anos[n] ocupa as colunas 12+4(n-1)...: [casa, adversário, PT, comparecimento]
+    ANOS = D.anos.map(a => String(a[0])).reverse();
+    D.anos.forEach(a => { NOME[a[0]] = { pt: a[1], adv: a[2] }; });
+    const pctPT = (p, a) => (p + a) > 0 ? 100 * p / (p + a) : null;
     S = D.secoes.map((r, i) => {
       const loc = D.locais[r[4]] || ["", 0, null, null];
-      return { i, uf: r[0], mun: D.mun[r[0] + "-" + r[1]] || String(r[1]), zona: r[2], sec: r[3], li: r[4], loc: String(loc[0]), tipo: loc[1], lon: loc[2], lat: loc[3],
-        aptos: r[5], comp: r[6], fl: r[7], lu: r[8], c22: r[12], b22: r[13], l22: r[14], c18: r[16], b18: r[17], h18: r[18],
-        n22: (D.nomes22 || {})[String(i)], n18: (D.nomes18 || {})[String(i)] };
+      const o = { i, uf: r[0], mun: D.mun[r[0] + "-" + r[1]] || String(r[1]), zona: r[2], sec: r[3], li: r[4], loc: String(loc[0]), tipo: loc[1], lon: loc[2], lat: loc[3],
+        aptos: r[5], comp: r[6], fl: r[7], lu: r[8], y: {} };
+      o.y["2026"] = { c: 1, a: r[7], p: r[8] };
+      D.anos.slice(1).forEach((a, n) => {
+        const b = 12 + 4 * n;
+        o.y[a[0]] = { c: r[b], a: r[b + 1], p: r[b + 2], nome: ((D.nomes || {})[a[0]] || {})[String(i)] };
+      });
+      ANOS.forEach(a => { const y = o.y[a], v = y.c === 0 ? null : pctPT(y.p, y.a); o["q" + a] = v == null ? -1 : v; });
+      return o;
     });
   }
 
@@ -311,45 +321,50 @@
     fechaTip(); if (GEO) pintaMapa(GEO);
   });
 
-  // ---------- Mesmas urnas em 3 anos ----------
+  // ---------- Mesmas urnas, 2002 a 2026 ----------
   function conjunto(ano) {
-    const dois = s => s.c22 === 1 && s.c18 === 1;
-    if (ano === "2026") return modoCasa === "dois" ? S.filter(dois) : S;
-    const k = ano === "2022" ? "c22" : "c18";
-    return S.filter(s => s[k] === 1 && (modoCasa !== "dois" || dois(s)));
+    if (modoCasa === "dois") return S.filter(s => ANOS.every(a => a === "2026" || s.y[a].c === 1));
+    return ano === "2026" ? S : S.filter(s => s.y[ano].c === 1);
   }
   function soma(ano, c) {
-    if (ano === "2026") return { pt: d3.sum(c, s => s.lu), bo: d3.sum(c, s => s.fl), n: c.length, zero: c.length };
-    const [kb, kp] = ano === "2022" ? ["b22", "l22"] : ["b18", "h18"];
-    return { pt: d3.sum(c, s => s[kp]), bo: d3.sum(c, s => s[kb]), n: c.length, zero: c.filter(s => s[kb] <= D.criterio).length };
+    return { pt: d3.sum(c, s => s.y[ano].p), bo: d3.sum(c, s => s.y[ano].a), n: c.length, zero: ano === "2026" ? c.length : c.filter(s => s.y[ano].a <= D.criterio).length };
   }
   function anos() {
     const R = {};
     ANOS.forEach(a => { R[a] = soma(a, conjunto(a)); });
-    const W = 640, H = 300, mg = { t: 24, r: 10, b: 34, l: 40 };
-    const x0 = d3.scaleBand().domain(ANOS).range([mg.l, W - mg.r]).padding(.25), x1 = d3.scaleBand().domain(["pt", "bo"]).range([0, x0.bandwidth()]).padding(.08);
+    const W = 640, H = 320, mg = { t: 24, r: 16, b: 46, l: 40 };
+    const x = d3.scalePoint().domain(ANOS).range([mg.l + 24, W - mg.r - 24]);
     const y = d3.scaleLinear().domain([0, 100]).range([H - mg.b, mg.t]);
     const s = d3.select("#graf"); s.selectAll("*").remove();
     s.append("g").attr("class", "eixo").attr("transform", `translate(${mg.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d => d + "%"));
-    ANOS.forEach(a => {
-      const r = R[a], v = r.pt + r.bo, vals = { pt: razao(r.pt, v), bo: razao(r.bo, v) };
-      ["pt", "bo"].forEach(k => {
-        const x = x0(a) + x1(k), w = x1.bandwidth(), t = D.tot[a], pv = razao(t[k === "pt" ? 0 : 1], t[0] + t[1]);
-        s.append("rect").attr("x", x).attr("width", w).attr("y", y(vals[k])).attr("height", y(0) - y(vals[k])).attr("rx", 2).attr("fill", k === "pt" ? "var(--pt)" : "var(--flavio)");
-        s.append("text").attr("class", "valor").attr("x", x + w / 2).attr("y", y(vals[k]) - 4).attr("text-anchor", "middle").text(r.n ? pc(vals[k]) : "—");
-        s.append("line").attr("x1", x - 2).attr("x2", x + w + 2).attr("y1", y(pv)).attr("y2", y(pv)).attr("stroke", "var(--text)").attr("stroke-width", 1.5).attr("stroke-dasharray", "4 3")
-          .append("title").text(`País inteiro em ${a}: ${pc(pv)}`);
+    const pcs = (a, k) => { const r = R[a], v = r.pt + r.bo; return r.n && v ? razao(k === "pt" ? r.pt : r.bo, v) : null; };
+    const pais = (a, k) => { const t = D.tot[a]; return razao(k === "pt" ? t[0] : t[1], t[0] + t[1]); };
+    ["pt", "bo"].forEach(k => {
+      const cor = k === "pt" ? "var(--pt)" : "var(--flavio)";
+      const ln = d3.line().defined(a => pcs(a, k) != null).x(a => x(a)).y(a => y(pcs(a, k)));
+      s.append("path").attr("d", ln(ANOS)).attr("fill", "none").attr("stroke", cor).attr("stroke-width", 2.2);
+      s.append("path").attr("d", d3.line().x(a => x(a)).y(a => y(pais(a, k)))(ANOS)).attr("fill", "none").attr("stroke", cor).attr("stroke-width", 1.5).attr("stroke-dasharray", "4 3").attr("opacity", .75);
+      ANOS.forEach(a => {
+        const v = pcs(a, k); if (v == null) return;
+        s.append("circle").attr("cx", x(a)).attr("cy", y(v)).attr("r", 4).attr("fill", cor)
+          .append("title").text(`${a}: ${k === "pt" ? NOME[a].pt : NOME[a].adv} ${pc(v)} nas ${num(R[a].n)} seções (país: ${pc(pais(a, k))})`);
+        s.append("text").attr("class", "valor").attr("x", x(a)).attr("y", y(v) + (k === "pt" ? -9 : 16)).attr("text-anchor", "middle").style("font-size", "10px").text(pc(v, 0));
       });
-      s.append("text").attr("x", x0(a) + x0.bandwidth() / 2).attr("y", H - 12).attr("text-anchor", "middle").style("font-weight", 600).text(a);
     });
-    document.getElementById("tabAnos").innerHTML = '<thead><tr><th>Ano</th><th class="num">Seções comparadas</th><th class="num">PT</th><th class="num">Bolsonaro</th><th class="num">Já com Bolsonaro ≤ ' + D.criterio + '</th><th class="num">País: PT × Bolsonaro</th></tr></thead><tbody>' +
+    ANOS.forEach(a => {
+      s.append("text").attr("x", x(a)).attr("y", H - 26).attr("text-anchor", "middle").style("font-weight", 600).text(a);
+      s.append("text").attr("x", x(a)).attr("y", H - 13).attr("text-anchor", "middle").style("font-size", "9px").text("n=" + num(R[a].n));
+    });
+    document.getElementById("tabAnos").innerHTML = '<thead><tr><th>Ano</th><th>PT × adversário</th><th class="num">Seções comparadas</th><th class="num">% PT</th><th class="num">% adversário</th><th class="num">Já com adversário ≤ ' + D.criterio + '</th><th class="num">País: % PT</th></tr></thead><tbody>' +
       ANOS.map(a => {
-        const r = R[a], v = r.pt + r.bo, t = D.tot[a], pv = t[0] + t[1];
-        return `<tr><td class="uf">${a}</td><td class="num">${num(r.n)}</td><td class="num">${r.n ? pc(razao(r.pt, v)) : "—"}</td><td class="num">${r.n ? pc(razao(r.bo, v)) : "—"}</td><td class="num">${a === "2026" ? "todas" : num(r.zero) + " (" + pc(razao(r.zero, r.n)) + ")"}</td><td class="num">${pc(razao(t[0], pv))} × ${pc(razao(t[1], pv))}</td></tr>`;
+        const r = R[a], t = D.tot[a], pv = t[0] + t[1];
+        return `<tr><td class="uf">${a}</td><td>${escapar(NOME[a].pt)} × ${escapar(NOME[a].adv)}</td><td class="num">${num(r.n)}</td><td class="num">${pcs(a, "pt") == null ? "—" : pc(pcs(a, "pt"))}</td><td class="num">${pcs(a, "bo") == null ? "—" : pc(pcs(a, "bo"))}</td><td class="num">${a === "2026" ? "todas" : num(r.zero) + " (" + pc(razao(r.zero, r.n)) + ")"}</td><td class="num">${pc(razao(t[0], pv))}</td></tr>`;
       }).join("") + "</tbody>";
-    const cc = k => [1, 2, 0].map(c => S.filter(s => s[k] === c).length);
-    const a22 = cc("c22"), a18 = cc("c18");
-    document.getElementById("metodo").innerHTML = `<strong>Método.</strong> Uma seção é &ldquo;casada&rdquo; quando tem a mesma zona, número e local de votação no ano anterior. Entre as ${num(S.length)} urnas zero de 2026: em 2022, ${num(a22[0])} casam (mesmo local), ${num(a22[1])} têm a mesma numeração em outro local de votação (não entram na soma) e ${num(a22[2])} não existiam; em 2018, ${num(a18[0])} casam, ${num(a18[1])} em outro local e ${num(a18[2])} não existiam. Percentuais sobre a soma dos votos dos dois candidatos. O TSE renumera seções, então o casamento é aproximado.`;
+    const lin2 = ANOS.filter(a => a !== "2026").map(a => {
+      const c = [1, 2, 0].map(v => S.filter(q => q.y[a].c === v).length);
+      return `${a}: ${num(c[0])} casam, ${num(c[1])} em outro local, ${num(c[2])} não existiam`;
+    }).join("; ");
+    document.getElementById("metodo").innerHTML = `<strong>Método.</strong> Uma seção é &ldquo;casada&rdquo; quando tem a mesma zona, número e local de votação no 2º turno do ano comparado. Entre as ${num(S.length)} urnas zero de 2026 — ${escapar(lin2)}. Quem tem a mesma numeração em outro local de votação, ou não existia, não entra na soma. Em 2006 e 2002 o TSE não publica o nome do local; nesses anos conta como mesmo local quando o número do local é igual ao do ano seguinte, já casado. O modo &ldquo;as mesmas seções em todos os anos&rdquo; usa só as seções casadas nos seis anos anteriores (${num(conjunto("2026").length)}), inclusive em 2026. Percentuais sobre a soma dos votos dos dois candidatos. O TSE renumera seções, então o casamento é aproximado. Em 1998 e 1994 não houve 2º turno de presidente.`;
   }
   document.getElementById("casam").addEventListener("click", ev => {
     const b = ev.target.closest("button"); if (!b) return;
@@ -374,11 +389,14 @@
   }
 
   // ---------- Tabela ----------
-  const COLS = [["uf", "UF"], ["mun", "Município"], ["zona", "Zona", 1], ["sec", "Seção", 1], ["loc", "Local"], ["aptos", "Aptos", 1], ["comp", "Compar.", 1], ["fl", "Flávio 26", 1], ["lu", "Lula 26", 1],
-    ["b22", "Bolsonaro 22", 1], ["l22", "Lula 22", 1], ["b18", "Bolsonaro 18", 1], ["h18", "Haddad 18", 1]];
-  function celAno(s, casa, v, nome) {
-    if (s[casa] === 0) return "—";
-    return num(v) + (s[casa] === 2 ? ` <span class="difl" tabindex="0" title="${escapar("Outro local de votação nesse ano: " + (nome || "não informado"))}">≠</span>` : "");
+  const COLS = [["uf", "UF"], ["mun", "Município"], ["zona", "Zona", 1], ["sec", "Seção", 1], ["loc", "Local"], ["aptos", "Aptos", 1], ["comp", "Compar.", 1], ["fl", "Flávio 26", 1], ["lu", "Lula 26", 1]]
+    .concat(["2026", "2022", "2018", "2014", "2010", "2006", "2002"].map(a => ["q" + a, "% PT " + a.slice(2), 1]));
+  function celAno(s, a) {
+    const y = s.y[a];
+    if (y.c === 0) return "—";
+    const v = s["q" + a];
+    if (v < 0) return "—";
+    return pc(v, 0) + (y.c === 2 ? ` <span class="difl" tabindex="0" title="${escapar("Outro local de votação em " + a + ": " + (y.nome || "nome não informado"))}">≠</span>` : "");
   }
   function tabela() {
     const u = document.getElementById("fUf").value, q = document.getElementById("busca").value.trim().toLowerCase();
@@ -393,7 +411,7 @@
     document.getElementById("ant").disabled = pagina === 0; document.getElementById("prox").disabled = pagina >= np - 1;
     document.getElementById("tabSecoes").innerHTML = "<thead><tr>" + COLS.map(c => `<th class="ord${c[2] ? " num" : ""}" data-k="${c[0]}" aria-sort="${ord.k === c[0] ? (ord.asc ? "ascending" : "descending") : "none"}">${c[1]}${ord.k === c[0] ? (ord.asc ? " ▲" : " ▼") : ""}</th>`).join("") + "</tr></thead><tbody>" +
       vis.map(s => `<tr><td class="uf">${escapar(s.uf)}</td><td>${escapar(s.mun)}</td><td class="num">${num(s.zona)}</td><td class="num">${num(s.sec)}</td><td class="loc">${escapar(s.loc)}</td><td class="num">${num(s.aptos)}</td><td class="num">${num(s.comp)}</td><td class="num">${num(s.fl)}</td><td class="num">${num(s.lu)}</td>` +
-        `<td class="num">${celAno(s, "c22", s.b22, s.n22)}</td><td class="num">${celAno(s, "c22", s.l22, s.n22)}</td><td class="num">${celAno(s, "c18", s.b18, s.n18)}</td><td class="num">${celAno(s, "c18", s.h18, s.n18)}</td></tr>`).join("") + "</tbody>";
+        ["2026", "2022", "2018", "2014", "2010", "2006", "2002"].map(a => `<td class="num">${celAno(s, a)}</td>`).join("") + `</tr>`).join("") + "</tbody>";
   }
   document.getElementById("tabSecoes").addEventListener("click", ev => {
     const th = ev.target.closest("th.ord"); if (!th) return;
