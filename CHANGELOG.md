@@ -2,6 +2,10 @@
 
 Formato: data — descrição. Mudanças mais recentes no topo.
 
+## 2026-10-28
+- **Apuração do 2º turno fechada em 100%:** presidente (Brasil, 27 estados e exterior) e governador (AC, AM, DF, ES, RN, TO) regravados com o resultado final do TSE, também por município. Lula 51,79% (64.256.232 votos) × Flávio Bolsonaro 48,21% (59.826.041).
+- **2º turno, nova página "Urnas até 19h" (`2turno-urnas.html`):** urnas que encerraram depois das 17h30 (horário de Brasília) com a prorrogação da votação até as 19h decidida às 17h03 de 25/10. São 7.614 de 497.897 urnas, segundo o horário de encerramento do boletim de urna do TSE; o critério é do site, não uma lista oficial. Subaba **Mapa e resumo**: mapa dos estados pelo número ou % de urnas postergadas, resumo dos votos nelas e histograma dos horários de encerramento. Subaba **Comparativo**: Flávio × Lula nas urnas não postergadas e nas postergadas, no Brasil ou por estado, com a lista das urnas. O switch do 2º turno ganhou o item **Urnas até 19h**.
+
 ## 2026-10-25
 - **2º turno:** o placar de presidente mostra o % de Flávio e de Lula com duas casas decimais; o link "← 1º turno" (Brasil e Estados) passa a abrir "Nacional e bancadas" (`apuracao.html`) em vez de "Pesquisas e análises".
 - **2º turno, Governador:** os cards das disputas mostram o partido entre parênteses depois do nome de cada candidato.
