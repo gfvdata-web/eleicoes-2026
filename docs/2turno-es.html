@@ -165,7 +165,7 @@
   .turno { display: inline-block; font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ao-vivo); margin-bottom: 4px; }
   .secoes a.volta { font-weight: 500; }
   @media (max-width: 900px) { .secoes { margin-right: 84px; } .secoes a { font-size: .75rem; padding: 5px 10px; } }
-  @media (max-width: 560px) { .secoes { display: grid; grid-template-columns: repeat(2, 1fr); border-radius: 14px; } .secoes a { border-radius: 11px; } }
+  @media (max-width: 560px) { .secoes { display: grid; grid-auto-flow: row; grid-template-columns: repeat(2, 1fr); border-radius: 14px; } .secoes a { border-radius: 11px; } }
   .abas button[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
   .aviso-def { margin: 10px 0 0; font-size: .88rem; color: var(--muted); }
 </style>
